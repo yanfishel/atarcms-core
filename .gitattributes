@@ -1,0 +1,41 @@
+* text=auto eol=lf
+# Vendored third-party files keep their exact upstream bytes (no line-ending normalization). A vendored module that
+# another module imports carries its version in its file name: an ESM import cannot carry asset()'s ?v= hash.
+/resources/admin/assets/vendor/sortable-1.15.7.esm.js -text
+/resources/admin/assets/vendor/sortable.LICENSE -text
+/resources/admin/assets/vendor/ckeditor5-48.5.2.js -text
+/resources/admin/assets/vendor/ckeditor5-48.5.2.css -text
+/resources/admin/assets/vendor/ckeditor5-48.5.2-ru.js -text
+/resources/admin/assets/vendor/ckeditor5-48.5.2-he.js -text
+/resources/admin/assets/vendor/ckeditor5-48.5.2-de.js -text
+/resources/admin/assets/vendor/ckeditor5-48.5.2-fr.js -text
+/resources/admin/assets/vendor/ckeditor5.LICENSE -text
+/resources/admin/assets/vendor/ckeditor5.COPYING.GPL -text
+/resources/admin/assets/vendor/htmx.min.js -text
+/resources/admin/assets/vendor/htmx.LICENSE -text
+/resources/admin/assets/icons.svg -text
+/resources/admin/assets/icons.LICENSE -text
+/resources/admin/assets/fishart.png -text
+/resources/admin/assets/logo/** -text
+/resources/fonts/** -text
+/skeleton/themes/default/assets/fonts/** -text
+/skeleton/themes/default/assets/icons.svg -text
+/skeleton/themes/default/assets/icons.LICENSE -text
+/skeleton/themes/default/assets/brands.svg -text
+/skeleton/themes/default/assets/brands.LICENSE -text
+/skeleton/themes/default/assets/vendor/** -text
+/tests export-ignore
+/skeleton export-ignore
+/docs export-ignore
+/docker export-ignore
+/compose.yaml export-ignore
+/.github export-ignore
+/.editorconfig export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/.php-cs-fixer.dist.php export-ignore
+/phpstan.neon.dist export-ignore
+/phpunit.xml.dist export-ignore
+/composer.lock export-ignore
+/CLAUDE.md export-ignore
+/.claude export-ignore

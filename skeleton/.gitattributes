@@ -1,0 +1,9 @@
+* text=auto eol=lf
+# Vendored theme files (fonts, icon sprites, libraries and their licences) keep their exact upstream bytes.
+themes/*/assets/fonts/** -text
+themes/*/assets/vendor/** -text
+themes/*/assets/*.svg -text
+themes/*/assets/*.LICENSE -text
+# The monorepo's development override (the core through a path repository); never part of a released site.
+/compose.override.yaml export-ignore
+/composer.dev.json export-ignore

@@ -1,0 +1,1 @@
+<textarea id="<?= $this->e($id) ?>" name="<?= $this->e($name) ?>" rows="4"<?= $field->required ? ' required' : '' ?><?= $aria ?><?= $lang ?>><?= $this->e(is_scalar($value) ? (string) $value : '') ?></textarea>

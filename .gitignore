@@ -1,0 +1,31 @@
+/vendor/
+/.phpunit.cache/
+/.phpstan.cache/
+/.php-cs-fixer.cache
+/tests/Fixtures/site/storage/
+/skeleton/vendor/
+/skeleton/.env
+/skeleton/composer.lock
+/skeleton/composer.dev.lock
+/skeleton/auth.json
+/skeleton/storage/logs/*
+!/skeleton/storage/logs/.gitkeep
+/skeleton/storage/cache/*
+!/skeleton/storage/cache/.gitkeep
+/skeleton/storage/uploads/*
+!/skeleton/storage/uploads/.gitkeep
+/skeleton/storage/tmp/
+/skeleton/storage/app.key
+/skeleton/storage/avatars/
+
+.idea
+
+# Brainstorming companion sessions
+.superpowers/
+
+# Local agent tooling: personal Claude Code settings and installed skills
+/.claude/settings.local.json
+/.claude/scheduled_tasks.lock
+/.agents/
+/.claude/skills/php-pro/
+/skills-lock.json

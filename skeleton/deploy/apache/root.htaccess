@@ -1,0 +1,24 @@
+# LAST RESORT for shared hosting whose document root cannot point at public/ (prefer pointing the domain or a
+# subdomain at public/ in the hosting panel). Copy this file to the site root as .htaccess: every request is
+# rewritten into public/, so .env, storage/, vendor/ and config/ are never served. It only works where the host reads
+# .htaccess files (AllowOverride All) and has mod_rewrite: run "php bin/atar doctor --http" afterwards; it must report
+# web.exposure ok, or the site's secrets are public.
+
+# Without mod_rewrite nothing could be protected: refuse everything.
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Hidden files anywhere are never served.
+    RewriteRule (^|/)\. - [R=404,L]
+
+    # Everything goes into public/ (public/.htaccess then routes it to index.php); a request already rewritten
+    # there is left alone, so this cannot loop.
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+Options -Indexes

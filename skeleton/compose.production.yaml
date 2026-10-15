@@ -1,0 +1,73 @@
+# A server with Docker: Caddy (automatic HTTPS for APP_URL) + PHP-FPM + MariaDB, restarted with the machine.
+# Select it in .env, so every "docker compose ..." command uses it:
+#   COMPOSE_FILE=compose.production.yaml
+# .env also sets APP_ENV=production, APP_URL=https://<domain>, DB_DATABASE/DB_USERNAME/DB_PASSWORD (the database is
+# created with them on the first start), HOST_UID/HOST_GID (the owner of the site's files: `id -u`, `id -g`).
+# The site's files, uploads and storage/app.key stay on the host (back them up with the database dump).
+services:
+  php:
+    build:
+      context: ./docker/php
+      args:
+        ATAR_PRODUCTION: "1"
+        HOST_UID: ${HOST_UID:-82}
+        HOST_GID: ${HOST_GID:-82}
+    working_dir: /srv/site
+    volumes:
+      - .:/srv/site
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 9000) ? 0 : 1);"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  web:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_ADDRESS: ${APP_URL}
+      SITE_ROOT: /srv/site
+      ATAR_THEME: ${APP_THEME:-default}
+      PHP_FASTCGI: php:9000
+    volumes:
+      - .:/srv/site:ro
+      - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+    depends_on:
+      - php
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE: ${DB_DATABASE}
+      MARIADB_USER: ${DB_USERNAME}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+    volumes:
+      - db-data:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:

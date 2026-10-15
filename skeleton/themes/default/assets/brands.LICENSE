@@ -1,0 +1,24 @@
+Brand icons of the AtarCMS default theme (brands.svg), for the site's social network and messenger links.
+
+Simple Icons 16.34.0 (https://simpleicons.org, npm package simple-icons), CC0 1.0 Universal (public domain
+dedication). Each <symbol> holds the <path> of the icon file of the same network in simple-icons@16.34.0/icons/, its
+<title> left out:
+
+  facebook   icons/facebook.svg
+  instagram  icons/instagram.svg
+  ok         icons/odnoklassniki.svg
+  pinterest  icons/pinterest.svg
+  telegram   icons/telegram.svg (also used for the Telegram channel)
+  tiktok     icons/tiktok.svg
+  viber      icons/viber.svg
+  vk         icons/vk.svg
+  waze       icons/waze.svg (the map's "Directions in Waze" link)
+  whatsapp   icons/whatsapp.svg
+  x          icons/x.svg
+  youtube    icons/youtube.svg
+
+Simple Icons has no icon for Rutube, Dzen or LinkedIn (removed at the brand owner's request): those links show the
+neutral "globe" symbol, the children of lucide-static@1.49.0/icons/globe.svg (Lucide, ISC License; see icons.LICENSE).
+
+The brand names and logos remain trademarks of their owners; Simple Icons' disclaimer applies
+(https://github.com/simple-icons/simple-icons/blob/develop/DISCLAIMER.md).

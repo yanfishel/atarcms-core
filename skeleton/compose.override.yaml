@@ -1,0 +1,15 @@
+# Development of the skeleton inside the AtarCMS repository (never part of a released site: export-ignore). Docker
+# Compose loads this file after compose.yaml: the whole repository is mounted, so the core resolves from the working
+# tree through the path repository of composer.dev.json.
+services:
+  php:
+    working_dir: /srv/atarcms/skeleton
+    volumes:
+      - ..:/srv/atarcms
+    environment:
+      COMPOSER: composer.dev.json
+  nginx:
+    environment:
+      SITE_ROOT: /srv/atarcms/skeleton
+    volumes:
+      - ..:/srv/atarcms:ro

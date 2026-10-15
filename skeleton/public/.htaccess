@@ -1,0 +1,18 @@
+# Apache: every path that is not a file of public/ goes to the front controller (index.php). Under nginx or Caddy
+# this file is ignored. The vhost (deploy/apache/atarcms.conf) or the host must allow it: AllowOverride All.
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Hidden files (.htaccess, .env copied here by mistake) are never served.
+    RewriteRule (^|/)\. - [R=404,L]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+<IfModule !mod_rewrite.c>
+    # Without mod_rewrite only the home page would work; say so instead of half working.
+    ErrorDocument 404 "AtarCMS needs Apache's mod_rewrite"
+</IfModule>

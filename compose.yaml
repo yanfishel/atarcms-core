@@ -1,0 +1,30 @@
+services:
+  php:
+    build: docker/php
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: atar_test
+      DB_USERNAME: atar
+      DB_PASSWORD: atar
+      PHP_CS_FIXER_IGNORE_ENV: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE: atar_test
+      MARIADB_USER: atar
+      MARIADB_PASSWORD: atar
+      MARIADB_ROOT_PASSWORD: root
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 2s
+      timeout: 5s
+      retries: 30

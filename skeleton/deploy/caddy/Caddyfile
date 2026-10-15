@@ -1,0 +1,101 @@
+# AtarCMS behind Caddy (automatic HTTPS) and PHP-FPM; the same rules as deploy/nginx/atarcms.conf.template.
+# Environment (compose.production.yaml sets them; on a server put them in Caddy's environment or replace them):
+#   SITE_ADDRESS  the site's address: APP_URL, e.g. https://example.com (https://localhost uses Caddy's local CA)
+#   SITE_ROOT     the site's directory (/srv/site in Docker, /var/www/<site> on a server)
+#   ATAR_THEME    APP_THEME; reload Caddy after switching the theme
+#   PHP_FASTCGI   php:9000 in Docker, unix//run/php/atarcms-<site>.sock on a server
+# Only public/index.php runs as PHP; .env, storage/, vendor/ and config/ are outside the document root.
+{$SITE_ADDRESS} {
+	root * {$SITE_ROOT}/public
+	# Compressed text responses (Caddy's default types: images, video and woff2 are compressed already). The admin is
+	# left out (BREACH: its pages carry the session's CSRF token next to input they reflect, such as a search).
+	@compressible {
+		not path /admin /admin/*
+	}
+	encode @compressible zstd gzip
+	header -Server
+	request_body {
+		# Keep above media.max_size and media.max_video_size (config/media.php) and PHP's upload_max_filesize.
+		max_size 101MB
+	}
+
+	# In this order: hidden files and PHP files other than the front controller never reach anything.
+	route {
+		@hidden path */.*
+		respond @hidden 404
+
+		@php {
+			path *.php
+			not path /index.php
+		}
+		respond @php 404
+
+		# Keep these headers in sync with AssetFileController::CACHE (the PHP fallback of both asset prefixes).
+		handle_path /theme-assets/* {
+			root * {$SITE_ROOT}/themes/{$ATAR_THEME}/assets
+			header {
+				Cache-Control "public, max-age=31536000, immutable"
+				X-Content-Type-Options "nosniff"
+				Referrer-Policy "strict-origin-when-cross-origin"
+			}
+			file_server
+		}
+
+		handle_path /admin-assets/* {
+			root * {$SITE_ROOT}/vendor/yanfishel/atarcms-core/resources/admin/assets
+			header {
+				Cache-Control "public, max-age=31536000, immutable"
+				X-Content-Type-Options "nosniff"
+				Referrer-Policy "strict-origin-when-cross-origin"
+			}
+			file_server
+		}
+
+		# Uploaded originals: static files only, never PHP, sandboxed; PDFs are downloads, videos play inline (Caddy
+		# answers Range requests itself, as the PHP fallback does). Keep the headers in sync
+		# with MediaFileController::CACHE and ::SANDBOX.
+		handle /uploads/* {
+			root * {$SITE_ROOT}/storage
+			header {
+				Cache-Control "public, max-age=31536000, immutable"
+				X-Content-Type-Options "nosniff"
+				Content-Security-Policy "default-src 'none'; sandbox"
+				Referrer-Policy "strict-origin-when-cross-origin"
+			}
+			@pdf path *.pdf
+			header @pdf Content-Disposition "attachment"
+			file_server
+		}
+
+		# Image variants: the cached file once generated; the first request of each goes to PHP, which makes it.
+		handle /media/* {
+			@generated file {
+				root {$SITE_ROOT}/storage/cache
+			}
+			handle @generated {
+				root * {$SITE_ROOT}/storage/cache
+				header {
+					Cache-Control "public, max-age=31536000, immutable"
+					X-Content-Type-Options "nosniff"
+					Content-Security-Policy "default-src 'none'; sandbox"
+					Referrer-Policy "strict-origin-when-cross-origin"
+				}
+				file_server
+			}
+			handle {
+				php_fastcgi {$PHP_FASTCGI} {
+					try_files {path} index.php
+				}
+			}
+		}
+
+		# A file of public/ is served as it is (nginx's try_files $uri); everything else goes to index.php. Only
+		# index.php, never public/<dir>/index.php, runs as PHP.
+		handle {
+			php_fastcgi {$PHP_FASTCGI} {
+				try_files {path} index.php
+			}
+			file_server
+		}
+	}
+}

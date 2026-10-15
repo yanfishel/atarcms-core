@@ -1,0 +1,22 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// Plain checks first, readable by any PHP: the core itself needs 8.4 and its Composer packages.
+if (PHP_VERSION_ID < 80400) {
+    fwrite(STDERR, 'AtarCMS needs PHP 8.4 or newer; this is PHP ' . PHP_VERSION . ' (' . PHP_BINARY . ").\n");
+    exit(1);
+}
+if (!is_file(dirname(__DIR__) . '/vendor/autoload.php')) {
+    fwrite(STDERR, "The Composer packages are missing: run \"composer install\" in " . dirname(__DIR__) . ".\n");
+    exit(1);
+}
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+use AtarCms\Cli\Output;
+use AtarCms\Kernel\ConsoleEntry;
+use AtarCms\Kernel\Paths;
+
+exit(ConsoleEntry::run(new Paths(dirname(__DIR__)), array_values(array_slice($argv, 1)), Output::standard()));

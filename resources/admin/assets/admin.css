@@ -1,0 +1,1595 @@
+@charset "UTF-8";
+/*
+ * AtarCMS admin. One stylesheet, no build step: tokens, base, shell, components, screens, editor overrides.
+ * Every colour, radius, spacing and shadow below the token section comes from a token. Class names use the
+ * admin- prefix; AdminStylesTest checks that every admin-* class used by a template or script is declared here,
+ * and that every class declared here is used.
+ * Rules that need JavaScript are gated by the "js" class, which the theme bootstrap script puts on <html>.
+ */
+
+/* ---------- Tokens ---------- */
+
+:root {
+    color-scheme: light;
+    --bg: #f7f5f1;
+    --surface: #fffdfa;
+    --raised: #ffffff;
+    --text: #2b2620;
+    --muted: #6f675d;
+    --faint: #b3ab9f;
+    --border: #e8e2d9;
+    --border-strong: #d6cec2;
+    --input-border: #958b7e;
+    --accent: #2a7d5c;
+    --accent-hover: #236a4e;
+    --accent-strong: #236a4e;
+    --accent-soft: #e2f2ea;
+    --on-accent: #ffffff;
+    --danger: #b3412a;
+    --danger-soft: #fbe9e4;
+    --on-danger: #ffffff;
+    --warning: #8a5a00;
+    --warning-soft: #fff3dc;
+    --focus-ring: rgb(42 125 92 / 40%);
+    --backdrop: rgb(20 16 12 / 45%);
+    --shadow-card: 0 1px 2px rgb(60 50 30 / 6%);
+    --shadow-bar: 0 -6px 16px rgb(20 30 50 / 5%);
+    --shadow-pop: 0 8px 24px rgb(40 30 20 / 14%);
+    --logo-filter: invert(1) opacity(.6);
+    --radius-card: 12px;
+    --radius-control: 8px;
+    --radius-pill: 999px;
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --control-height: 40px;
+    --control-height-compact: 32px;
+    --control-height-tiny: 24px;
+    --topbar-height: 56px;
+    --sidebar-width: 240px;
+    --rail-width: 64px;
+    --content-width: 1100px;
+    --side-column: 300px;
+    --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --swatch-green: #2a7d5c;
+    --swatch-teal: #1f7a80;
+    --swatch-blue: #2563b8;
+    --swatch-indigo: #4c4fb8;
+    --swatch-violet: #7a45a8;
+    --swatch-cherry: #b0304f;
+    --swatch-terracotta: #b4532a;
+    --swatch-graphite: #4a4f57;
+    /* The default roles (role chips, the dot on the top bar avatar); other roles stay neutral. */
+    --role-admin: #b0304f;
+    --role-admin-soft: #f8e4e9;
+    --role-editor: #2563b8;
+    --role-editor-soft: #e3ecf8;
+    --role-author: #1f7a80;
+    --role-author-soft: #dff1f2;
+    /*
+     * The dashboard's categorical palette (Plan 36): the swatch hues re-stepped and ordered so that neighbours stay
+     * apart for colour-blind readers (dataviz validate_palette.js, both palettes, on --surface and --raised). A
+     * collection takes the slot of its place in the config; slot 8 is a neutral for every later collection.
+     */
+    --chart-1: #107f59;
+    --chart-2: #2564ba;
+    --chart-3: #b35025;
+    --chart-4: #04a3ab;
+    --chart-5: #7d47ad;
+    --chart-6: #ad324f;
+    --chart-7: #4d51b8;
+    --chart-8: #5e646d;
+    /* What the activity chart mixes the admin colour with for its second series (edits). */
+    --chart-wash: #fffdfa;
+}
+
+/*
+ * Admin colour presets (<html data-accent>, the site settings' "Admin colour"; green is the palette above). Each
+ * preset sets the six accent tokens in the light palette here and in both dark palettes below; the dark selectors
+ * (0,3,0) outrank a light preset and the base dark palette wherever they stand.
+ */
+:root[data-accent="teal"] {
+    --accent: #1f7a80;
+    --accent-hover: #186469;
+    --accent-strong: #186469;
+    --accent-soft: #dff1f2;
+    --on-accent: #ffffff;
+    --focus-ring: rgb(31 122 128 / 40%);
+}
+
+:root[data-accent="blue"] {
+    --accent: #2563b8;
+    --accent-hover: #1e519a;
+    --accent-strong: #1e519a;
+    --accent-soft: #e3ecf8;
+    --on-accent: #ffffff;
+    --focus-ring: rgb(37 99 184 / 40%);
+}
+
+:root[data-accent="indigo"] {
+    --accent: #4c4fb8;
+    --accent-hover: #3e4199;
+    --accent-strong: #3e4199;
+    --accent-soft: #e8e8f8;
+    --on-accent: #ffffff;
+    --focus-ring: rgb(76 79 184 / 40%);
+}
+
+:root[data-accent="violet"] {
+    --accent: #7a45a8;
+    --accent-hover: #64398b;
+    --accent-strong: #64398b;
+    --accent-soft: #f0e7f7;
+    --on-accent: #ffffff;
+    --focus-ring: rgb(122 69 168 / 40%);
+}
+
+:root[data-accent="cherry"] {
+    --accent: #b0304f;
+    --accent-hover: #922841;
+    --accent-strong: #922841;
+    --accent-soft: #f8e4e9;
+    --on-accent: #ffffff;
+    --focus-ring: rgb(176 48 79 / 40%);
+}
+
+:root[data-accent="terracotta"] {
+    --accent: #b4532a;
+    --accent-hover: #954423;
+    --accent-strong: #954423;
+    --accent-soft: #f8e8df;
+    --on-accent: #ffffff;
+    --focus-ring: rgb(180 83 42 / 40%);
+}
+
+:root[data-accent="graphite"] {
+    --accent: #4a4f57;
+    --accent-hover: #3a3e45;
+    --accent-strong: #3a3e45;
+    --accent-soft: #e9eaec;
+    --on-accent: #ffffff;
+    --focus-ring: rgb(74 79 87 / 40%);
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #1b1916;
+    --surface: #24211d;
+    --raised: #2c2823;
+    --text: #ece7df;
+    --muted: #a59d92;
+    --faint: #6a635a;
+    --border: #38332d;
+    --border-strong: #4a443c;
+    --input-border: #857c70;
+    --accent: #5cc394;
+    --accent-hover: #7dd3ab;
+    --accent-strong: #5cc394;
+    --accent-soft: #1f3a2e;
+    --on-accent: #1b1916;
+    --danger: #f08a74;
+    --danger-soft: #3b2320;
+    --on-danger: #1b1916;
+    --warning: #f0c068;
+    --warning-soft: #3a2e14;
+    --focus-ring: rgb(92 195 148 / 40%);
+    --backdrop: rgb(0 0 0 / 60%);
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 30%);
+    --shadow-bar: 0 -6px 16px rgb(0 0 0 / 30%);
+    --shadow-pop: 0 8px 24px rgb(0 0 0 / 45%);
+    --logo-filter: opacity(.7);
+    --swatch-green: #5cc394;
+    --swatch-teal: #5cc0c6;
+    --swatch-blue: #7aa7ea;
+    --swatch-indigo: #9a9cf0;
+    --swatch-violet: #c39ae6;
+    --swatch-cherry: #ec8aa1;
+    --swatch-terracotta: #e99b76;
+    --swatch-graphite: #b4bac4;
+    --role-admin: #ec8aa1;
+    --role-admin-soft: #43232b;
+    --role-editor: #7aa7ea;
+    --role-editor-soft: #1d2c42;
+    --role-author: #5cc0c6;
+    --role-author-soft: #1c3739;
+    --chart-1: #3ea97b;
+    --chart-2: #6793d5;
+    --chart-3: #c97c56;
+    --chart-4: #10a6ad;
+    --chart-5: #b071e0;
+    --chart-6: #dc6685;
+    --chart-7: #8788da;
+    --chart-8: #9aa0a9;
+    --chart-wash: #4a443c;
+}
+
+:root[data-theme="dark"][data-accent="teal"] {
+    --accent: #5cc0c6;
+    --accent-hover: #80ced3;
+    --accent-strong: #5cc0c6;
+    --accent-soft: #1c3739;
+    --on-accent: #1b1916;
+    --focus-ring: rgb(92 192 198 / 40%);
+}
+
+:root[data-theme="dark"][data-accent="blue"] {
+    --accent: #7aa7ea;
+    --accent-hover: #97baef;
+    --accent-strong: #7aa7ea;
+    --accent-soft: #1d2c42;
+    --on-accent: #1b1916;
+    --focus-ring: rgb(122 167 234 / 40%);
+}
+
+:root[data-theme="dark"][data-accent="indigo"] {
+    --accent: #9a9cf0;
+    --accent-hover: #b0b2f3;
+    --accent-strong: #9a9cf0;
+    --accent-soft: #2a2a46;
+    --on-accent: #1b1916;
+    --focus-ring: rgb(154 156 240 / 40%);
+}
+
+:root[data-theme="dark"][data-accent="violet"] {
+    --accent: #c39ae6;
+    --accent-hover: #d0b0ec;
+    --accent-strong: #c39ae6;
+    --accent-soft: #36283f;
+    --on-accent: #1b1916;
+    --focus-ring: rgb(195 154 230 / 40%);
+}
+
+:root[data-theme="dark"][data-accent="cherry"] {
+    --accent: #ec8aa1;
+    --accent-hover: #f0a4b6;
+    --accent-strong: #ec8aa1;
+    --accent-soft: #43232b;
+    --on-accent: #1b1916;
+    --focus-ring: rgb(236 138 161 / 40%);
+}
+
+:root[data-theme="dark"][data-accent="terracotta"] {
+    --accent: #e99b76;
+    --accent-hover: #eeb194;
+    --accent-strong: #e99b76;
+    --accent-soft: #42291d;
+    --on-accent: #1b1916;
+    --focus-ring: rgb(233 155 118 / 40%);
+}
+
+:root[data-theme="dark"][data-accent="graphite"] {
+    --accent: #b4bac4;
+    --accent-hover: #c5c9d1;
+    --accent-strong: #b4bac4;
+    --accent-soft: #2c2f34;
+    --on-accent: #1b1916;
+    --focus-ring: rgb(180 186 196 / 40%);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: #1b1916;
+        --surface: #24211d;
+        --raised: #2c2823;
+        --text: #ece7df;
+        --muted: #a59d92;
+        --faint: #6a635a;
+        --border: #38332d;
+        --border-strong: #4a443c;
+        --input-border: #857c70;
+        --accent: #5cc394;
+        --accent-hover: #7dd3ab;
+        --accent-strong: #5cc394;
+        --accent-soft: #1f3a2e;
+        --on-accent: #1b1916;
+        --danger: #f08a74;
+        --danger-soft: #3b2320;
+        --on-danger: #1b1916;
+        --warning: #f0c068;
+        --warning-soft: #3a2e14;
+        --focus-ring: rgb(92 195 148 / 40%);
+        --backdrop: rgb(0 0 0 / 60%);
+        --shadow-card: 0 1px 2px rgb(0 0 0 / 30%);
+        --shadow-bar: 0 -6px 16px rgb(0 0 0 / 30%);
+        --shadow-pop: 0 8px 24px rgb(0 0 0 / 45%);
+        --logo-filter: opacity(.7);
+        --swatch-green: #5cc394;
+        --swatch-teal: #5cc0c6;
+        --swatch-blue: #7aa7ea;
+        --swatch-indigo: #9a9cf0;
+        --swatch-violet: #c39ae6;
+        --swatch-cherry: #ec8aa1;
+        --swatch-terracotta: #e99b76;
+        --swatch-graphite: #b4bac4;
+        --role-admin: #ec8aa1;
+        --role-admin-soft: #43232b;
+        --role-editor: #7aa7ea;
+        --role-editor-soft: #1d2c42;
+        --role-author: #5cc0c6;
+        --role-author-soft: #1c3739;
+        --chart-1: #3ea97b;
+        --chart-2: #6793d5;
+        --chart-3: #c97c56;
+        --chart-4: #10a6ad;
+        --chart-5: #b071e0;
+        --chart-6: #dc6685;
+        --chart-7: #8788da;
+        --chart-8: #9aa0a9;
+        --chart-wash: #4a443c;
+    }
+
+    :root:not([data-theme="light"])[data-accent="teal"] {
+        --accent: #5cc0c6;
+        --accent-hover: #80ced3;
+        --accent-strong: #5cc0c6;
+        --accent-soft: #1c3739;
+        --on-accent: #1b1916;
+        --focus-ring: rgb(92 192 198 / 40%);
+    }
+
+    :root:not([data-theme="light"])[data-accent="blue"] {
+        --accent: #7aa7ea;
+        --accent-hover: #97baef;
+        --accent-strong: #7aa7ea;
+        --accent-soft: #1d2c42;
+        --on-accent: #1b1916;
+        --focus-ring: rgb(122 167 234 / 40%);
+    }
+
+    :root:not([data-theme="light"])[data-accent="indigo"] {
+        --accent: #9a9cf0;
+        --accent-hover: #b0b2f3;
+        --accent-strong: #9a9cf0;
+        --accent-soft: #2a2a46;
+        --on-accent: #1b1916;
+        --focus-ring: rgb(154 156 240 / 40%);
+    }
+
+    :root:not([data-theme="light"])[data-accent="violet"] {
+        --accent: #c39ae6;
+        --accent-hover: #d0b0ec;
+        --accent-strong: #c39ae6;
+        --accent-soft: #36283f;
+        --on-accent: #1b1916;
+        --focus-ring: rgb(195 154 230 / 40%);
+    }
+
+    :root:not([data-theme="light"])[data-accent="cherry"] {
+        --accent: #ec8aa1;
+        --accent-hover: #f0a4b6;
+        --accent-strong: #ec8aa1;
+        --accent-soft: #43232b;
+        --on-accent: #1b1916;
+        --focus-ring: rgb(236 138 161 / 40%);
+    }
+
+    :root:not([data-theme="light"])[data-accent="terracotta"] {
+        --accent: #e99b76;
+        --accent-hover: #eeb194;
+        --accent-strong: #e99b76;
+        --accent-soft: #42291d;
+        --on-accent: #1b1916;
+        --focus-ring: rgb(233 155 118 / 40%);
+    }
+
+    :root:not([data-theme="light"])[data-accent="graphite"] {
+        --accent: #b4bac4;
+        --accent-hover: #c5c9d1;
+        --accent-strong: #b4bac4;
+        --accent-soft: #2c2f34;
+        --on-accent: #1b1916;
+        --focus-ring: rgb(180 186 196 / 40%);
+    }
+}
+
+/* ---------- Base ---------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+html { font-family: var(--font); font-size: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text); font-size: 1rem; line-height: 1.5; }
+h1, h2, h3 { margin: 0 0 var(--space-3); line-height: 1.25; }
+h1 { font-size: 1.5rem; font-weight: 700; }
+h2 { font-size: 1.125rem; font-weight: 600; }
+p { margin: 0 0 var(--space-3); }
+a { color: var(--accent-strong); text-underline-offset: 2px; }
+a:hover { color: var(--accent-hover); }
+code { font-family: var(--font-mono); font-size: .875em; }
+img { max-width: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; box-shadow: 0 0 0 4px var(--focus-ring); }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+
+.admin-visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.admin-muted { color: var(--muted); }
+.admin-icon { display: inline-block; flex: none; width: 1.25em; height: 1.25em; vertical-align: -.25em; }
+/* Directional icons (AdminIcon::MIRRORED) point the other way in a right-to-left page; scale, not transform, so the
+   rotations of the rail toggle and the tree accordion still apply. */
+.admin-icon-mirror:dir(rtl) { scale: -1 1; }
+/* Names and titles of content may be in another language than the interface: each takes its direction from its own
+   text (like dir="auto"), so an English title keeps its "!" at its end in a Hebrew interface and the other way round. */
+.admin-page-header h1, .admin-breadcrumbs li > :is(a, span), .admin-row-link, .admin-row-title, .admin-panel-text > a, .admin-tree-label, .admin-media-name, .admin-media-folder > span, .admin-media-trail li > :is(a, span) { unicode-bidi: plaintext; }
+
+/* ---------- Shell ---------- */
+
+.admin-skip { position: absolute; top: var(--space-2); inset-inline-start: var(--space-2); z-index: 60; padding: var(--space-2) var(--space-3); border-radius: var(--radius-control); background: var(--accent); color: var(--on-accent); transform: translateY(-200%); }
+.admin-skip:focus { color: var(--on-accent); transform: none; }
+
+.admin-shell { display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); min-height: 100vh; }
+:root[data-sidebar="rail"] .admin-shell { grid-template-columns: var(--rail-width) minmax(0, 1fr); }
+
+.admin-sidebar { container: sidebar / inline-size; position: sticky; top: 0; z-index: 30; display: flex; flex-direction: column; gap: var(--space-4); height: 100vh; padding: var(--space-4) var(--space-3); background: var(--surface); border-inline-end: 1px solid var(--border); }
+/* The brand is a band as tall as the top bar, its bottom line level with the top bar's, the mark centred in it. */
+.admin-brand { display: flex; align-items: center; gap: var(--space-3); min-height: var(--topbar-height); margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-3)) 0; padding: 0 calc(var(--space-3) + var(--space-1)); border-bottom: 1px solid var(--border); color: var(--text); font-weight: 700; text-decoration: none; }
+.admin-brand:hover { color: var(--text); }
+.admin-brand-mark { display: block; flex: none; width: 36px; height: 36px; }
+.admin-sidebar .admin-brand-mark { width: 33px; height: 33px; }
+.admin-brand-icon { border-radius: var(--radius-control); object-fit: cover; }
+.admin-brand-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-nav { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; align-content: start; gap: var(--space-4); min-height: 0; overflow-y: auto; }
+.admin-nav-heading { margin: 0 0 var(--space-1); padding: 0 var(--space-3); color: var(--faint); font-size: .75rem; font-weight: 600; line-height: 1.25; letter-spacing: .06em; text-transform: uppercase; }
+.admin-nav-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; margin: 0; padding: 0; list-style: none; }
+.admin-nav-link { display: flex; align-items: center; gap: var(--space-3); min-height: var(--control-height); padding: 0 var(--space-3); border-radius: var(--radius-control); color: var(--text); text-decoration: none; }
+.admin-nav-link .admin-icon { color: var(--muted); }
+.admin-nav-link:hover { background: var(--bg); color: var(--text); }
+.admin-nav-link[aria-current="page"] { background: var(--accent-soft); color: var(--accent-strong); font-weight: 600; }
+.admin-nav-link[aria-current="page"] .admin-icon { color: var(--accent-strong); }
+.admin-nav-label { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-sidebar-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-2); }
+/* The AI agent guide (/admin/ai-guide): a quiet text link beside the fishart mark. */
+.admin-sidebar-guide { display: inline-flex; align-items: center; min-height: var(--control-height); padding: 0 var(--space-1); border-radius: var(--radius-control); color: var(--muted); font-size: .75rem; text-decoration: none; }
+.admin-sidebar-guide:hover { color: var(--text); text-decoration: underline; }
+.admin-sidebar-brand-link { display: inline-flex; align-items: center; min-width: 0; min-height: var(--control-height); padding: 0 var(--space-1); border-radius: var(--radius-control); }
+.admin-fishart { width: auto; height: 16px; filter: var(--logo-filter); }
+/* The rail toggle hangs on the sidebar's inner edge at the bottom, level with the centred fishart mark: a 40 px button
+   (the hit area) around a 32 px circle. It is a child of the <aside>, which does not clip, not of the scrolling nav. */
+.admin-sidebar-toggle { position: absolute; bottom: var(--space-4); inset-inline-end: 0; z-index: 1; display: none; align-items: center; justify-content: center; width: var(--control-height); height: var(--control-height); padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; transform: translateX(50%); }
+.admin-sidebar-toggle:dir(rtl) { transform: translateX(-50%); }
+.admin-sidebar-toggle::before { content: ""; position: absolute; top: 4px; inset-inline-start: 4px; z-index: -1; width: 32px; height: 32px; border: 1px solid var(--border-strong); border-radius: 50%; background: var(--raised); box-shadow: var(--shadow-card); }
+.js .admin-sidebar-toggle { display: inline-flex; }
+.admin-sidebar-toggle:hover { color: var(--text); }
+.admin-sidebar-toggle:hover::before { border-color: var(--accent); }
+.admin-sidebar-toggle:focus-visible { outline-offset: -2px; }
+
+/* The rail: the sidebar at --rail-width shows icons only (labels stay for assistive technology, titles show on hover). */
+@container sidebar (max-width: 120px) {
+    .admin-brand { justify-content: center; padding: 0; }
+    .admin-brand-name, .admin-nav-heading { display: none; }
+    .admin-nav-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .admin-nav-group + .admin-nav-group { padding-top: var(--space-3); border-top: 1px solid var(--border); }
+    .admin-nav-link { justify-content: center; padding: 0; }
+    .admin-sidebar-brand-link { visibility: hidden; }
+    .admin-sidebar-guide { display: none; }
+    .admin-sidebar-toggle .admin-icon { transform: rotate(180deg); }
+}
+
+.admin-main { display: flex; flex-direction: column; min-width: 0; }
+.admin-topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: var(--space-3); min-height: var(--topbar-height); padding: 0 var(--space-5); background: var(--surface); border-bottom: 1px solid var(--border); }
+.admin-topbar .admin-burger { display: none; }
+/* The drawer's own close button: phones with JavaScript only (the phone query shows it in the brand band). Two classes,
+   so the later .admin-button rule does not show it. */
+.admin-sidebar .admin-drawer-close { display: none; }
+.admin-burger { flex: none; min-inline-size: var(--control-height); min-block-size: var(--control-height); }
+.admin-backdrop { display: none; }
+.admin-breadcrumbs { flex: 1 1 auto; min-width: 0; }
+.admin-breadcrumbs ol { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0; padding: 0; font-size: .875rem; list-style: none; }
+.admin-breadcrumbs li + li::before { content: "›"; margin-inline-end: var(--space-2); color: var(--muted); }
+.admin-breadcrumbs a { color: var(--muted); text-decoration: none; }
+.admin-breadcrumbs a:hover { color: var(--accent-strong); text-decoration: underline; }
+.admin-breadcrumbs [aria-current="page"] { color: var(--text); font-weight: 600; }
+.admin-content:focus { outline: none; }
+.admin-content { width: 100%; min-width: 0; max-width: calc(var(--content-width) + 2 * var(--space-5)); margin: 0 auto; padding: var(--space-5); }
+
+/* The top-bar menus (after the inbox: theme, content language, user): <details> popovers that open downwards over the page. */
+.admin-topbar-menus { display: flex; flex: none; align-items: center; gap: var(--space-1); margin-inline-start: auto; }
+.admin-menu { position: relative; }
+.admin-theme-menu { display: none; }
+.js .admin-theme-menu { display: block; }
+.admin-menu-trigger { display: flex; flex: none; align-items: center; justify-content: center; width: var(--control-height); height: var(--control-height); padding: 0; border-radius: var(--radius-control); color: var(--text); cursor: pointer; list-style: none; }
+.admin-content-locale > .admin-menu-trigger:has(> .admin-locale-badge) { gap: var(--space-1); width: auto; padding: 0 var(--space-2); }
+.admin-menu-trigger::-webkit-details-marker { display: none; }
+.admin-menu-trigger:hover, .admin-menu[open] > .admin-menu-trigger { background: var(--bg); }
+.admin-menu-trigger .admin-icon { color: var(--muted); }
+/* The top bar's inbox: a link styled as a menu trigger, the unread count on its corner. */
+.admin-inbox { position: relative; }
+.admin-inbox-count { position: absolute; inset-block-start: 1px; inset-inline-end: 1px; display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: var(--radius-pill); background: var(--danger); color: var(--on-danger); font-size: .6875rem; font-weight: 700; line-height: 1; }
+.admin-avatar { display: grid; flex: none; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-strong); font-size: .875rem; font-weight: 700; }
+.admin-avatar-image { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.admin-avatar.admin-role { position: relative; }
+.admin-avatar.admin-role::after { content: ""; position: absolute; inset-block-end: -1px; inset-inline-end: -1px; width: 12px; height: 12px; border: 2px solid var(--surface); border-radius: 50%; background: var(--role, var(--faint)); }
+/* The Profile's card: the large avatar beside who is signed in (stacked on narrow screens). */
+.admin-avatar-large { width: 72px; height: 72px; font-size: 1.5rem; }
+.admin-avatar-large.admin-role::after { inset-block-end: 2px; inset-inline-end: 2px; width: 16px; height: 16px; border-width: 3px; }
+.admin-profile-card { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); margin: 0; }
+/* The Profile in the entry form's columns: the card (first in the markup) in the side column beside the form. */
+.admin-profile-layout > .admin-profile-card { grid-column: 2; grid-row: 1; }
+.admin-profile-form { display: grid; gap: var(--space-4); min-width: 0; margin: 0; }
+.admin-profile-facts { display: grid; gap: var(--space-1); min-width: 0; }
+.admin-profile-facts p { margin: 0; overflow-wrap: anywhere; }
+.admin-profile-name { margin: 0; font-size: 1.125rem; overflow-wrap: anywhere; }
+.admin-menu-panel { position: absolute; top: 100%; inset-inline-end: 0; z-index: 25; display: grid; gap: var(--space-3); width: max-content; min-width: 0; max-width: min(20rem, calc(100vw - 2 * var(--space-4))); margin-top: var(--space-1); padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--raised); box-shadow: var(--shadow-pop); }
+.admin-menu-panel-account { gap: var(--space-1); min-width: 14rem; }
+.admin-menu-panel-account > .admin-user-card { padding: 0 var(--space-3) var(--space-2); }
+.admin-menu-separator { margin: 0; border: 0; border-top: 1px solid var(--border); }
+.admin-menu-list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.admin-menu-form { margin: 0; }
+.admin-menu-item { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); width: 100%; min-height: var(--control-height); padding-block: 0; padding-inline: var(--space-3) calc(var(--space-3) + 1.25em + var(--space-2)); border: 0; border-radius: var(--radius-control); background: transparent; color: var(--text); font-size: .875rem; text-align: start; white-space: nowrap; cursor: pointer; }
+.admin-menu-item:hover { background: var(--accent-soft); color: var(--accent-strong); }
+.admin-menu-item[aria-current="true"] { padding-inline-end: var(--space-3); }
+.admin-menu-item[aria-current="true"], .admin-menu-item:has(> input:checked) { color: var(--accent-strong); font-weight: 600; }
+/* An action of a menu (the account menu's Profile and Sign out): its icon first, no room kept for a check mark. */
+.admin-menu-item-icon { justify-content: flex-start; padding-inline-end: var(--space-3); font: inherit; font-size: .875rem; text-decoration: none; }
+.admin-menu-item-icon .admin-icon { color: var(--muted); }
+.admin-menu-item-icon:hover .admin-icon { color: inherit; }
+/* The theme menu: the language menu's items around visually hidden (still focusable) radios, the focus ring on the
+   row; every row keeps its check mark at the end, shown only on the checked one. */
+.admin-theme-switch { min-width: 0; border: 0; }
+.admin-theme-option { position: relative; justify-content: flex-start; padding-inline-end: var(--space-3); }
+.admin-theme-option > input { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.admin-theme-option > .admin-icon { color: var(--muted); }
+.admin-theme-option:hover > .admin-icon, .admin-theme-option:has(> input:checked) > .admin-icon { color: inherit; }
+.admin-theme-option > .admin-icon:last-child { margin-inline-start: auto; visibility: hidden; color: inherit; }
+.admin-theme-option:has(> input:checked) > .admin-icon:last-child { visibility: visible; }
+.admin-theme-option:has(> input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
+.admin-user-card { display: grid; gap: 2px; }
+.admin-user-card p { margin: 0; overflow-wrap: anywhere; }
+.admin-user-name { font-weight: 600; }
+.admin-user-meta { color: var(--muted); font-size: .8125rem; }
+.admin-signout { margin: 0; }
+
+
+.admin-toasts { display: grid; gap: var(--space-2); margin-bottom: var(--space-4); }
+:root:not(.js) .admin-toasts:empty { display: none; }
+.js .admin-toasts { position: fixed; top: calc(var(--topbar-height) + var(--space-3)); inset-inline-end: var(--space-4); z-index: 50; width: min(360px, calc(100vw - 2 * var(--space-4))); margin: 0; }
+.admin-toast { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--border-strong); border-inline-start-width: 4px; border-radius: var(--radius-control); background: var(--raised); box-shadow: var(--shadow-pop); }
+.admin-toast > .admin-icon { margin-top: 2px; }
+.admin-toast-success { border-inline-start-color: var(--accent); }
+.admin-toast-success > .admin-icon { color: var(--accent-strong); }
+.admin-toast-error { border-inline-start-color: var(--danger); }
+.admin-toast-error > .admin-icon { color: var(--danger); }
+.admin-toast-info { border-inline-start-color: var(--accent-strong); }
+.admin-toast-info > .admin-icon { color: var(--accent-strong); }
+.admin-toast-form { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0; }
+.admin-toast-text { flex: 1; margin: 0; }
+.admin-toast-body { display: grid; flex: 1; justify-items: start; gap: var(--space-2); min-width: 0; }
+.admin-toast-close { display: none; align-items: center; justify-content: center; width: var(--control-height); height: var(--control-height); margin-block: -10px 0; margin-inline: 0 -12px; padding: 0; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--muted); cursor: pointer; }
+.js .admin-toast-close { display: inline-flex; }
+.admin-toast-close:hover { background: var(--bg); color: var(--text); }
+
+.admin-guest { display: grid; min-height: 100vh; align-content: center; justify-items: center; gap: var(--space-2); padding: var(--space-4); }
+.admin-guest-main { width: min(28rem, 100%); }
+.admin-login, .admin-error { display: grid; justify-items: start; gap: var(--space-3); padding: var(--space-6); border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow-card); }
+.admin-login h1, .admin-error h1, .admin-login p, .admin-error p { margin: 0; }
+.admin-login-site { display: flex; align-items: center; gap: var(--space-3); font-weight: 700; }
+.admin-login-button { width: 100%; }
+.admin-login-dev { display: grid; gap: var(--space-2); width: 100%; }
+/* The card is a grid with its own gap: its alert needs no margin of its own. */
+.admin-login .admin-alert { margin: 0; }
+.admin-error-code { color: var(--accent-strong); font-size: 3.5rem; font-weight: 700; line-height: 1; }
+
+@media (max-width: 1199px) {
+    :root.js:not([data-sidebar="full"]) .admin-shell { grid-template-columns: var(--rail-width) minmax(0, 1fr); }
+}
+
+/* Phones: without JavaScript the sidebar is a plain block above the page; with it, a drawer opened by the burger. */
+@media (max-width: 767px) {
+    .admin-shell { display: block; }
+    .admin-sidebar { position: static; height: auto; border-inline-end: 0; border-bottom: 1px solid var(--border); }
+    .js .admin-sidebar { position: fixed; inset-block: 0; inset-inline: 0 auto; z-index: 40; width: min(calc(var(--sidebar-width) + var(--space-6)), 85vw); height: 100vh; border-inline-end: 1px solid var(--border); border-bottom: 0; visibility: hidden; transform: translateX(-100%); }
+    .js .admin-sidebar:dir(rtl) { transform: translateX(100%); }
+    /* The drawer slides once the burger was used (shell.js), not when the window crosses this width. It becomes visible
+       at once when it opens (shell.js focuses its first link) and hidden only after sliding out. */
+    .js.admin-drawer-animated .admin-sidebar { transition: transform .2s, visibility 0s .2s; }
+    .js.admin-drawer-animated.admin-drawer-open .admin-sidebar { transition: transform .2s; }
+    .js.admin-drawer-open .admin-sidebar { visibility: visible; transform: none; }
+    .js .admin-sidebar-toggle { display: none; }
+    .js .admin-topbar .admin-burger { display: inline-flex; }
+    .js .admin-sidebar .admin-drawer-close { display: inline-flex; position: absolute; inset-block-start: calc((var(--topbar-height) - var(--control-height)) / 2); inset-inline-end: var(--space-2); z-index: 1; }
+    .js .admin-sidebar .admin-brand { padding-inline-end: calc(var(--control-height) + var(--space-3)); }
+    .admin-backdrop:not([hidden]) { display: block; }
+    .admin-backdrop { position: fixed; inset: 0; z-index: 35; background: var(--backdrop); }
+    .admin-topbar { padding: 0 var(--space-4); }
+    /* The page header names the screen; the drawer (or the plain sidebar without JavaScript) leads back. */
+    .admin-breadcrumbs { display: none; }
+    .admin-content { padding: var(--space-4); }
+}
+
+/* ---------- Components ---------- */
+
+.admin-card { margin: 0 0 var(--space-5); padding: var(--space-5); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
+.admin-card-heading { margin: 0 0 var(--space-4); color: var(--muted); font-size: .75rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+
+.admin-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: var(--control-height);
+    padding: 0 var(--space-4);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-control);
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color .15s, border-color .15s, color .15s;
+}
+.admin-button:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--on-accent); }
+.admin-button-primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.admin-button-secondary { background: var(--raised); border-color: var(--border-strong); color: var(--text); }
+.admin-button-secondary:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); }
+.admin-button-danger { background: var(--danger); border-color: var(--danger); color: var(--on-danger); }
+.admin-button-danger:hover { background: var(--danger); border-color: var(--danger); color: var(--on-danger); filter: brightness(.92); }
+.admin-button-link { background: transparent; border-color: transparent; color: var(--accent-strong); padding: 0 var(--space-2); }
+.admin-button-link:hover { background: var(--accent-soft); border-color: transparent; color: var(--accent-strong); }
+.admin-button-link.admin-button-danger { background: transparent; color: var(--danger); filter: none; }
+.admin-button-link.admin-button-danger:hover { background: var(--danger-soft); color: var(--danger); }
+.admin-button-icon { width: var(--control-height); padding: 0; }
+.admin-button-small { min-height: var(--control-height); padding: 0 var(--space-3); font-size: .875rem; }
+/* A compact button (32 px, a smaller font and icon) for a secondary action inside a field, such as the media widget's Choose. */
+.admin-button-compact { gap: var(--space-1); min-height: var(--control-height-compact); padding: 0 var(--space-3); font-size: .8125rem; }
+.admin-button-compact .admin-icon { width: 1rem; height: 1rem; }
+/* The translation offer (a toast form): Translate, shown by translate.js, is the primary and Copy beside it a link-style
+   button; while Translate stays hidden (no JavaScript, no on-device translator) Copy is the primary. */
+.admin-toast-form:has(> [data-machine-offer]:not([hidden])) > .admin-toast-copy { background: transparent; border-color: transparent; color: var(--accent-strong); }
+.admin-toast-form:has(> [data-machine-offer]:not([hidden])) > .admin-toast-copy:hover, .admin-toast-form:has(> [data-machine-offer]:not([hidden])) > .admin-toast-copy:focus-visible { background: var(--accent-soft); border-color: transparent; color: var(--accent-strong); }
+.admin-button:disabled { cursor: not-allowed; opacity: .45; }
+.admin-button-link:disabled:hover { background: transparent; }
+/* A locked button (aria-disabled, so it stays in the Tab order and keyboard users reach it) looks disabled; its
+   reason, its title, shows in the shared tooltip on hover and on keyboard focus. */
+.admin-button.admin-locked { color: var(--muted); cursor: not-allowed; }
+.admin-button-link.admin-locked:hover, .admin-button-link.admin-button-danger.admin-locked:hover { background: transparent; color: var(--muted); filter: none; }
+
+/* Tooltips (tooltip.js): every title shows in one shared tip, a manual popover in the top layer (never clipped by
+   overflow, above an open dialog). CSS anchor positioning places it above the trigger, which carries
+   data-tooltip-anchor while it shows, and flips it below or to the other side near an edge; it hides with a
+   trigger scrolled out of view. Dark on a light page, light on a dark one. It fades in and hides at once (a fade-out
+   would outlive its anchor; no motion under the Base rule's prefers-reduced-motion). Its text takes its direction
+   from itself (a title in another language). */
+[data-tooltip-anchor] { anchor-name: --tooltip; }
+#tooltip { position-anchor: --tooltip; position-area: block-start; position-try-fallbacks: flip-block, flip-inline; position-visibility: anchors-visible; inset: auto; width: max-content; max-inline-size: min(18rem, calc(100vw - 2 * var(--space-4))); margin: var(--space-1); padding: var(--space-1) var(--space-2); overflow: visible; border: 0; border-radius: var(--radius-control); background: var(--text); box-shadow: var(--shadow-pop); color: var(--surface); font-size: .8125rem; font-weight: 400; line-height: 1.35; text-align: start; unicode-bidi: plaintext; white-space: normal; overflow-wrap: anywhere; pointer-events: none; opacity: 0; }
+#tooltip:popover-open { opacity: 1; transition: opacity .12s; }
+/* The sidebar's tips (the rail's icons above all) open beside it, not over the item above. */
+body:has(.admin-sidebar [data-tooltip-anchor]) #tooltip { position-area: inline-end; }
+@starting-style {
+    #tooltip:popover-open { opacity: 0; }
+}
+
+.admin-form { display: grid; gap: var(--space-4); max-width: 44rem; }
+.admin-field { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-1); align-content: start; min-width: 0; }
+.admin-field > label, .admin-field-label { display: flex; align-items: center; gap: var(--space-2); font-weight: 600; }
+.admin-field > label .admin-icon, .admin-field-label .admin-icon { color: var(--muted); }
+.admin-field input:not([type="checkbox"], [type="radio"], [type="file"]),
+.admin-field select,
+.admin-field textarea,
+.admin-filters input:not([type="checkbox"], [type="radio"]),
+.admin-filters select {
+    width: 100%;
+    min-height: var(--control-height);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--input-border);
+    border-radius: var(--radius-control);
+    background: var(--raised);
+    color: var(--text);
+}
+/* The list filters sit in one row: a search box is taller than a select by default (line height), so both get the control height. */
+.admin-filters input:not([type="checkbox"], [type="radio"]), .admin-filters select { height: var(--control-height); }
+.admin-field select[multiple] { min-height: 8rem; }
+/* The YouTube field's card (youtube.js): the cover with Play over it (the player replaces both), then the id, the
+   link to YouTube and Remove at the end of the line. Play and Remove need JavaScript. */
+.admin-youtube { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-2); max-width: 480px; margin-top: var(--space-2); }
+.admin-youtube-preview { display: grid; grid-template-rows: minmax(0, 1fr); width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--bg); }
+.admin-youtube-preview > * { grid-area: 1 / 1; }
+.admin-youtube-thumb { display: block; width: 100%; height: 100%; object-fit: cover; }
+.admin-youtube-play { display: none; place-self: center; place-items: center; width: 4rem; height: 4rem; padding: 0; border: 0; border-radius: 50%; background: var(--accent); color: var(--on-accent); box-shadow: var(--shadow-pop); cursor: pointer; }
+.js .admin-youtube-play { display: grid; }
+.admin-youtube-play:hover { background: var(--accent-hover); }
+.admin-youtube-play:focus-visible { outline: 2px solid var(--on-accent); outline-offset: -4px; box-shadow: 0 0 0 4px var(--focus-ring); }
+.admin-youtube-play > .admin-icon { width: 1.75rem; height: 1.75rem; fill: currentColor; }
+.admin-youtube-frame { display: block; width: 100%; height: 100%; border: 0; }
+.admin-youtube-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.admin-youtube-open { display: inline-flex; align-items: center; gap: var(--space-1); }
+.admin-youtube-open > .admin-icon { width: 1rem; height: 1rem; }
+.admin-youtube-remove { display: none; }
+.js .admin-youtube-remove { display: inline-flex; margin-inline-start: auto; }
+.admin-field textarea { min-height: 7rem; resize: vertical; }
+.admin-field input:disabled, .admin-field select:disabled, .admin-field input[readonly] { background: var(--bg); color: var(--muted); }
+.admin-field-invalid input, .admin-field-invalid select, .admin-field-invalid textarea { border-color: var(--danger); }
+.admin-help { color: var(--muted); font-size: .8125rem; }
+.admin-field-error { color: var(--danger); font-size: .8125rem; font-weight: 600; }
+
+.admin-check { display: flex; align-items: center; gap: var(--space-2); min-height: var(--control-height); font-weight: 400; cursor: pointer; }
+.admin-check input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+/* A boolean field: its checkbox label is the field label. */
+.admin-check-field { font-weight: 600; }
+
+.admin-alert { display: flex; align-items: flex-start; gap: var(--space-3); margin: 0 0 var(--space-4); padding: var(--space-3) var(--space-4); border: 1px solid var(--danger); border-radius: var(--radius-control); background: var(--danger-soft); color: var(--text); }
+.admin-alert > .admin-icon { flex: none; margin-top: 2px; color: var(--danger); }
+.admin-alert > p { margin: 0; }
+.admin-alert-warning { border-color: var(--warning); background: var(--warning-soft); }
+.admin-alert-warning > .admin-icon { color: var(--warning); }
+/* The machine translation panel of a copy's form (Plan 38, partials/machine-translation.php): rendered hidden,
+   translate.js shows it where the browser can translate on the device. */
+.admin-machine { display: flex; align-items: flex-start; gap: var(--space-3); margin: 0 0 var(--space-4); padding: var(--space-3) var(--space-4); border: 1px solid var(--accent); border-radius: var(--radius-control); background: var(--accent-soft); color: var(--text); }
+.admin-machine > .admin-icon { flex: none; margin-top: 2px; color: var(--accent-strong); }
+.admin-machine-body { display: flex; flex: 1 1 auto; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); min-width: 0; }
+.admin-machine-note { flex: 1 1 20rem; margin: 0; }
+.admin-machine-actions { display: flex; align-items: center; gap: var(--space-3); }
+.admin-machine-progress { width: 10rem; height: 8px; accent-color: var(--accent); }
+
+.admin-chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--muted); font-size: .8125rem; font-weight: 600; line-height: 1.4; white-space: nowrap; }
+/* The languages of an entry in the lists: the theme's round flags (as its language menu shows them), else the code;
+   above the row link, so their tooltips show. */
+.admin-flags { position: relative; z-index: 1; display: inline-flex; flex-wrap: nowrap; align-items: center; gap: var(--space-1); }
+.admin-flag { display: block; flex: none; inline-size: 20px; block-size: 20px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 1px var(--border); }
+.admin-flag-code { font-size: .8125rem; font-weight: 600; text-decoration: none; }
+/* A date and time in a table cell (partials/table-date.php): the day never breaks, the time under it, smaller. */
+.admin-table-date { display: block; white-space: nowrap; }
+.admin-table-time { display: block; color: var(--muted); font-size: .8125rem; }
+.admin-chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.admin-chip-published, .admin-chip-active, .admin-chip-unread { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-strong); }
+.admin-chip-draft { color: var(--muted); }
+.admin-chip-scheduled { border-color: var(--warning); background: var(--warning-soft); color: var(--warning); }
+.admin-chip-disabled { border-color: var(--danger); background: var(--danger-soft); color: var(--danger); }
+/* A user's role: the default roles have a colour (a chip, the top bar avatar's dot); any other role stays neutral. */
+.admin-role-admin { --role: var(--role-admin); --role-soft: var(--role-admin-soft); }
+.admin-role-editor { --role: var(--role-editor); --role-soft: var(--role-editor-soft); }
+.admin-role-author { --role: var(--role-author); --role-soft: var(--role-author-soft); }
+.admin-chip.admin-role-admin, .admin-chip.admin-role-editor, .admin-chip.admin-role-author { border-color: var(--role); background: var(--role-soft); color: var(--role); }
+/* A preset page (Plan 29): a lock instead of the dot, beside the title; above the row link, so its title shows as a tip. */
+.admin-chip-preset { position: relative; z-index: 1; margin-inline-start: var(--space-2); padding-block: 0; vertical-align: middle; cursor: default; }
+.admin-chip-preset::before { content: none; }
+.admin-chip-preset .admin-icon { width: 14px; height: 14px; }
+
+.admin-table { width: 100%; border-collapse: collapse; }
+.admin-table th, .admin-table td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); text-align: start; vertical-align: middle; }
+.admin-table th { color: var(--muted); font-size: .8125rem; font-weight: 600; letter-spacing: .02em; }
+.admin-table tbody tr:last-child td { border-bottom: 0; }
+.admin-table code { white-space: pre-wrap; word-break: break-word; }
+
+.admin-table-card { padding: 0; overflow-x: auto; }
+.admin-table-row { position: relative; }
+.admin-table-row:hover { background: var(--bg); }
+.admin-table-row:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
+/* The title link covers the whole row; links, buttons and controls of the row stay above that overlay. */
+.admin-row-link { color: var(--text); font-weight: 600; text-decoration: none; }
+.admin-row-link::after { content: ""; position: absolute; inset: 0; }
+.admin-row-link:hover { color: var(--accent-strong); text-decoration: underline; }
+.admin-row-link:focus-visible { outline: none; }
+.admin-table-row a:not(.admin-row-link), .admin-table-row button, .admin-table-row input, .admin-table-row select, .admin-table-row summary, .admin-table-row label { position: relative; z-index: 1; }
+.admin-row-title { font-weight: 600; }
+.admin-row-sub { display: block; color: var(--muted); font-size: .8125rem; }
+/* The Media column: an entry's extra media (a gallery, a YouTube video), each in its colour; above the row link, so
+   their tips show. */
+.admin-entry-media { display: inline-flex; gap: var(--space-2); }
+.admin-entry-media-item { position: relative; z-index: 1; display: inline-flex; }
+.admin-entry-media-item > .admin-icon { width: 1.375rem; height: 1.375rem; }
+.admin-entry-media-gallery { color: var(--swatch-blue); }
+.admin-entry-media-video { color: var(--swatch-cherry); }
+/* The entries list's title cell with the entry's main photo (the admin variant), or a dashed placeholder box. */
+.admin-entry-title-cell { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.admin-entry-title-text { min-width: 0; }
+.admin-entry-thumb { display: block; flex: none; box-sizing: border-box; width: var(--control-height); height: var(--control-height); border-radius: var(--radius-control); background: var(--bg); object-fit: cover; }
+.admin-entry-thumb-empty { display: grid; place-items: center; border: 1px dashed var(--border-strong); background: none; color: var(--muted); }
+.admin-entry-thumb-empty > .admin-icon { width: 1.25rem; height: 1.25rem; }
+.admin-sort { display: inline-flex; align-items: center; gap: var(--space-1); color: inherit; text-decoration: none; }
+.admin-sort:hover { color: var(--accent-strong); }
+.admin-details summary { color: var(--accent-strong); cursor: pointer; }
+.admin-details code { display: block; margin-top: var(--space-2); }
+
+.admin-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); margin-bottom: var(--space-4); }
+.admin-filter { display: grid; gap: var(--space-1); min-width: 9rem; }
+.admin-filter-label { color: var(--muted); font-size: .8125rem; font-weight: 600; }
+.admin-filter-search { position: relative; flex: 1 1 16rem; }
+.admin-filter-search > .admin-icon { position: absolute; bottom: 10px; inset-inline-start: var(--space-3); color: var(--muted); pointer-events: none; }
+.admin-filters .admin-filter-search input { padding-inline-start: 2.5rem; }
+.admin-list-count { margin: 0 0 var(--space-3); font-size: .875rem; }
+.admin-list-switch { margin-bottom: var(--space-4); }
+
+.admin-pagination { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); margin-top: var(--space-4); }
+.admin-page-link { display: inline-grid; place-items: center; min-width: var(--control-height-compact); height: var(--control-height-compact); padding: 0 var(--space-2); font-size: .875rem; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--raised); color: var(--text); text-decoration: none; }
+a.admin-page-link:hover { border-color: var(--accent); color: var(--accent-strong); }
+.admin-page-link[aria-current="page"] { border-color: var(--accent); background: var(--accent); color: var(--on-accent); font-weight: 700; }
+.admin-page-gap { padding: 0 var(--space-1); color: var(--muted); }
+.admin-pagination-summary { margin-inline-start: var(--space-3); color: var(--muted); font-size: .875rem; }
+/* Above .admin-table td (text-align: start). */
+.admin-table .admin-table-actions { text-align: end; white-space: nowrap; }
+.admin-inline-form { display: inline; margin: 0; }
+.admin-depth-0 { padding-inline-start: var(--space-4); }
+.admin-depth-1 { padding-inline-start: calc(var(--space-4) + 1.5rem); }
+.admin-depth-2 { padding-inline-start: calc(var(--space-4) + 3rem); }
+.admin-depth-3 { padding-inline-start: calc(var(--space-4) + 4.5rem); }
+.admin-depth-4 { padding-inline-start: calc(var(--space-4) + 6rem); }
+.admin-depth-5 { padding-inline-start: calc(var(--space-4) + 7.5rem); }
+.admin-check.admin-depth-0 { padding-inline-start: 0; }
+.admin-check.admin-depth-1 { padding-inline-start: 1.5rem; }
+.admin-check.admin-depth-2 { padding-inline-start: 3rem; }
+.admin-check.admin-depth-3 { padding-inline-start: 4.5rem; }
+.admin-check.admin-depth-4 { padding-inline-start: 6rem; }
+.admin-check.admin-depth-5 { padding-inline-start: 7.5rem; }
+
+.admin-empty { display: grid; justify-items: center; gap: var(--space-3); padding: var(--space-6) var(--space-4); color: var(--muted); text-align: center; }
+.admin-empty > .admin-icon { width: 2.5rem; height: 2.5rem; }
+.admin-empty-title { margin: 0; color: var(--text); font-size: 1.0625rem; font-weight: 600; }
+
+.admin-page-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-4); margin-bottom: var(--space-5); }
+.admin-page-header h1 { margin: 0; overflow-wrap: anywhere; }
+.admin-page-header h1 > .admin-locale-badge, .admin-dialog-header h2 > .admin-locale-badge { vertical-align: middle; }
+.admin-page-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.admin-switch { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px; max-width: 100%; padding: 2px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--surface); }
+.admin-switch > a, .admin-switch > span { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1); min-width: var(--control-height-compact); min-height: var(--control-height-compact); padding: 0 var(--space-2); border: 0; border-radius: 6px; background: transparent; color: var(--text); font-size: .8125rem; font-weight: 600; text-decoration: none; cursor: pointer; }
+.admin-switch > a:hover { background: var(--accent-soft); color: var(--accent-strong); }
+.admin-switch > a:focus-visible { outline-offset: -2px; }
+.admin-switch > [aria-current="page"] { background: var(--accent); color: var(--on-accent); }
+/* The Translations line of the entry and term forms (partials/translations.php), after the page title: codes
+   separated by middle dots. */
+/* The translations switch: a segmented control, the form's own language as the raised segment. */
+.admin-translations { display: flex; flex-wrap: wrap; align-items: center; margin: 0; font-size: .875rem; }
+.admin-translations-list { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px; margin: 0; padding: 3px; list-style: none; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--bg); }
+.admin-translations-item { display: inline-flex; align-items: center; }
+.admin-translations-current, .admin-translations-item > a, .admin-translations-exists, .admin-translations-missing, .admin-translations-create { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--control-height-tiny); padding: 0 var(--space-3); border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--muted); font: inherit; font-weight: 600; text-decoration: none; }
+.admin-translations-current { background: var(--raised); box-shadow: var(--shadow-card); color: var(--text); }
+.admin-translations-item > a:hover, .admin-translations-create:hover { background: var(--surface); color: var(--text); cursor: pointer; }
+.admin-translations-item .admin-icon { width: 16px; height: 16px; }
+.admin-translations-item .admin-locale-flag { width: 16px; height: 16px; }
+.admin-translations-missing { font-weight: 400; }
+.admin-translations-form { margin: 0; display: contents; }
+
+.admin-radio-list { display: grid; gap: var(--space-1); margin: 0; padding: 0; border: 0; }
+.admin-radio-list legend { margin-bottom: var(--space-2); padding: 0; font-weight: 600; }
+.admin-radio { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-1) var(--space-2); border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--raised); line-height: 1.3; cursor: pointer; }
+.admin-radio:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.admin-radio input { flex: none; width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent); }
+.admin-radio-text { display: grid; }
+.admin-radio-title { font-weight: 600; }
+
+.admin-action-bar { position: sticky; bottom: var(--space-3); z-index: 10; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-5); margin-bottom: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow-bar); }
+.admin-action-bar-status { margin: 0; color: var(--muted); font-size: .875rem; }
+.admin-action-bar-buttons { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); margin-inline-start: auto; }
+/* On a phone the secondary actions (delete, earlier versions, view on site) show their icon only; the label stays for
+   screen readers. The buttons then keep one row under the status line, Save included. */
+@media (max-width: 479px) {
+    .admin-action-bar-buttons { flex-wrap: nowrap; }
+    .admin-action-compact { width: var(--control-height); padding: 0; }
+    .admin-action-compact .admin-action-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+
+.admin-card-danger { border-color: var(--danger); }
+.admin-confirm { display: grid; justify-items: start; gap: var(--space-3); max-width: 40rem; }
+.admin-confirm > h1 { margin: 0; }
+.admin-confirm > .admin-icon { width: 2rem; height: 2rem; color: var(--danger); }
+.admin-confirm-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; }
+
+/* Messages of the site's forms: unread rows in bold; the visitor's text keeps its lines and its own direction. With
+   more than one form, a row of plain links filters by form (the current one underlined, like a tab) and a badge
+   names each message's form; a message's fields are a two-column table. */
+.admin-filter-tabs { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-block-end: var(--space-4); border-block-end: 1px solid var(--border-strong); }
+.admin-filter-tab { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--control-height); margin-block-end: -1px; padding-inline: var(--space-3); border-block-end: 3px solid transparent; border-start-start-radius: var(--radius-control); border-start-end-radius: var(--radius-control); color: var(--muted); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.admin-filter-tab:hover { background: var(--surface); color: var(--text); }
+.admin-filter-tab:focus-visible { outline-offset: -2px; }
+.admin-filter-tab[aria-current="page"] { border-block-end-color: var(--accent); color: var(--accent-strong); }
+.admin-message-unread .admin-row-link { font-weight: 800; }
+.admin-message-email { display: block; color: var(--muted); font-size: .8125rem; }
+.admin-message-preview { color: var(--muted); unicode-bidi: plaintext; }
+.admin-chip-form { margin-inline-end: var(--space-2); vertical-align: middle; }
+.admin-chip-form::before { content: none; }
+.admin-message-fields { width: 100%; border-collapse: collapse; }
+.admin-message-fields th, .admin-message-fields td { padding-block: var(--space-2); border-block-end: 1px solid var(--border); text-align: start; vertical-align: top; }
+.admin-message-fields th { width: 30%; padding-inline-end: var(--space-4); color: var(--muted); font-weight: 500; }
+.admin-message-fields td { overflow-wrap: anywhere; unicode-bidi: plaintext; }
+.admin-message { display: grid; gap: var(--space-4); }
+.admin-message-meta { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-2) var(--space-4); margin: 0; }
+.admin-message-meta dt { color: var(--muted); }
+.admin-message-meta dd { margin: 0; overflow-wrap: anywhere; }
+.admin-message-body { padding-block-start: var(--space-4); border-block-start: 1px solid var(--border); white-space: pre-wrap; overflow-wrap: anywhere; unicode-bidi: plaintext; }
+
+@media (max-width: 767px) {
+    .admin-table thead { display: none; }
+    .admin-table tr { display: grid; gap: var(--space-1); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); }
+    .admin-table tbody tr:last-child { border-bottom: 0; }
+    .admin-table td { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: 0; border: 0; }
+    .admin-table td[data-label]::before { content: attr(data-label); min-width: 7rem; color: var(--muted); font-size: .8125rem; font-weight: 600; }
+    .admin-table .admin-table-actions { text-align: start; }
+    .admin-action-bar { margin-inline-end: calc(-1 * var(--space-2)); margin-inline-start: calc(-1 * var(--space-2)); border-radius: var(--radius-card); }
+}
+
+/* ---------- Screens ---------- */
+
+/* The entry form is the container its two columns follow: the room the sidebar leaves decides, not the viewport. */
+.admin-entry-form { container: entry-form / inline-size; margin: 0; }
+
+/* Media: the upload drop zone, the library tiles, the item page, the picker dialog and the media widgets. */
+.admin-dropzone { position: relative; display: grid; justify-items: center; gap: var(--space-2); margin-bottom: var(--space-5); padding: var(--space-6) var(--space-4); border: 2px dashed var(--border-strong); border-radius: var(--radius-card); background: var(--surface); text-align: center; }
+.admin-dropzone > .admin-icon { width: 2.5rem; height: 2.5rem; color: var(--accent-strong); }
+.admin-dropzone-title { margin: 0; font-size: 1.0625rem; font-weight: 600; }
+.admin-dropzone-label { cursor: pointer; }
+html.js .admin-dropzone input[type="file"] { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); border: 0; }
+html.js .admin-dropzone [data-upload-submit] { display: none; }
+html.js .admin-dropzone:has(input[type="file"]:focus-visible) .admin-dropzone-label { box-shadow: 0 0 0 3px var(--focus-ring); }
+.admin-dropzone-compact { justify-items: start; margin-bottom: var(--space-4); padding: var(--space-4); text-align: start; }
+.admin-media-dragging { border-color: var(--accent); background: var(--accent-soft); }
+.admin-progress { width: min(24rem, 100%); height: 8px; accent-color: var(--accent); }
+.admin-media-picker { display: grid; gap: var(--space-3); }
+/* The library and the picker: the folder tree in a side column, the drop zone, toolbar and results beside it. */
+.admin-media-folders { min-width: 0; }
+.admin-media-browser { display: grid; grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr); align-items: start; gap: var(--space-5); }
+/* The library page: the heading spans both columns; the folders start level with the drop zone and stay in view while
+   the files scroll. */
+.admin-media-page { grid-template-areas: "head head" "side main"; row-gap: 0; }
+.admin-media-head { grid-area: head; min-width: 0; }
+.admin-media-page > .admin-media-sidebar { position: sticky; top: calc(var(--topbar-height) + var(--space-4)); grid-area: side; max-height: calc(100vh - var(--topbar-height) - 2 * var(--space-4)); overflow: auto; }
+.admin-media-page > .admin-media-content { grid-area: main; }
+.admin-media-sidebar { display: grid; gap: var(--space-2); margin: 0; padding: var(--space-4); }
+.admin-media-sidebar .admin-card-heading { margin: 0; }
+.admin-media-content { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); min-width: 0; }
+.admin-media-content > .admin-dropzone { margin: 0; }
+.admin-media-results { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); min-width: 0; }
+.admin-media-results > .admin-list-count, .admin-media-results > .admin-card { margin: 0; }
+.admin-media-count-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.admin-media-count-row .admin-list-count { margin: 0; }
+.admin-media-select-actions { display: inline-flex; gap: var(--space-1); }
+.admin-media-tree { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.admin-media-tree .admin-media-tree { margin-inline-start: calc(var(--space-2) + .15rem); padding-inline-start: var(--space-1); border-inline-start: 1px solid var(--border-strong); }
+.admin-media-folder { display: flex; align-items: center; gap: var(--space-2); min-height: var(--control-height-compact); padding: 0 var(--space-2); border-radius: var(--radius-control); color: var(--text); text-decoration: none; overflow-wrap: break-word; }
+.admin-media-folder .admin-icon { flex: none; width: 1rem; height: 1rem; color: var(--muted); }
+.admin-media-folder:hover { background: var(--accent-soft); color: var(--accent-strong); }
+.admin-media-folder[aria-current="page"] { background: var(--accent-soft); color: var(--accent-strong); font-weight: 600; }
+.admin-media-new-folder { justify-self: start; }
+/* A folder row of the library: the pencil of its form shows on hover and on keyboard focus (always without hover). */
+.admin-media-folder-row { position: relative; }
+.admin-media-folder-row:hover > .admin-media-folder, .admin-media-folder-row:focus-within > .admin-media-folder { padding-inline-end: var(--control-height-compact); }
+.admin-media-folder-edit { position: absolute; top: 50%; inset-inline-end: 0; display: inline-grid; place-items: center; translate: 0 -50%; width: var(--control-height-compact); height: var(--control-height-compact); border-radius: var(--radius-control); color: var(--muted); opacity: 0; }
+.admin-media-folder-edit .admin-icon { width: .875rem; height: .875rem; }
+.admin-media-folder-row:hover > .admin-media-folder-edit, .admin-media-folder-row:focus-within > .admin-media-folder-edit { opacity: 1; }
+.admin-media-folder-edit:hover, .admin-media-folder-edit:focus-visible { background: var(--accent-soft); color: var(--accent-strong); }
+@media (hover: none) {
+    .admin-media-folder-edit { opacity: 1; }
+    .admin-media-folder-row > .admin-media-folder { padding-inline-end: var(--control-height-compact); }
+}
+/* The toolbar: the path with the folder's buttons and the view and order dropdowns; then search, type and Unused. */
+.admin-media-toolbar { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); margin: 0; }
+.admin-media-toolbar-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.admin-media-toolbar-end { display: flex; gap: var(--space-2); margin-inline-start: auto; }
+.admin-media-trail { flex: 0 1 auto; min-width: 0; }
+.admin-media-trail ol { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0; padding: 0; list-style: none; font-size: 1.0625rem; font-weight: 600; }
+.admin-media-trail li { display: inline-flex; align-items: center; gap: var(--space-2); overflow-wrap: anywhere; }
+.admin-media-trail-sep { display: inline-flex; color: var(--muted); }
+.admin-media-trail-sep .admin-icon { width: 1.25rem; height: 1.25rem; }
+/* The toolbar's dropdowns (media/dropdown.php): a <details> styled like an input, its panel the top-bar menus' one. */
+.admin-media-dropdown-trigger { display: inline-flex; align-items: center; gap: var(--space-2); height: var(--control-height); padding: 0 var(--space-3); border: 1px solid var(--input-border); border-radius: var(--radius-control); background: var(--raised); color: var(--text); font-size: .875rem; font-weight: 600; white-space: nowrap; cursor: pointer; list-style: none; }
+.admin-media-dropdown-trigger::-webkit-details-marker { display: none; }
+.admin-media-dropdown-trigger:hover, .admin-media-dropdown[open] > .admin-media-dropdown-trigger { border-color: var(--accent); }
+.admin-media-dropdown-trigger > .admin-icon { width: .875rem; height: .875rem; color: var(--muted); }
+.admin-media-dropdown-icon { gap: var(--space-1); padding: 0 var(--space-2); }
+.admin-media-dropdown-current { display: inline-flex; align-items: center; gap: var(--space-2); }
+/* The type of an image-only picker: shown, fixed (its title says why). */
+.admin-media-dropdown-fixed { background: var(--bg); color: var(--muted); cursor: not-allowed; opacity: .7; }
+.admin-media-dialog-delete { margin-inline-end: auto; }
+.admin-media-options { display: grid; gap: 2px; min-width: 12rem; margin: 0; padding: 0; border: 0; }
+.admin-media-option { display: flex; align-items: center; gap: var(--space-2); min-height: var(--control-height); padding: 0 var(--space-3); border-radius: var(--radius-control); font-size: .875rem; white-space: nowrap; cursor: pointer; }
+.admin-media-option:hover { background: var(--accent-soft); color: var(--accent-strong); }
+.admin-media-option:has(input:focus-visible) { background: var(--accent-soft); outline: 2px solid var(--accent); outline-offset: -2px; }
+.admin-media-option-icon { display: inline-flex; color: var(--muted); }
+.admin-media-option-text { min-width: 0; }
+.admin-media-option-check { margin-inline-start: auto; padding-inline-start: var(--space-3); color: var(--accent-strong); opacity: 0; }
+.admin-media-option:has(input:checked) { color: var(--accent-strong); font-weight: 600; }
+.admin-media-option:has(input:checked) .admin-media-option-check { opacity: 1; }
+/* The search box with its scope dropdown inside, at its start. */
+.admin-media-search { display: flex; flex: 1 1 20rem; min-width: 0; height: var(--control-height); border: 1px solid var(--input-border); border-radius: var(--radius-control); background: var(--raised); }
+.admin-media-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-ring); }
+.admin-media-search .admin-media-dropdown-trigger { height: 100%; border: 0; border-inline-start: 1px solid var(--input-border); border-radius: 0; border-start-end-radius: var(--radius-control); border-end-end-radius: var(--radius-control); background: var(--bg); }
+.admin-media-search-field { display: flex; flex: 1; align-items: center; gap: var(--space-2); min-width: 0; padding: 0 var(--space-3); color: var(--muted); }
+.admin-media-search-field input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; background: transparent; color: var(--text); }
+/* The box draws the focus (:focus-within), not the bare input inside it. */
+.admin-media-search-field input:focus-visible { outline: none; box-shadow: none; }
+/* A toggle: a checkbox drawn as a track with a knob (role="switch"). */
+.admin-toggle { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--control-height); font-size: .875rem; font-weight: 600; cursor: pointer; }
+.admin-toggle input { position: relative; flex: none; width: 2.25rem; height: 1.25rem; margin: 0; border-radius: var(--radius-pill); background: var(--border-strong); cursor: pointer; appearance: none; transition: background-color .15s; }
+.admin-toggle input::before { content: ""; position: absolute; top: 2px; inset-inline-start: 2px; width: calc(1.25rem - 4px); height: calc(1.25rem - 4px); border-radius: 50%; background: var(--raised); box-shadow: var(--shadow-card); transition: translate .15s; }
+.admin-toggle input:checked { background: var(--accent); }
+.admin-toggle input:checked::before { translate: 1rem 0; }
+.admin-toggle input:checked:dir(rtl)::before { translate: -1rem 0; }
+/* The accessibility toolbar's group in the site settings: the switch with its On|Off state and the corner in one row. */
+.admin-toolbar-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-5); }
+.admin-toggle input:checked ~ .admin-toggle-off, .admin-toggle input:not(:checked) ~ .admin-toggle-on { display: none; }
+.admin-toolbar-position { display: inline-flex; align-items: center; gap: var(--space-2); }
+.admin-toolbar-position-label { font-size: .875rem; font-weight: 600; }
+.js .admin-media-apply { display: none; }
+.js .admin-list-apply { display: none; }
+/* Bulk actions: a floating bar like the entry form's, shown while files are checked (always without JavaScript). */
+.admin-media-bulk { margin: 0; }
+.js .admin-media-bulk:not(.admin-media-bulk-active) { display: none; }
+.admin-media-bulk-count { color: var(--text); font-weight: 600; }
+.admin-media-bulk-label { color: var(--muted); font-size: .875rem; font-weight: 600; }
+.admin-media-bulk-target { min-width: 10rem; height: var(--control-height); padding: 0 var(--space-3); border: 1px solid var(--input-border); border-radius: var(--radius-control); background: var(--raised); color: var(--text); }
+.admin-media-grid-item { position: relative; }
+.admin-media-select { display: inline-grid; place-items: center; width: var(--control-height); height: var(--control-height); cursor: pointer; }
+.admin-media-select input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+.js .admin-media-table [data-media-row] { cursor: pointer; }
+.admin-media-table .admin-media-cell-name label { cursor: pointer; }
+/* The icon link to a file's page: a click on the item itself only checks it. */
+.admin-media-open { position: relative; z-index: 1; display: inline-grid; place-items: center; width: var(--control-height-compact); height: var(--control-height-compact); border-radius: var(--radius-control); color: var(--muted); }
+.admin-media-open:hover, .admin-media-open:focus-visible { background: var(--accent-soft); color: var(--accent-strong); }
+.admin-media-grid-item .admin-media-open { position: absolute; top: var(--space-1); inset-inline-end: var(--space-1); background: var(--raised); box-shadow: var(--shadow-card); }
+.admin-media-table .admin-media-cell-actions { width: 1%; text-align: end; }
+.admin-media-grid-item .admin-media-select { position: absolute; top: var(--space-1); inset-inline-start: var(--space-1); width: var(--control-height-compact); height: var(--control-height-compact); border-radius: var(--radius-control); background: var(--raised); box-shadow: var(--shadow-card); }
+.admin-media-table .admin-media-cell-check { width: var(--control-height); padding-block: var(--space-1); padding-inline: var(--space-3) 0; }
+.admin-media-table .admin-media-cell-thumb { width: 48px; padding-block: var(--space-2); padding-inline: var(--space-1) var(--space-2); }
+.admin-media-table th, .admin-media-table td { padding-inline-end: var(--space-3); padding-inline-start: var(--space-3); }
+.admin-media-table td { white-space: nowrap; }
+/* The name column takes the room the others leave; a long name ends in an ellipsis (the full name is its title). */
+.admin-media-table .admin-media-cell-name { width: 100%; min-width: 7rem; max-width: 0; }
+.admin-media-table .admin-media-cell-name .admin-media-name { display: block; }
+.admin-media-table .admin-media-cell-date { white-space: nowrap; }
+.admin-media-uses, .admin-uses { display: inline-flex; justify-content: center; min-width: 1.75rem; padding: 0 var(--space-2); border-radius: var(--radius-pill); background: var(--accent-soft); color: var(--accent-strong); font-size: .8125rem; font-weight: 700; line-height: 1.6; }
+/* Selection, alike in the library and the picker: a checked file's card has an accent border, its row an accent tint;
+   a gallery's files in the picker are disabled and marked. */
+.admin-media-grid-item:has(.admin-media-select input:checked) .admin-media-card { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.admin-media-table .admin-table-row:has(.admin-media-select input:checked) { background: var(--accent-soft); }
+.admin-media-grid-item:has(.admin-media-select input:disabled) .admin-media-card { cursor: default; opacity: .6; }
+.admin-media-pick-name { cursor: pointer; }
+.admin-media-already { justify-self: start; padding: 0 var(--space-2); border-radius: var(--radius-pill); background: var(--bg); color: var(--muted); font-size: .75rem; font-weight: 600; }
+.admin-media-table .admin-media-thumb { width: 48px; max-width: none; height: 48px; aspect-ratio: 1; }
+.admin-media-table .admin-media-file { font-size: .6875rem; }
+.admin-media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.admin-media-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-1); width: 100%; height: 100%; margin: 0; padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow-card); color: var(--text); text-align: start; text-decoration: none; cursor: pointer; }
+.admin-media-card:hover, .admin-media-card:focus-visible { border-color: var(--accent); color: var(--text); box-shadow: 0 0 0 3px var(--focus-ring); }
+.admin-media-thumb { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius-control); background: var(--bg); }
+.admin-media-file { display: grid; place-items: center; color: var(--muted); font-weight: 700; }
+.admin-media-name { min-width: 0; overflow: hidden; font-size: .8125rem; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
+.admin-media-size { color: var(--muted); font-size: .8125rem; }
+.admin-media-item { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 22rem); align-items: start; gap: var(--space-5); }
+.admin-media-stage { display: grid; place-items: center; background: var(--bg); }
+.admin-media-preview { max-width: 100%; height: auto; border-radius: var(--radius-control); }
+.admin-media-player { max-width: 100%; max-height: 70vh; border-radius: var(--radius-control); }
+.admin-media-video { display: block; width: 100%; border-radius: var(--radius-control); background: var(--bg); }
+.admin-media-chosen li:has(> .admin-media-video) { width: min(22rem, 100%); }
+.admin-media-folder-thumb .admin-icon { width: 2rem; height: 2rem; }
+.admin-media-folder-tile:hover { border-color: var(--accent); }
+.admin-media-folder-name { font-weight: 600; }
+.admin-media-info { display: grid; gap: var(--space-4); }
+.admin-media-info > .admin-card { margin: 0; }
+.admin-media-alt { display: grid; gap: var(--space-3); }
+.admin-media-alt legend { float: inline-start; width: 100%; margin-bottom: var(--space-2); padding: 0; }
+.admin-media-details { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-2) var(--space-4); margin: 0; font-size: .875rem; }
+.admin-media-details dt { color: var(--muted); }
+.admin-media-details dd { margin: 0; overflow-wrap: anywhere; }
+.admin-media-copy { margin-top: var(--space-4); }
+.admin-media-usages { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.admin-media-form { margin: 0; }
+/* The picker: the shared dialog (see Dialogs), wider and of a fixed height, so loading its content never resizes it. */
+.admin-dialog.admin-media-dialog { width: min(60rem, 95vw); height: 90vh; }
+/* The dialog's own toast stack stays inside it, at the bottom of its scroll area above the footer, clear of the close
+   button and the search field that the page stack's fixed top corner would cover. */
+.js .admin-media-dialog .admin-toasts { position: sticky; top: auto; inset-inline-end: auto; bottom: var(--space-3); width: auto; margin: 0 var(--space-4) var(--space-3); }
+.js .admin-media-dialog .admin-toasts:empty { margin: 0; }
+/* A size container, so the picker's folders, sticky at its top, never grow past its height (cqh). */
+.admin-dialog-body.admin-media-dialog-body { display: block; container-type: size; }
+.admin-media-picker > .admin-media-sidebar { position: sticky; top: 0; max-height: calc(100cqh - 2 * var(--space-4)); overflow: auto; }
+.admin-media-picker-status { flex: 1 1 12rem; min-width: 0; margin: 0; color: var(--muted); overflow-wrap: anywhere; }
+/* Slides (fields/slides.php, slides.js): without JavaScript a fieldset per slide; with it compact rows that open the
+   slide's dialog. The rows show from the first paint under .js, so nothing shifts when slides.js runs. */
+.admin-slides { display: grid; gap: var(--space-3); }
+.admin-slides-empty { margin: 0; color: var(--muted); }
+.admin-slides-list { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.admin-slides-item { min-width: 0; }
+.admin-slides-item.sortable-ghost .admin-slides-row { border-style: dashed; opacity: .6; }
+.admin-slides-fieldset { display: grid; gap: var(--space-3); min-width: 0; margin: 0; padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-control); }
+.admin-slides-fieldset > .admin-media-thumb { width: 8rem; }
+.admin-slides-position input { max-width: 8rem; }
+.admin-slides-row { display: none; }
+.js .admin-slides-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--raised); }
+.js .admin-slides-fieldset, .js .admin-slides-blank { display: none; }
+.admin-slides-handle { display: inline-flex; flex: none; align-items: center; justify-content: center; min-width: var(--control-height); min-height: var(--control-height); color: var(--muted); cursor: grab; }
+.admin-slides-preview { flex: none; width: 5rem; aspect-ratio: 4 / 3; border-radius: var(--radius-control); background: var(--bg); }
+/* A slide with a video: a small badge over the thumbnail's bottom inline-end corner; its margins cancel its width, so
+   the texts stay where they are. */
+.admin-slides-video { display: inline-grid; flex: none; place-items: center; align-self: end; width: 1.5rem; height: 1.5rem; margin-block-end: var(--space-1); margin-inline: calc(-1.5rem - var(--space-3) - var(--space-1)) var(--space-1); border-radius: 50%; background: var(--raised); color: var(--text); }
+.admin-slides-video svg { width: 1rem; height: 1rem; }
+.admin-slides-text { display: grid; flex: 1 1 auto; min-width: 0; }
+.admin-slides-title, .admin-slides-subtitle { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: plaintext; }
+.admin-slides-title { font-weight: 600; }
+.admin-slides-subtitle { color: var(--muted); font-size: .8125rem; }
+.admin-slides-controls { display: flex; flex: none; gap: var(--space-1); }
+.admin-slides-action { display: inline-grid; place-items: center; width: var(--control-height); height: var(--control-height); padding: 0; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--muted); cursor: pointer; }
+.admin-slides-action:hover, .admin-slides-action:focus-visible { background: var(--accent-soft); color: var(--accent-strong); }
+.admin-slides-action:disabled { background: transparent; color: var(--border-strong); cursor: default; }
+.admin-slides-action.admin-slides-delete { color: var(--danger); }
+.admin-slides-action.admin-slides-delete:hover, .admin-slides-action.admin-slides-delete:focus-visible { background: var(--danger-soft); color: var(--danger); }
+.admin-slides-add { justify-self: start; }
+.admin-dialog.admin-slides-dialog { width: min(40rem, calc(100vw - 2 * var(--space-4))); }
+/* Below 560px the moves and actions wrap under the title. */
+@media (max-width: 559px) {
+    .js .admin-slides-row { flex-wrap: wrap; }
+    .admin-slides-controls { justify-content: flex-end; width: 100%; }
+}
+/* Tags (fields/tags.php, tags.js): without JavaScript the comma-separated input; with it the tag box, an input-like
+   frame holding a pill per chosen tag and the query, with the suggestions below it. The input stays the posted value,
+   hidden. The frame draws the focus ring and the error border; the query inside draws neither. */
+.admin-tags { display: none; }
+.js .admin-tags { display: grid; gap: var(--space-1); min-width: 0; }
+.js .admin-tags-value, .js .admin-tags-help-plain { display: none; }
+.admin-tags-box { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); min-width: 0; min-height: var(--control-height); padding: 3px var(--space-1); border: 1px solid var(--input-border); border-radius: var(--radius-control); background: var(--raised); color: var(--text); cursor: text; }
+.admin-tags-box:has(.admin-tags-query:focus-visible) { outline: 2px solid var(--accent); outline-offset: 0; box-shadow: 0 0 0 4px var(--focus-ring); }
+.admin-field-invalid .admin-tags-box { border-color: var(--danger); }
+.admin-tags-list { display: flex; flex-wrap: wrap; gap: var(--space-1); min-width: 0; max-width: 100%; margin: 0; padding: 0; list-style: none; }
+.admin-tags-pill { display: inline-flex; align-items: center; gap: 2px; min-width: 0; max-width: 100%; min-height: var(--control-height-compact); padding-inline: var(--space-3) var(--space-1); border-radius: var(--radius-pill); background: var(--accent-soft); color: var(--accent-strong); font-size: .875rem; font-weight: 600; cursor: default; }
+.admin-tags-pill-text { min-width: 0; overflow-wrap: anywhere; unicode-bidi: plaintext; }
+/* The pill's × is a 24px circle (a small-target exception like the translations switch's segments): the pill around
+   it is the visible target. */
+.admin-tags-remove { display: inline-grid; flex: none; place-items: center; width: var(--control-height-tiny); height: var(--control-height-tiny); padding: 0; border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; }
+.admin-tags-remove:hover { background: var(--accent); color: var(--on-accent); }
+.admin-tags-remove .admin-icon { width: .875rem; height: .875rem; }
+.admin-field .admin-tags-box .admin-tags-query { flex: 1 1 6rem; width: auto; min-width: 0; min-height: var(--control-height-compact); padding: 0 var(--space-2); border: 0; border-radius: 0; background: transparent; color: inherit; }
+.admin-field .admin-tags-box .admin-tags-query:focus-visible { outline: none; box-shadow: none; }
+.admin-tags-listbox { position: absolute; inset-block-start: calc(100% + var(--space-1)); inset-inline: -1px; z-index: 30; max-height: 20rem; margin: 0; padding: var(--space-1); overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--raised); box-shadow: var(--shadow-pop); list-style: none; cursor: default; }
+.admin-tags-option { display: flex; align-items: center; gap: var(--space-2); min-height: var(--control-height); padding: 0 var(--space-3); border-radius: var(--radius-control); color: var(--text); cursor: pointer; }
+.admin-tags-option-active { background: var(--accent-soft); color: var(--accent-strong); }
+.admin-tags-option-text { min-width: 0; overflow-wrap: anywhere; unicode-bidi: plaintext; }
+.admin-tags-create { font-weight: 600; }
+.admin-tags-create .admin-icon { flex: none; color: var(--accent-strong); }
+.admin-tags-full { color: var(--text); font-weight: 600; }
+.admin-media-field { display: grid; gap: var(--space-2); }
+.admin-media-chosen { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.admin-media-chosen li { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-1); width: 8.5rem; padding: var(--space-1); border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--raised); }
+.admin-media-field[data-multiple="1"] .admin-media-chosen li { cursor: grab; }
+/* An item without a preview (a file that no longer exists) has its name at the top, clear of the remove button. */
+.admin-media-chosen li:not(:has(> .admin-media-thumb)):not(:has(> .admin-media-video)) { padding-inline-end: calc(32px + var(--space-3)); }
+.admin-media-remove, .admin-media-choose { display: none; }
+.admin-media-enabled .admin-media-remove, .admin-media-enabled .admin-media-choose { display: inline-flex; }
+.admin-media-enabled .admin-media-ids, .admin-media-enabled .admin-media-ids-help { display: none; }
+/* A gallery's "drag to reorder" line: only while it holds a photo that media.js can move. */
+.admin-media-order-help { display: none; }
+.admin-media-enabled:has(.admin-media-chosen > li) .admin-media-order-help { display: inline; }
+/* The remove button is a small circle on the preview's top end corner (the user asked for it smaller than the usual
+   40 px target), across from the "Main" marker. */
+.admin-media-remove { position: absolute; top: var(--space-2); inset-inline-end: var(--space-2); align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; border: 1px solid var(--border-strong); border-radius: 50%; background: var(--raised); box-shadow: var(--shadow-card); color: var(--danger); cursor: pointer; }
+.admin-media-remove:hover { border-color: var(--danger); background: var(--danger-soft); }
+.admin-media-choose { justify-self: start; }
+
+@media (max-width: 999px) {
+    .admin-media-item { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 767px) {
+    .admin-media-browser { grid-template-columns: minmax(0, 1fr); }
+    .admin-media-page { grid-template-areas: "head" "side" "main"; row-gap: var(--space-4); }
+    .admin-media-page > .admin-media-sidebar, .admin-media-picker > .admin-media-sidebar { position: static; max-height: none; }
+    .admin-media-toolbar-end { margin-inline-start: 0; }
+    /* The view, order and type menus open under their row, from its start, so they stay inside the gutters. */
+    .admin-media-toolbar-row { position: relative; }
+    .admin-media-toolbar-end > .admin-media-dropdown, .admin-media-toolbar-row > .admin-media-dropdown { position: static; }
+    .admin-media-toolbar-end > .admin-media-dropdown > .admin-menu-panel,
+    .admin-media-toolbar-row > .admin-media-dropdown > .admin-menu-panel { inset-inline-end: auto; inset-inline-start: 0; }
+    .admin-media-table .admin-media-cell-name { flex-wrap: nowrap; width: auto; max-width: none; }
+    .admin-media-table .admin-media-cell-name .admin-media-name { flex: 1 1 auto; }
+}
+
+/* Trees (menus, page order, term order): rows as cards, nesting by indentation and a guide line. */
+.admin-tree-form { display: grid; gap: var(--space-4); margin: 0; }
+.admin-tree { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.admin-tree .admin-tree { margin-block: var(--space-2) 0; margin-inline: var(--space-4) 0; padding-inline-start: var(--space-3); border-inline-start: 2px solid var(--border-strong); }
+.admin-tree .admin-tree:not(:has(> li)) { margin-top: 0; border-inline-start-color: transparent; }
+.admin-tree-item { margin: 0; }
+.admin-tree-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow-card); }
+.admin-tree-row .admin-icon { width: 1rem; height: 1rem; }
+.admin-tree-handle { display: none; align-items: center; justify-content: center; min-width: var(--control-height-compact); min-height: var(--control-height-compact); margin-inline: calc(var(--space-2) * -1); color: var(--muted); cursor: grab; }
+.js .admin-tree-handle { display: inline-flex; }
+.admin-tree-toggle { display: none; flex: none; align-items: center; gap: 2px; min-height: var(--control-height-tiny); margin-inline-start: auto; padding: 0 var(--space-1); border: 0; border-radius: var(--radius-control); background: transparent; color: var(--muted); font-size: .8125rem; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.js .admin-tree-toggle { display: inline-flex; }
+.admin-tree-toggle:hover { color: var(--accent-strong); }
+.admin-tree-row .admin-tree-toggle .admin-icon { width: .875rem; height: .875rem; }
+.admin-tree-open > .admin-tree-row .admin-tree-toggle .admin-icon { transform: rotate(90deg); }
+.js .admin-tree-item:not(:has(> .admin-tree > li)) > .admin-tree-row .admin-tree-toggle { display: none; }
+.js .admin-tree-item:has(> .admin-tree > li) > .admin-tree-row { cursor: pointer; }
+.js .admin-tree-item:has(> .admin-tree > li) > .admin-tree-row:hover { border-color: var(--border-strong); }
+.js .admin-tree-item:not(.admin-tree-open) > .admin-tree:has(> li):not(:has(> .sortable-ghost)) { display: none; }
+.admin-tree-text { display: flex; flex: 1; align-items: baseline; gap: var(--space-2); min-width: 10rem; }
+.admin-tree-label { font-weight: 600; }
+.admin-tree-meta { overflow: hidden; min-width: 0; font-size: .8125rem; text-overflow: ellipsis; white-space: nowrap; }
+.admin-tree-form .sortable-ghost { opacity: .4; }
+.admin-tree-controls { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); margin-inline-start: auto; }
+.admin-tree-moves { flex: none; }
+.admin-tree-moves .admin-icon { width: .875rem; height: .875rem; }
+.admin-segmented { display: inline-flex; overflow: hidden; border: 1px solid var(--input-border); border-radius: var(--radius-control); }
+.admin-content .admin-segmented button { display: inline-grid; place-items: center; min-width: var(--control-height-tiny); min-height: var(--control-height-tiny); padding: 0; border: 0; border-inline-start: 1px solid var(--input-border); border-radius: 0; background: var(--raised); color: var(--muted); cursor: pointer; }
+.admin-content .admin-segmented button:first-child { border-inline-start: 0; }
+.admin-content .admin-segmented button:hover, .admin-content .admin-segmented button:focus-visible { background: var(--accent-soft); color: var(--accent-strong); }
+.admin-content .admin-segmented button:focus-visible { outline-offset: -2px; }
+.admin-content .admin-segmented button:disabled { background: var(--raised); color: var(--border-strong); cursor: default; }
+.admin-content .admin-segmented button.admin-locked, .admin-content .admin-segmented button.admin-locked:hover { background: var(--raised); color: var(--border-strong); cursor: default; }
+.admin-row-actions { display: inline-flex; gap: var(--space-1); }
+.admin-row-slot { width: var(--control-height-compact); height: var(--control-height-compact); }
+.admin-content .admin-row-action { display: inline-grid; place-items: center; width: var(--control-height-compact); height: var(--control-height-compact); padding: 0; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--muted); cursor: pointer; }
+.admin-content .admin-row-action:hover, .admin-content .admin-row-action:focus-visible { background: var(--accent-soft); color: var(--accent-strong); }
+.admin-content .admin-row-action-danger { color: var(--danger); }
+.admin-content .admin-row-action-danger:hover, .admin-content .admin-row-action-danger:focus-visible { background: var(--danger-soft); color: var(--danger); }
+.admin-content .admin-row-action:disabled { background: transparent; color: var(--border-strong); cursor: default; }
+.admin-content .admin-row-action.admin-locked, .admin-content .admin-row-action.admin-locked:hover { background: transparent; color: var(--border-strong); cursor: default; }
+
+@media (max-width: 767px) {
+    .admin-tree .admin-tree { margin-inline-start: var(--space-2); padding-inline-start: var(--space-2); }
+}
+
+/* Dialogs (a user rule, every admin modal: dialog.js's and the media picker): a header with the title and the close
+   button, the body, and a footer with the actions, the header and the footer set off by lines. Only the body scrolls;
+   the header and the footer always stay in view. A form wraps the body and the footer (.admin-dialog-form), so the
+   footer's buttons submit it. */
+.admin-dialog { width: min(36rem, calc(100vw - 2 * var(--space-4))); max-height: 90vh; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface); color: var(--text); box-shadow: var(--shadow-pop); }
+.admin-dialog::backdrop { background: var(--backdrop); }
+.admin-dialog[open] { display: flex; flex-direction: column; }
+.admin-dialog-content, .admin-dialog-form { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; margin: 0; }
+.admin-dialog-header { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); min-height: calc(var(--control-height) + 2 * var(--space-3)); padding-block: var(--space-3); padding-inline: var(--space-4) calc(var(--control-height) + 2 * var(--space-3)); border-bottom: 1px solid var(--border); }
+.admin-dialog-header h2 { margin: 0; overflow-wrap: anywhere; }
+.admin-dialog-header > .admin-translations { flex-basis: 100%; margin: 0; }
+/* The close button keeps the top end corner of the header, also when the title and a language switch wrap. */
+.admin-dialog-close { position: absolute; top: var(--space-3); inset-inline-end: var(--space-3); margin: 0; }
+.admin-dialog-body { display: grid; flex: 1 1 auto; align-content: start; gap: var(--space-4); min-height: 0; overflow: auto; padding: var(--space-4); }
+.admin-dialog-body > p { margin: 0; }
+.admin-dialog-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); margin: 0; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); }
+
+/* Single-column forms (terms, menu items, users). */
+.admin-form-card { max-width: 44rem; margin: 0; }
+.admin-form-card > .admin-card { margin: 0; }
+.admin-fieldset { display: grid; gap: var(--space-3); margin: 0; padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-control); }
+.admin-fieldset legend { padding: 0 var(--space-1); font-weight: 600; }
+.js .admin-fieldset:has(input[name="target_type"][value="entry"]:checked) [data-target]:not([data-target="entry"]) { display: none; }
+.js .admin-fieldset:has(input[name="target_type"][value="term"]:checked) [data-target]:not([data-target="term"]) { display: none; }
+.js .admin-fieldset:has(input[name="target_type"][value="url"]:checked) [data-target]:not([data-target="url"]) { display: none; }
+
+/*
+ * The dashboard (Plan 36). A container, so its rows stack by their own width whatever the sidebar leaves. Colour by
+ * job: --tone is a block's identity (a collection by its place in the config, admin-tone-1…8 from the --chart-*
+ * palette; a tile its own), the activity chart follows the admin colour (publications = the published status colour,
+ * edits a tint of it), the status bars use the status colours. Charts are server-drawn SVGs that stretch to their
+ * box (lines keep 1px through vector-effect); the right-to-left order comes from the server, nothing is mirrored here.
+ */
+.admin-dash { container: dashboard / inline-size; }
+.admin-dash .admin-card { margin: 0; }
+.admin-tone-1 { --tone: var(--chart-1); }
+.admin-tone-2 { --tone: var(--chart-2); }
+.admin-tone-3 { --tone: var(--chart-3); }
+.admin-tone-4 { --tone: var(--chart-4); }
+.admin-tone-5 { --tone: var(--chart-5); }
+.admin-tone-6 { --tone: var(--chart-6); }
+.admin-tone-7 { --tone: var(--chart-7); }
+.admin-tone-8 { --tone: var(--chart-8); }
+.admin-tone-accent { --tone: var(--accent); }
+.admin-tone-warning { --tone: var(--warning); }
+.admin-dash-dot { display: inline-block; flex: none; inline-size: 10px; block-size: 10px; border-radius: 50%; background: var(--tone, var(--faint)); }
+
+.admin-dash-header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-4) var(--space-5); margin-block-end: var(--space-5); }
+.admin-dash-hello h1 { margin: 0; font-size: 1.875rem; letter-spacing: -.015em; }
+.admin-dash-date { margin: var(--space-1) 0 0; color: var(--muted); }
+.admin-dash-quick { min-inline-size: 0; }
+.admin-dash-quick-list { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.admin-dash-quick-link { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--control-height); padding-block: 0; padding-inline: 5px var(--space-4); border: 1px solid color-mix(in oklab, var(--tone) 30%, var(--surface)); border-radius: var(--radius-pill); background: color-mix(in oklab, var(--tone) 9%, var(--surface)); color: var(--text); font-size: .9375rem; font-weight: 600; text-decoration: none; unicode-bidi: plaintext; }
+.admin-dash-quick-link:hover { border-color: var(--tone); background: color-mix(in oklab, var(--tone) 16%, var(--surface)); color: var(--text); }
+.admin-dash-quick-icon { display: inline-grid; place-items: center; inline-size: 28px; block-size: 28px; border-radius: 50%; background: var(--tone); color: var(--surface); }
+.admin-dash-quick-icon .admin-icon { inline-size: 1rem; block-size: 1rem; }
+
+.admin-dash-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)); gap: var(--space-4); margin-block-end: var(--space-4); }
+.admin-dash-tile { position: relative; display: flex; flex-direction: column; gap: var(--space-1); min-inline-size: 0; padding: var(--space-4) var(--space-5); overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow-card); }
+.admin-dash-tile:has(.admin-dash-tile-link:hover) { border-color: var(--tone); }
+.admin-dash-tile-head { display: flex; align-items: center; gap: var(--space-3); margin-block-end: var(--space-2); }
+.admin-dash-tile-icon { display: inline-grid; flex: none; place-items: center; inline-size: 36px; block-size: 36px; border-radius: 10px; background: color-mix(in oklab, var(--tone) 15%, var(--surface)); color: var(--tone); }
+.admin-dash-tile-label { margin: 0; color: var(--muted); font-size: .875rem; font-weight: 600; line-height: 1.3; }
+.admin-dash-tile-link { color: inherit; text-decoration: none; }
+.admin-dash-tile-link:hover { color: var(--text); }
+.admin-dash-tile-link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.admin-dash-tile-link:focus-visible { outline: none; }
+.admin-dash-tile-link:focus-visible::after { outline: 2px solid var(--accent); outline-offset: -2px; }
+.admin-dash-tile-value, .admin-dash-pair dd { margin: 0; font-size: 2.25rem; font-weight: 700; line-height: 1.1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.admin-dash-tile-note { margin: 0; color: var(--muted); font-size: .8125rem; }
+.admin-dash-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); margin: 0; }
+/* The number first and its caption under it, like the other tiles; the markup keeps the term before its value. */
+.admin-dash-pair-item { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: var(--space-1); }
+.admin-dash-pair dt { color: var(--muted); font-size: .8125rem; }
+.admin-dash-pair-item + .admin-dash-pair-item { padding-inline-start: var(--space-3); border-inline-start: 1px solid var(--border); }
+.admin-spark { display: block; inline-size: calc(100% + 2 * var(--space-5)); block-size: 44px; margin-block: auto calc(-1 * var(--space-4)); margin-inline: calc(-1 * var(--space-5)); padding-block-start: var(--space-3); }
+.admin-spark-area { fill: color-mix(in oklab, var(--tone) 16%, transparent); }
+.admin-spark-line { fill: none; stroke: var(--tone); stroke-width: 2px; stroke-linejoin: round; }
+
+.admin-dash-split { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); margin-block-end: var(--space-4); }
+.admin-dash-split-two { grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); }
+.admin-dash-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: var(--space-4); margin-block-end: var(--space-4); }
+@container dashboard (max-width: 879px) {
+    .admin-dash-split-two { grid-template-columns: minmax(0, 1fr); }
+}
+.admin-dash-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-3); margin-block-end: var(--space-3); }
+.admin-dash-title { display: flex; align-items: center; gap: var(--space-2); margin: 0; font-size: 1.0625rem; font-weight: 650; }
+.admin-dash-title .admin-icon { color: var(--muted); }
+.admin-dash-card, .admin-dash-feed { display: flex; flex-direction: column; }
+.admin-dash-card > .admin-dash-more, .admin-dash-feed > .admin-dash-more { margin-block-start: auto; padding-block-start: var(--space-2); }
+.admin-dash-none { margin: 0; color: var(--muted); }
+.admin-dash-more { display: inline-flex; align-items: center; min-height: var(--control-height); margin-block-end: calc(-1 * var(--space-2)); font-size: .875rem; font-weight: 600; text-decoration: none; }
+.admin-dash-more:hover { text-decoration: underline; }
+
+/* The range switch: a pill track of links, the current one raised. */
+.admin-dash-range { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--bg); }
+.admin-dash-range a { display: inline-grid; place-items: center; min-height: var(--control-height); padding: 0 var(--space-4); border-radius: var(--radius-pill); color: var(--muted); font-size: .875rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.admin-dash-range a:hover { color: var(--text); }
+.admin-dash-range a[aria-current="true"] { background: var(--raised); box-shadow: var(--shadow-card); color: var(--text); }
+
+.admin-dash-legend { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-4); margin: 0 0 var(--space-4); padding: 0; list-style: none; color: var(--muted); font-size: .8125rem; }
+.admin-dash-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.admin-dash-legend strong { color: var(--text); font-variant-numeric: tabular-nums; }
+.admin-dash-legend-note { margin-inline-start: auto; }
+.admin-dash-key { display: inline-block; inline-size: 10px; block-size: 10px; border-radius: 3px; }
+.admin-dash-activity { --edits: color-mix(in oklab, var(--accent) 52%, var(--chart-wash)); --publications: var(--accent); }
+.admin-dash-content { --published: var(--accent); --scheduled: var(--warning); --draft: var(--faint); }
+.admin-dash-key-edits { background: var(--edits); }
+.admin-dash-key-publications { background: var(--publications); }
+.admin-dash-key-published { background: var(--published); }
+.admin-dash-key-scheduled { background: var(--scheduled); }
+.admin-dash-key-draft { background: var(--draft); }
+
+/* The activity chart: the ticks outside the plot at its start, the SVG and the hover columns over the same box. */
+.admin-chart { --chart-inset: var(--space-2); min-inline-size: 0; }
+.admin-chart-plot { position: relative; block-size: 13rem; margin-inline-start: 2rem; }
+.admin-chart-tick { position: absolute; inset-inline-end: calc(100% + var(--space-2)); color: var(--muted); font-size: .75rem; line-height: 1; font-variant-numeric: tabular-nums; translate: 0 -50%; }
+.admin-chart-tick-top { inset-block-start: 0; }
+.admin-chart-tick-mid { inset-block-start: 50%; }
+.admin-chart-svg, .admin-chart-hits { position: absolute; inset-block: 0; inset-inline: var(--chart-inset); }
+.admin-chart-svg { display: block; inline-size: calc(100% - 2 * var(--chart-inset)); block-size: 100%; overflow: visible; }
+.admin-chart-grid { stroke: var(--border); stroke-width: 1px; }
+.admin-chart-base { stroke: var(--border-strong); stroke-width: 1px; }
+.admin-chart-bar { transform-box: fill-box; transform-origin: bottom; animation: admin-rise .5s cubic-bezier(.2, .7, .2, 1) both; }
+.admin-chart-bar-edits { fill: var(--edits); }
+.admin-chart-bar-publications { fill: var(--publications); }
+@keyframes admin-rise {
+    from { transform: scaleY(0); }
+}
+.admin-chart-hits { display: flex; margin: 0; padding: 0; list-style: none; }
+.admin-chart-hit { flex: 1 1 0; min-inline-size: 0; border-radius: 6px; }
+.admin-chart-hit:hover { background: color-mix(in oklab, var(--text) 6%, transparent); }
+.admin-chart-empty { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: var(--space-4); color: var(--muted); text-align: center; pointer-events: none; }
+.admin-chart-axis { display: flex; margin: var(--space-2) 0 0; margin-inline: calc(2rem + var(--chart-inset)) var(--chart-inset); padding: 0; list-style: none; color: var(--muted); font-size: .75rem; font-variant-numeric: tabular-nums; }
+.admin-chart-axis li { display: flex; flex: 1 1 0; justify-content: center; min-inline-size: 0; white-space: nowrap; }
+/* The first and the last label lean inwards from their edge, so neither leaves the plot in either direction. */
+.admin-chart-axis li:first-child { justify-content: flex-start; }
+.admin-chart-axis li:last-child { justify-content: flex-end; }
+@container dashboard (max-width: 559px) {
+    .admin-chart-axis-minor { visibility: hidden; }
+}
+
+/* Content by collection: a row per collection, its bar split by status on the largest collection's scale. */
+.admin-dash-stacks { display: grid; gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
+.admin-dash-stack { min-inline-size: 0; }
+.admin-dash-stack-head { display: flex; align-items: center; gap: var(--space-2); }
+.admin-dash-stack-head a { min-inline-size: 0; overflow: hidden; color: var(--text); font-weight: 600; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: plaintext; }
+.admin-dash-stack-head a:hover { color: var(--accent-strong); text-decoration: underline; }
+.admin-dash-stack-total { margin-inline-start: auto; font-weight: 600; font-variant-numeric: tabular-nums; }
+.admin-dash-stack-bar { display: block; inline-size: 100%; block-size: 10px; margin-block-start: 6px; overflow: hidden; border-radius: var(--radius-pill); background: color-mix(in oklab, var(--border) 70%, transparent); }
+.admin-dash-seg { stroke: var(--surface); stroke-width: 2px; }
+.admin-dash-seg-published { fill: var(--published); }
+.admin-dash-seg-scheduled { fill: var(--scheduled); }
+.admin-dash-seg-draft { fill: var(--draft); }
+
+/* Translations and popular tags: a label, a number and a bar of the card's tone. */
+.admin-dash-meters { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.admin-dash-meter { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px var(--space-3); }
+.admin-dash-meter-label { display: flex; align-items: center; gap: var(--space-2); min-inline-size: 0; font-weight: 600; }
+.admin-dash-meter-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: plaintext; }
+.admin-dash-meter-code { text-decoration: none; }
+.admin-dash-meter-value { color: var(--muted); font-size: .875rem; font-variant-numeric: tabular-nums; }
+.admin-dash-meter-bar { display: block; grid-column: 1 / -1; inline-size: 100%; block-size: 8px; overflow: hidden; border-radius: var(--radius-pill); }
+.admin-dash-meter-track { fill: color-mix(in oklab, var(--tone) 14%, var(--surface)); }
+.admin-dash-meter-fill { fill: var(--tone); }
+
+/* The latest messages: each row a link, unread ones bold with an accent dot. */
+.admin-dash-messages { display: grid; margin: 0; padding: 0; list-style: none; }
+.admin-dash-message { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 0 var(--space-3); padding-block: var(--space-2); }
+.admin-dash-message + .admin-dash-message { border-block-start: 1px solid var(--border); }
+.admin-dash-message:hover { background: color-mix(in oklab, var(--text) 3%, transparent); }
+.admin-dash-message-link { display: grid; min-inline-size: 0; color: var(--text); text-decoration: none; }
+.admin-dash-message-link::after { content: ""; position: absolute; inset: 0; }
+.admin-dash-message-link:focus-visible { outline: none; }
+.admin-dash-message-link:focus-visible::after { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--radius-control); }
+.admin-dash-message-name { overflow: hidden; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.admin-dash-message-unread .admin-dash-message-name { font-weight: 700; }
+.admin-dash-message-unread .admin-dash-message-name::before { content: ""; display: inline-block; inline-size: 8px; block-size: 8px; margin-inline-end: 6px; border-radius: 50%; background: var(--accent); vertical-align: middle; }
+.admin-dash-message-text { overflow: hidden; color: var(--muted); font-size: .8125rem; text-overflow: ellipsis; white-space: nowrap; }
+.admin-dash-message-time { color: var(--muted); font-size: .75rem; white-space: nowrap; }
+
+/* In progress: the tabs of the forms inside one card; each row starts with its collection's dot. */
+.admin-dash-progress .admin-tab-list { margin-block-end: var(--space-2); }
+.admin-dash-progress .admin-panel-item { justify-content: flex-start; }
+.admin-dash-progress .admin-panel-text { flex: 1 1 auto; }
+.admin-panel-list { display: grid; margin: 0; padding: 0; list-style: none; }
+.admin-panel-item { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding-block: var(--space-3); }
+.admin-panel-item + .admin-panel-item { border-block-start: 1px solid var(--border); }
+.admin-panel-item:first-child { padding-block-start: 0; }
+.admin-panel-item:last-child { padding-block-end: 0; }
+.admin-panel-text { display: grid; justify-items: start; min-width: 0; }
+.admin-panel-item > .admin-chip { flex: none; }
+.admin-panel-list a { font-weight: 600; }
+.admin-panel-meta { margin-top: 2px; color: var(--muted); font-size: .8125rem; }
+.admin-panel-empty { padding: var(--space-5) 0; }
+.admin-panel-empty p { margin: 0; }
+
+/* Recent activity: the avatar, who did what to which item, and when. */
+.admin-dash-events { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.admin-dash-event { display: flex; align-items: flex-start; gap: var(--space-3); }
+.admin-dash-event-text { display: grid; gap: 2px; min-inline-size: 0; font-size: .875rem; }
+.admin-dash-event-text p { margin: 0; }
+.admin-dash-event-what { overflow-wrap: anywhere; }
+.admin-dash-event-item { overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }
+.admin-dash-event-time { color: var(--muted); font-size: .75rem; }
+
+
+/* The entry form: two columns of tabs; without JavaScript the tab lists are hidden and every panel shows its heading. */
+.admin-form-layout { display: grid; grid-template-columns: minmax(0, 1fr) var(--side-column); align-items: start; gap: var(--space-5); }
+.admin-form-layout-wide { grid-template-columns: minmax(0, 1fr); }
+/* A rich-text field: the help before the editor's word count (one row; dense fills the cell beside it). */
+.admin-field-rich-text { grid-template-columns: minmax(0, 1fr) auto; grid-auto-flow: row dense; }
+.admin-field-rich-text > * { grid-column: 1 / -1; }
+.admin-field-rich-text > .admin-field-help { grid-column: 1; }
+.admin-form-column { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); min-width: 0; }
+.admin-tab-list { display: none; }
+.js .admin-tab-list { display: flex; gap: var(--space-1); overflow-x: auto; overflow-y: hidden; border-bottom: 1px solid var(--border-strong); }
+.admin-tab { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--control-height); margin-bottom: -1px; padding: 0 var(--space-3); border: 0; border-bottom: 3px solid transparent; border-radius: var(--radius-control) var(--radius-control) 0 0; background: transparent; color: var(--muted); font-weight: 600; white-space: nowrap; cursor: pointer; }
+.admin-tab:focus-visible { outline-offset: -2px; }
+.admin-tab:hover { background: var(--surface); color: var(--text); }
+.admin-tab[aria-selected="true"] { border-bottom-color: var(--accent); color: var(--accent-strong); }
+.admin-tab-badge, .admin-tab-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--radius-pill); font-size: .75rem; font-weight: 700; }
+.admin-tab-badge { background: var(--danger); color: var(--on-danger); }
+.admin-tab-count { background: var(--accent-soft); color: var(--accent-strong); }
+.admin-tab-panel { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); min-width: 0; margin: 0; }
+.admin-tab-heading { margin: 0; color: var(--muted); font-size: .75rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.js .admin-tab-heading { display: none; }
+.js .admin-form-column:not(.admin-tabs-ready) > .admin-tab-panel:not(.admin-tab-panel-open) { display: none; }
+
+/* Site settings: the language badge of a field kept per language, the theme colour's picker and its checkbox. */
+.admin-locale-badge { display: inline-grid; place-items: center; min-width: 24px; height: 18px; padding: 0 6px; border-radius: var(--radius-pill); background: var(--accent-soft); color: var(--accent-strong); font-size: .6875rem; font-weight: 700; letter-spacing: .04em; }
+/* A language's round flag from the theme (partials/locale-badge.php, the content language switch), in place of its pill. */
+.admin-locale-flag { display: inline-block; flex: none; inline-size: 20px; block-size: 20px; border-radius: 50%; object-fit: cover; vertical-align: middle; box-shadow: 0 0 0 1px var(--border); }
+.admin-locale-flag-large { inline-size: 22px; block-size: 22px; }
+.admin-content-locale .admin-menu-item { justify-content: flex-start; }
+.admin-content-locale .admin-menu-item > .admin-icon { margin-inline-start: auto; }
+.admin-color-field { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.admin-field .admin-color-field input[type="color"] { width: 4rem; padding: 2px; cursor: pointer; }
+/* The theme colour presets (media.js copies one into the colour input): JavaScript only, the plain picker stays. */
+.admin-color-presets { display: none; }
+.js .admin-color-presets { display: inline-block; }
+/* The admin colour: the swatch of a preset in its dropdown (media/dropdown.php). */
+.admin-field > .admin-media-dropdown { justify-self: start; }
+.admin-field > .admin-media-dropdown > .admin-menu-panel { inset-inline-end: auto; inset-inline-start: 0; }
+.admin-accent-swatch { display: block; flex: none; width: 18px; height: 18px; border-radius: 50%; }
+.admin-accent-swatch-green { background: var(--swatch-green); }
+.admin-accent-swatch-teal { background: var(--swatch-teal); }
+.admin-accent-swatch-blue { background: var(--swatch-blue); }
+.admin-accent-swatch-indigo { background: var(--swatch-indigo); }
+.admin-accent-swatch-violet { background: var(--swatch-violet); }
+.admin-accent-swatch-cherry { background: var(--swatch-cherry); }
+.admin-accent-swatch-terracotta { background: var(--swatch-terracotta); }
+.admin-accent-swatch-graphite { background: var(--swatch-graphite); }
+
+.admin-share-preview { display: grid; gap: var(--space-2); }
+.admin-share-preview .admin-help { margin: 0; }
+/* The contact page's form: the site's map in the side column (map/panel.php, a 4:3 preview), and the ways to enter it
+   (map/dialog.php's tabs, map/form.php's cards). */
+.admin-map-panel { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); min-width: 0; margin: 0; }
+.admin-map-title { display: flex; align-items: center; gap: var(--space-2); margin: 0; font-size: 1rem; }
+.admin-map-frame { display: block; box-sizing: border-box; width: 100%; height: auto; aspect-ratio: 4 / 3; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--bg); }
+.admin-map-none { margin: 0; color: var(--muted); }
+.admin-map-waze { display: inline-flex; align-items: center; gap: var(--space-1); justify-self: start; }
+.admin-map-waze > .admin-icon { width: 1rem; height: 1rem; }
+.admin-map-form > .admin-help { margin: 0; }
+.admin-map-actions { display: flex; flex-wrap: nowrap; align-items: center; gap: var(--space-2); }
+.admin-map-actions > .admin-button { flex: 0 1 auto; min-width: 0; }
+.admin-map-form { display: grid; gap: var(--space-4); margin: 0; }
+.admin-map-point { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.admin-map-ways { display: grid; gap: var(--space-4); max-width: 44rem; margin: var(--space-4) 0; }
+.admin-map-ways > .admin-card { display: grid; gap: var(--space-3); margin: 0; }
+.admin-map-ways h2 { margin: 0; }
+.admin-map-form-actions { display: flex; justify-content: flex-end; }
+
+.admin-share-image { display: block; width: 100%; max-width: 480px; height: auto; aspect-ratio: 1200 / 630; object-fit: cover; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--bg); }
+
+/* Two columns need the side column, the gap and a main column of at least about 550px. */
+@container entry-form (max-width: 879px) {
+    .admin-form-layout { grid-template-columns: minmax(0, 1fr); }
+    .admin-profile-layout > .admin-profile-card { grid-column: auto; grid-row: auto; }
+}
+
+/* ---------- Editor (vendor/ckeditor5-48.5.2.css stays as shipped; its look is adapted here) ---------- */
+/* ckeditor5.css loads after this file, so every override starts with :root. CKEditor reads its colours from
+   --ck-color-* variables on :root; the same variables on .ck (every element of its UI, the floating panels too) win,
+   so the editor follows the admin tokens on both palettes. */
+
+:root .ck {
+    --ck-color-base-foreground: var(--surface);
+    --ck-color-base-background: var(--raised);
+    --ck-color-base-border: var(--border-strong);
+    --ck-color-base-action: var(--accent);
+    --ck-color-base-focus: var(--accent);
+    --ck-color-base-text: var(--text);
+    --ck-color-base-active: var(--accent);
+    --ck-color-base-active-focus: var(--accent-hover);
+    --ck-color-base-error: var(--danger);
+    --ck-color-focus-border: var(--accent);
+    --ck-color-focus-outer-shadow: var(--focus-ring);
+    --ck-color-text: var(--text);
+    --ck-color-button-default-hover-background: var(--accent-soft);
+    --ck-color-button-default-active-background: var(--accent-soft);
+    --ck-color-button-on-background: var(--accent-soft);
+    --ck-color-button-on-hover-background: var(--accent-soft);
+    --ck-color-button-on-active-background: var(--accent-soft);
+    --ck-color-button-on-color: var(--accent-strong);
+    --ck-color-button-action-background: var(--accent);
+    --ck-color-button-action-hover-background: var(--accent-hover);
+    --ck-color-button-action-active-background: var(--accent-hover);
+    --ck-color-button-action-text: var(--on-accent);
+    --ck-color-button-save: var(--accent);
+    --ck-color-button-cancel: var(--danger);
+    --ck-color-split-button-hover-background: var(--accent-soft);
+    --ck-color-split-button-hover-border: var(--border-strong);
+    --ck-color-toolbar-background: var(--surface);
+    --ck-color-toolbar-border: var(--input-border);
+    --ck-color-dropdown-panel-background: var(--raised);
+    --ck-color-dropdown-panel-border: var(--border-strong);
+    --ck-color-panel-background: var(--raised);
+    --ck-color-panel-border: var(--border-strong);
+    --ck-color-dialog-background: var(--raised);
+    --ck-color-input-background: var(--raised);
+    --ck-color-input-border: var(--input-border);
+    --ck-color-input-text: var(--text);
+    --ck-color-input-error-border: var(--danger);
+    --ck-color-labeled-field-label-background: var(--raised);
+    --ck-color-list-background: var(--raised);
+    --ck-color-list-button-hover-background: var(--accent-soft);
+    --ck-color-list-button-on-background: var(--accent);
+    --ck-color-list-button-on-background-focus: var(--accent-hover);
+    --ck-color-list-button-on-text: var(--on-accent);
+    --ck-color-tooltip-background: var(--text);
+    --ck-color-tooltip-text: var(--bg);
+    --ck-color-engine-placeholder-text: var(--muted);
+    --ck-color-link-default: var(--accent-strong);
+    --ck-color-widget-blurred-border: var(--border-strong);
+    --ck-color-widget-hover-border: var(--accent-soft);
+    --ck-color-widget-editable-focus-background: var(--raised);
+    --ck-color-table-focused-cell-background: var(--accent-soft);
+    --ck-style-panel-button-label-background: var(--surface);
+    --ck-style-panel-button-hover-label-background: var(--accent-soft);
+    --ck-style-panel-button-hover-border-color: var(--border-strong);
+    --ck-border-radius: var(--radius-control);
+    --ck-font-face: var(--font);
+}
+
+:root .admin-field > .ck-editor { min-width: 0; }
+:root .ck.ck-editor__main > .ck-editor__editable { min-height: 12rem; background: var(--raised); color: var(--text); }
+:root .ck.ck-editor__main > .ck-editor__editable:not(.ck-focused) { border-color: var(--input-border); }
+/* A minimal field (a summary) is a few lines long. */
+:root .admin-editor-minimal .ck.ck-editor__main > .ck-editor__editable { min-height: 5rem; }
+:root .admin-field-rich-text > .ck.ck-word-count { grid-column: 2; }
+/* The character counter of a field with ->max() (editor.js), the last item of the word count line. */
+:root .admin-editor-count { font-variant-numeric: tabular-nums; }
+:root .admin-editor-count-over { color: var(--danger); font-weight: 700; }
+/* A tall field (the text of a whole page) starts a page long. */
+:root .admin-field-tall .ck.ck-editor__main > .ck-editor__editable { min-height: 28rem; }
+:root .ck.ck-editor__top .ck-sticky-panel .ck-toolbar { border-color: var(--input-border); }
+:root .ck .ck-style-grid__button__preview { color: var(--text); }
+/* The heading dropdown is narrower than the vendor's 8em and the style dropdown than the generic 7em, so the toolbar fits two rows in the form. */
+:root .ck.ck-dropdown.ck-heading-dropdown .ck-dropdown__button .ck-button__label { width: 6em; }
+:root .ck.ck-dropdown.ck-style-dropdown > .ck-dropdown__button > .ck-button__label { width: 5em; }
+/* The word count under the editor (editor.js puts it there; the vendor stylesheet has no rule for it). */
+:root .ck.ck-word-count { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-1); color: var(--muted); font-size: .8125rem; }
+/* Fullscreen moves the editable into a page-wide wrapper that the vendor stylesheet paints white: it follows the palette. */
+:root .ck-fullscreen__main-wrapper .ck-fullscreen__editable .ck.ck-editor__editable:not(.ck-editor__nested-editable) { background: var(--raised); color: var(--text); }
+
+/* The admin preview of a video (editor.js): sized here, the iframe itself carries no style. */
+:root .admin-editor-video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border: 0; }

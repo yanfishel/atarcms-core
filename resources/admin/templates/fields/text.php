@@ -1,0 +1,1 @@
+<input id="<?= $this->e($id) ?>" name="<?= $this->e($name) ?>" value="<?= $this->e(is_scalar($value) ? (string) $value : '') ?>" maxlength="<?= $this->e((int) ($field->max ?? 255)) ?>"<?= $field->required ? ' required' : '' ?><?= $aria ?><?= $lang ?>>

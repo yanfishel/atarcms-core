@@ -1,0 +1,2 @@
+<?php $display = is_int($value) || is_float($value) ? AtarCms\Content\Field\NumberType::format($value) : (is_string($value) ? $value : ''); ?>
+<input type="number" step="any" id="<?= $this->e($id) ?>" name="<?= $this->e($name) ?>" value="<?= $this->e($display) ?>"<?= $field->min !== null ? ' min="' . $this->e($field->min) . '"' : '' ?><?= $field->max !== null ? ' max="' . $this->e($field->max) . '"' : '' ?><?= $field->required ? ' required' : '' ?><?= $aria ?>>

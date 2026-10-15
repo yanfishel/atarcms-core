@@ -1,0 +1,14 @@
+/vendor/
+/.env
+# Composer credentials (a GitHub token) never belong in git; composer.lock does: commit it.
+/auth.json
+/composer.dev.lock
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/cache/*
+!/storage/cache/.gitkeep
+/storage/uploads/*
+!/storage/uploads/.gitkeep
+/storage/tmp/
+/storage/avatars/
+/storage/app.key

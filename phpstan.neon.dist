@@ -1,0 +1,11 @@
+parameters:
+    level: max
+    paths:
+        - src
+        - tests
+        - skeleton/src
+    excludePaths:
+        # Templates: plain PHP rendered with $this bound to the renderer, which PHPStan cannot type.
+        - tests/Fixtures/site/themes/*
+        - tests/Fixtures/admin-templates/*
+    tmpDir: .phpstan.cache

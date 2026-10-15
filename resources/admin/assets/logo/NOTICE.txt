@@ -1,0 +1,2 @@
+The aleph of the AtarCMS logo is the glyph U+05D0 of Cardo Bold by David J. Perry, used as artwork under the
+SIL Open Font License 1.1 (see Cardo-OFL.txt). No font file is shipped.

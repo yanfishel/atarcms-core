@@ -1,0 +1,135 @@
+# AtarCMS behind nginx and PHP-FPM. One template for Docker and a server:
+# - Docker: the nginx image fills it from the environment (compose.yaml sets SERVER_NAME, SITE_ROOT, ATAR_THEME and
+#   PHP_FASTCGI; variables it does not define, such as $uri, stay as they are).
+# - A server: envsubst '$SERVER_NAME $SITE_ROOT $ATAR_THEME $PHP_FASTCGI' < atarcms.conf.template > /etc/nginx/sites-available/<site>
+#   with SERVER_NAME=example.com, SITE_ROOT=/var/www/<site>, ATAR_THEME=<APP_THEME>, PHP_FASTCGI=unix:/run/php/atarcms-<site>.sock;
+#   then certbot --nginx -d example.com adds HTTPS. Render it again (and reload nginx) after switching APP_THEME.
+# Only public/index.php runs as PHP; .env, storage/, vendor/ and config/ are outside the document root.
+server {
+    listen 80;
+    # IPv6 too: a visitor (or "localhost" resolving to ::1) must not land on another site of the server.
+    listen [::]:80;
+    server_name ${SERVER_NAME};
+    root ${SITE_ROOT}/public;
+    index index.php;
+    # Keep above media.max_size and media.max_video_size (config/media.php) and PHP's upload_max_filesize.
+    client_max_body_size 101m;
+    # PHP's response headers fit one buffer: the Content-Security-Policy of a page with every analytics counter and
+    # advertising pixel (consentHead()) brings the response headers to about 4.3 KB, beyond nginx's default 4 KB (a
+    # 502 "upstream sent too big header"). The buffers grow with it (busy buffers, twice the buffer size by default,
+    # must stay below all of them minus one).
+    fastcgi_buffer_size 16k;
+    fastcgi_buffers 8 16k;
+    server_tokens off;
+    # Styles and scripts are UTF-8 (as AssetFileController says): without it a browser may read "›" as "â€º".
+    charset utf-8;
+    charset_types text/css text/javascript application/javascript;
+    # Compressed text responses (text/html always; pages are ~40 KB, site.css ~58 KB before it). Images, video and
+    # woff2 are compressed already and stay out of gzip_types (so do byte ranges: nginx never compresses a 206).
+    # The admin is left out below (BREACH).
+    gzip on;
+    gzip_vary on;
+    gzip_comp_level 5;
+    gzip_min_length 1024;
+    gzip_proxied any;
+    gzip_types text/css application/javascript text/javascript application/json application/manifest+json image/svg+xml application/xml text/xml application/rss+xml application/atom+xml text/plain;
+
+    # Keep these headers in sync with AssetFileController::CACHE (the PHP fallback of both asset prefixes).
+    location /theme-assets/ {
+        alias ${SITE_ROOT}/themes/${ATAR_THEME}/assets/;
+        access_log off;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+
+    location /admin-assets/ {
+        alias ${SITE_ROOT}/vendor/yanfishel/atarcms-core/resources/admin/assets/;
+        access_log off;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+
+    # Uploaded originals are static files only: "^~" keeps the regex locations below (and so PHP) away from this
+    # prefix, and there is no fastcgi_pass here, so nothing below /uploads/ can ever run as PHP. Every response is
+    # sandboxed, and PDFs are downloads; videos play inline (nginx answers Range requests itself, as the PHP fallback
+    # does). Nested locations do not inherit add_header, so they repeat the headers.
+    location ^~ /uploads/ {
+        root ${SITE_ROOT}/storage;
+        access_log off;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Content-Security-Policy "default-src 'none'; sandbox" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+        location ~ /\. {
+            return 404;
+        }
+
+        location ~* \.pdf$ {
+            add_header Cache-Control "public, max-age=31536000, immutable" always;
+            add_header X-Content-Type-Options "nosniff" always;
+            add_header Content-Security-Policy "default-src 'none'; sandbox" always;
+            add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+            add_header Content-Disposition "attachment" always;
+        }
+    }
+
+    # Keep the media headers here (and in the /uploads/ block above) in sync with MediaFileController::CACHE and ::SANDBOX.
+    # Image variants: served from storage/cache/media once generated; the first request of each goes to PHP, which
+    # generates and caches it (only variants declared in theme.php).
+    location ^~ /media/ {
+        root ${SITE_ROOT}/storage/cache;
+        access_log off;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Content-Security-Policy "default-src 'none'; sandbox" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        # The variants' types by name: the mime.types of older nginx releases lacks AVIF (ImageFormats), which would go
+        # out as application/octet-stream. A types block replaces the inherited map, so it lists every variant format.
+        types {
+            image/jpeg jpg;
+            image/png png;
+            image/webp webp;
+            image/gif gif;
+            image/avif avif;
+        }
+
+        location ~ /\. {
+            return 404;
+        }
+
+        try_files $uri /index.php$is_args$args;
+    }
+
+    location / {
+        try_files $uri /index.php$is_args$args;
+    }
+
+    location = /index.php {
+        fastcgi_pass ${PHP_FASTCGI};
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root/index.php;
+        fastcgi_param DOCUMENT_ROOT $document_root;
+    }
+
+    location ~ \.php$ {
+        return 404;
+    }
+
+    location ~ /\. {
+        return 404;
+    }
+
+    # The admin goes to PHP uncompressed (BREACH): its pages carry the session's CSRF token next to input they
+    # reflect, such as a search. After the two locations above, so its hidden and PHP files still answer 404.
+    location ~ ^/admin(/|$) {
+        gzip off;
+        fastcgi_pass ${PHP_FASTCGI};
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root/index.php;
+        fastcgi_param SCRIPT_NAME /index.php;
+        fastcgi_param DOCUMENT_ROOT $document_root;
+    }
+}

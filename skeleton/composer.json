@@ -1,0 +1,29 @@
+{
+    "name": "yanfishel/atarcms",
+    "description": "AtarCMS site skeleton",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.4",
+        "yanfishel/atarcms-core": "^0.1"
+    },
+    "repositories": [
+        { "type": "vcs", "url": "https://github.com/yanfishel/atarcms-core" }
+    ],
+    "autoload": {
+        "psr-4": { "App\\": "src/" }
+    },
+    "minimum-stability": "stable",
+    "config": {
+        "platform": {
+            "php": "8.4.1"
+        },
+        "sort-packages": true
+    },
+    "scripts": {
+        "post-create-project-cmd": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php -r \"echo PHP_EOL, 'Next: edit .env, then run php bin/atar doctor (see .agents/skills/building-atarcms-sites/references/install.md).', PHP_EOL;\""
+        ]
+    }
+}

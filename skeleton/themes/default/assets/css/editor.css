@@ -1,0 +1,71 @@
+/* The rich-text content inside the admin editor, styled like the site (site.css). Every rule is scoped to .ck-content:
+   the editor lives in the admin page, so an unscoped rule would restyle the admin. */
+.ck-content .lead { color: #556170; font-size: 1.25em; }
+.ck-content .note { margin: 1em 0; padding: .75em 1em; border-inline-start: 4px solid #1e5e55; border-radius: .375rem; background: #1e5e551a; }
+.ck-content .note-title { font-weight: 600; }
+.ck-content .columns { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
+.ck-content .column { min-width: 0; }
+.ck-content .table-striped tbody tr:nth-child(odd) { background: #8881; }
+
+/* The editor's own features (the same rules as in site.css): font sizes, highlighters, alignment, indentation. */
+.ck-content .text-tiny { font-size: .7em; }
+.ck-content .text-small { font-size: .85em; }
+.ck-content .text-big { font-size: 1.4em; }
+.ck-content .text-huge { font-size: 1.8em; }
+.ck-content .marker-yellow { background: #fdfd77; color: #1d1d1f; }
+.ck-content .marker-green { background: #62f962; color: #1d1d1f; }
+.ck-content .marker-pink { background: #fc7899; color: #1d1d1f; }
+.ck-content .marker-blue { background: #72ccfd; color: #1d1d1f; }
+.ck-content .pen-red { background: transparent; color: #e71313; }
+.ck-content .pen-green { background: transparent; color: #128a00; }
+.ck-content .text-align-left { text-align: left; }
+.ck-content .text-align-center { text-align: center; }
+.ck-content .text-align-right { text-align: right; }
+.ck-content .text-align-justify { text-align: justify; }
+.ck-content .indent-1 { margin-inline-start: 2em; }
+.ck-content .indent-2 { margin-inline-start: 4em; }
+.ck-content .indent-3 { margin-inline-start: 6em; }
+.ck-content .indent-4 { margin-inline-start: 8em; }
+
+/* Images: centred by default, floated left or right with the text around them, full width, or resized. */
+.ck-content figure.image { display: table; clear: both; margin: 1em auto; }
+.ck-content figure.image img { display: block; max-width: 100%; height: auto; }
+.ck-content figure.image figcaption { display: table-caption; caption-side: bottom; padding: .4em; color: #666; font-size: .875em; text-align: center; }
+.ck-content .image.image-style-align-left { float: left; clear: none; max-width: 50%; margin: .25em 1.5em 1em 0; }
+.ck-content .image.image-style-align-right { float: right; clear: none; max-width: 50%; margin: .25em 0 1em 1.5em; }
+.ck-content img.image-style-align-left { float: left; max-width: 50%; margin: .25em 1.5em 1em 0; }
+.ck-content img.image-style-align-right { float: right; max-width: 50%; margin: .25em 0 1em 1.5em; }
+.ck-content .image-style-full { width: 100%; }
+.ck-content .image-style-full img { width: 100%; }
+.ck-content .image_resized { box-sizing: border-box; max-width: 100%; }
+.ck-content .image_resized img { width: 100%; }
+.ck-content p img.image-style-align-left, .ck-content p img.image-style-align-right { margin-top: 0; }
+.ck-content .media { margin: 1em 0; }
+
+/* List styles are type attributes (<ol type="a">); the vendor stylesheet sets list-style-type on every list, which
+   would hide them: revert-layer lets the attribute through again. */
+.ck-content ol[type], .ck-content ul[type] { list-style-type: revert-layer; }
+
+/* To-do lists: the checkbox replaces the bullet (the editor draws its own checkbox in the list's padding). */
+.ck-content .todo-list { list-style: none; }
+.ck-content .todo-list li { margin: .25em 0; }
+.ck-content .todo-list__label { vertical-align: middle; }
+.ck-content .todo-list__label_without-description { display: inline-block; }
+.ck-content .todo-list__label__description { vertical-align: middle; }
+
+/* Code blocks and rules. */
+.ck-content pre { overflow-x: auto; padding: .75em 1em; border-radius: 4px; background: #8881; font-size: .9em; }
+.ck-content code { font-family: ui-monospace, Consolas, monospace; }
+.ck-content hr { margin: 1.5em 0; border: 0; border-block-start: 1px solid #8886; }
+
+/* Tables: caption on top, alignment as classes, fixed layout once columns are resized. */
+.ck-content figure.table { display: table; margin: 1em auto; }
+.ck-content .table table { width: 100%; height: 100%; border-collapse: collapse; }
+.ck-content .table td, .ck-content .table th { padding: .4em .6em; border: 1px solid #8886; }
+.ck-content .table figcaption { display: table-caption; caption-side: top; padding: .4em; color: #666; font-size: .875em; text-align: center; }
+.ck-content .table.table-style-align-left { float: left; margin: 0 1.5em 1em 0; }
+.ck-content .table.table-style-align-right { float: right; margin: 0 0 1em 1.5em; }
+.ck-content .table.table-style-align-center { margin-inline: auto; }
+.ck-content .table.table-style-block-align-left { margin-left: 0; margin-right: auto; }
+.ck-content .table.table-style-block-align-right { margin-left: auto; margin-right: 0; }
+.ck-content .ck-table-resized { table-layout: fixed; }

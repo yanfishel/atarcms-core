@@ -1,0 +1,55 @@
+# Local development: http://localhost:8080 (nginx + PHP-FPM + MariaDB), mail caught by Mailpit (http://localhost:8025).
+# On a server use compose.production.yaml instead (COMPOSE_FILE=compose.production.yaml in .env).
+services:
+  php:
+    build:
+      context: ./docker/php
+      args:
+        # Linux: the owner of the site's files (`id -u`, `id -g`) in .env; Docker Desktop: leave empty.
+        HOST_UID: ${HOST_UID:-82}
+        HOST_GID: ${HOST_GID:-82}
+    working_dir: /srv/site
+    volumes:
+      - .:/srv/site
+    environment:
+      # Development mail goes to Mailpit (http://localhost:8025) unless .env sets MAIL_DSN.
+      MAIL_DSN: ${MAIL_DSN:-smtp://mailpit:1025}
+    depends_on:
+      db:
+        condition: service_healthy
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    environment:
+      SERVER_NAME: _
+      SITE_ROOT: /srv/site
+      ATAR_THEME: ${APP_THEME:-default}
+      PHP_FASTCGI: php:9000
+    volumes:
+      - .:/srv/site:ro
+      - ./deploy/nginx/atarcms.conf.template:/etc/nginx/templates/default.conf.template:ro
+    depends_on:
+      - php
+  # Catches every mail the site sends in development (MAIL_DSN=smtp://mailpit:1025): http://localhost:8025.
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "8025:8025"
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE: atar
+      MARIADB_USER: atar
+      MARIADB_PASSWORD: atar
+      MARIADB_ROOT_PASSWORD: root
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  db-data:
