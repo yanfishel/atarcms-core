@@ -45,8 +45,7 @@ then `chmod 600 auth.json`.
 ## 3A. Local with Docker
 
 ```bash
-composer create-project yanfishel/atarcms my-site --no-interaction \
-  --repository='{"type":"vcs","url":"https://github.com/yanfishel/atarcms"}'
+composer create-project yanfishel/atarcms my-site --no-interaction
 cd my-site
 ```
 
@@ -131,8 +130,7 @@ mariadb -e "CREATE DATABASE example CHARACTER SET utf8mb4 COLLATE utf8mb4_unicod
 As the site user (composer runs as that user), the code and `.env`:
 
 ```bash
-sudo -u example -H composer create-project yanfishel/atarcms /var/www/example --no-dev --no-interaction \
-  --repository='{"type":"vcs","url":"https://github.com/yanfishel/atarcms"}'
+sudo -u example -H composer create-project yanfishel/atarcms /var/www/example --no-dev --no-interaction
 cd /var/www/example
 sudo -u example sed -i 's/^APP_ENV=.*/APP_ENV=production/; s#^APP_URL=.*#APP_URL=https://example.com#; s/^LOG_LEVEL=.*/LOG_LEVEL=info/; s/^DB_HOST=.*/DB_HOST=localhost/; s/^DB_DATABASE=.*/DB_DATABASE=example/; s/^DB_USERNAME=.*/DB_USERNAME=example/' .env
 sudo -u example chmod 600 .env
@@ -196,7 +194,7 @@ have them). A smaller limit somewhere refuses large videos only: `doctor --http`
 The panel gives PHP 8.4 (select it for the domain and for the SSH command line; they can differ), a MySQL/MariaDB
 database and user, and SSH. Composer: the host's, or `php composer.phar` downloaded into your home directory.
 
-1. `composer create-project … ~/example --no-dev --no-interaction --repository=…` (section 3A's command).
+1. `composer create-project … ~/example --no-dev --no-interaction` (section 3A's command).
 2. In the panel, point the domain's document root at `~/example/public`. Most panels allow it (or use a subdomain).
    Only if the panel cannot: `cp deploy/apache/root.htaccess .htaccess` in the site root. This protects `.env`,
    `storage/` and `vendor/` only when the host reads `.htaccess` files; step 5 must prove it.

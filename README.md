@@ -108,8 +108,7 @@ A site starts from the skeleton, its own repository
 version tag), and gets this core as the Composer package `yanfishel/atarcms-core`:
 
 ```bash
-composer create-project yanfishel/atarcms my-site --no-interaction \
-  --repository='{"type":"vcs","url":"https://github.com/yanfishel/atarcms"}'
+composer create-project yanfishel/atarcms my-site --no-interaction
 ```
 
 Then: fill `.env`, run `php bin/atar migrate`, create the first administrator with

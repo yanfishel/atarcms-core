@@ -20,6 +20,7 @@ use AtarCms\Content\Http\TermController;
 use AtarCms\Content\Markdown\EntryMarkdown;
 use AtarCms\Content\Menu\MainMenu;
 use AtarCms\Content\Menu\MenuService;
+use AtarCms\Demo\DemoStructure;
 use AtarCms\Http\Routing\Route;
 use AtarCms\Http\Routing\Router;
 use AtarCms\I18n\Locales;
@@ -47,6 +48,7 @@ final class ContentModule extends Module
         $container->factory(Collections::class, static fn(Container $c): Collections => Collections::fromConfig($c->service(Config::class)));
         $container->factory(Taxonomies::class, static fn(Container $c): Taxonomies => $c->service(Collections::class)->taxonomies);
         $container->factory(MainMenu::class, static fn(Container $c): MainMenu => MainMenu::fromConfig($c->service(Config::class), $c->service(Collections::class)));
+        $container->factory(DemoStructure::class, static fn(Container $c): DemoStructure => DemoStructure::fromConfig($c->service(Config::class)));
         $container->factory(RichTextTheme::class, static fn(Container $c): RichTextTheme => new RichTextTheme(
             $c->service(ThemeConfig::class)->editor,
             $c->service(Paths::class)->theme($c->service(Config::class)->string('app.theme')),

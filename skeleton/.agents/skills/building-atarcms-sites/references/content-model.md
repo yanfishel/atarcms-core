@@ -85,7 +85,48 @@ Collection::make('events')                 // name: a-z, 0-9, _ ; never rename o
 - Tags: `Taxonomy::make('tags')->label('site.taxonomies.tags')->route('/tag/{slug}')` and `Field::tags('tags')`
   in a collection.
 - The terms themselves (the actual section names) are content: create them in the admin (Structure, Sections), per
-  language. Demo content creates generic ones.
+  language. Demo content creates the ones `config/demo.php` names (below), else generic ones.
+
+## Demo structure: `config/demo.php`
+
+What `bin/atar demo:seed` builds: the sections of the root taxonomy (top level, each with its subsections), the
+pages of the collection routed at `/{slug}` and the news tags, from the brief. Addresses are slugs (Latin letters,
+digits, hyphens), the same in every language; names are per language. Every key is optional: one left out (or the
+whole file) gives the generic demo one (Services, Projects, Company; About us; four tags), a language without a name
+gets a placeholder one. A flat root taxonomy (no `hierarchical()`) ignores `children`. A malformed file stops
+demo:seed before it deletes anything; an address the site already uses (a single such as `/about`, a preset page)
+is skipped and named in a `skipped:` line, never fatal. Articles, news texts and pictures stay placeholders.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+return [
+    'sections' => [
+        'kitchens' => [
+            'names' => ['ru' => 'Кухни'],
+            'children' => [
+                'modern' => ['ru' => 'Современные'],
+                'classic' => ['ru' => 'Классические'],
+            ],
+        ],
+        'bathrooms' => [
+            'names' => ['ru' => 'Ванные'],
+            'children' => [
+                'tiles' => ['ru' => 'Плитка'],
+                'plumbing' => ['ru' => 'Сантехника'],
+            ],
+        ],
+    ],
+    'pages' => [
+        'prices' => ['ru' => 'Цены'],
+    ],
+    'tags' => [
+        'ru' => ['Ремонт', 'Советы', 'Проекты', 'Материалы'],
+    ],
+];
+```
 
 ## `config/content.php`
 
@@ -119,7 +160,7 @@ Messages (and the mail) like the contact form. The skeleton ships `booking`. To 
    data-form-dialog="form-callback">…</a>` (the default theme's header has the "Book" link for `booking`).
 4. Send one through the dialog and once with JavaScript off (the page), and check it under Messages.
 
-Not available (the backlog): file attachments, prefilling a field from the button, statuses, slots or a calendar,
+Not available (planned, not built): file attachments, prefilling a field from the button, statuses, slots or a calendar,
 CAPTCHA, conversion events.
 
 ## Site settings (database, not config)

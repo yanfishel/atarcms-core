@@ -43,7 +43,7 @@ final readonly class DashboardData
 
     public const int TAGS = 8;
 
-    public const int FEED = 6;
+    public const int FEED = 5;
 
     /** The days of the KPI tiles' sparklines and their "in the last N days". */
     public const int TILE_DAYS = 30;

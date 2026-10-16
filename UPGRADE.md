@@ -26,6 +26,12 @@ here; every minor version lists its steps here.
 
 ## Versions
 
+### v0.2.0
+
+Change the constraint to `"yanfishel/atarcms-core": "^0.2"` in `composer.json`, then the usual three commands.
+No schema changes and nothing else to do; sites created from v0.1.0 keep working as they are. The optional
+`config/demo.php` only matters before `demo:seed` runs, so an installed site can ignore it.
+
 ### v0.1.0
 
 The first version: install it, nothing to update.

@@ -1,8 +1,8 @@
 # Architecture reference
 
 How each subsystem works: the classes, flows, routes and rules that are not obvious from one file. Read the
-section before changing its area. The hard rules themselves live in `CLAUDE.md`; public themes are
-`docs/theme-guide.md`, the admin UI is `docs/admin-ui.md`.
+section before changing its area. The hard rules themselves live in the development repository's `CLAUDE.md`;
+public themes are `docs/theme-guide.md`, the admin UI is `docs/admin-ui.md`.
 
 ## Boot and kernel
 
@@ -106,7 +106,9 @@ links and the dev login leave the avatar alone), served to signed-in users by `G
 
 Users (`users`: unique e-mail, name, role, unique `google_sub`, active or disabled, interface and content
 locale, accent, `last_login_at`, `avatar_version`; `bin/atar user:create <email> --role= [--name=]` and
-`user:disable <email>`) are managed through `Auth\UserManager` (the CLI and `/admin/users`, `users.manage`):
+`user:disable <email>`; `user:create` saves the site's default language as the interface language when it has an
+admin catalog, so a single-language site's admin speaks the site's language and not the browser's — users made
+in the admin keep the browser-following null) are managed through `Auth\UserManager` (the CLI and `/admin/users`, `users.manage`):
 `create()` and `update()` validate the e-mail, name and role and, with an actor, require `grants()` for the old
 and the new role; no one changes their own role or status (audited `user.created`, `user.updated`,
 `user.enabled`/`user.disabled`; a user's own locale, content locale and accent are preferences, not audited);
@@ -799,13 +801,13 @@ sanitizer's element set (tables stay HTML, videos become links; no markdown libr
 
 Three surfaces meet AI agents, all built in and all hidden by "Hide from search engines" where public:
 `/admin/ai-guide` (the admin described for a signed-in browser agent, filtered by the user's permissions; the
-sidebar-footer "AI guide" link and `<link rel="help">` point to it — details in docs/admin-ui.md "AI guide"),
+page footer's "AI guide" link and `<link rel="help">` point to it — details in docs/admin-ui.md "AI guide"),
 `/llms.txt` (the public site as a markdown map) and the `.md` twins of entry pages (both above, in "Feeds, sitemap
 and robots"). The admin's no-JavaScript rule and semantic markup are what make browser agents reliable there, and
 `skeleton/.agents/skills/building-atarcms-sites` is the agent skill that builds sites. The README's "AI-ready"
 section is the owner-facing summary. Decisions: one known guide URL instead of hidden per-page hints (hidden text
 never reaches an agent reading the accessibility tree and pollutes screen readers); browser agents only — an editing
-API/MCP is a deliberate non-goal until there is a real use (backlog).
+API/MCP is a deliberate non-goal until there is a real use (noted in the development repository's backlog).
 
 ## Preset pages
 
@@ -949,7 +951,12 @@ terms, menu items, media rows and files, share images, variants, messages, setti
 `DemoWiper::KEPT_SETTINGS`) through the repositories' `deleteAll()`; `DemoSeeder` fills every configured locale
 through the services only (GD placeholders labelled "Purpose · W×H", sections with subsections, articles, news
 with tags, pages, singles by field type, hero slides, footer menu, main menu order, demo settings with a map),
-deterministic; it asks for "yes" (`Cli\Prompt`) unless `--force`.
+deterministic; it asks for "yes" (`Cli\Prompt`) unless `--force`. `DemoStructure` reads the sections, root pages
+and tags from the optional `config/demo.php` (config key `demo`), each key falling back to `DemoTexts`; its
+`problems()` lines lead `DemoSeeder::problems()`, so a malformed file refuses before the wipe. Every per-item create
+(term, page, single, preset fill, article, news) goes through `DemoSeeder::guarded()`: a `ValidationFailed` (a taken
+address) becomes a `skipped: <kind> "<slug>" (<key>)` line in `seed()`'s result and the command's output, and the seed
+goes on.
 
 The public admin bar: theme helper `adminBar($entry, $term)` (`Admin\AdminBar` → `list<AdminBarAction>`:
 dashboard, "Add: {collection}" for at most 3 routed non-single collections the user may create in, with

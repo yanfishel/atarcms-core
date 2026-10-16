@@ -128,21 +128,19 @@ final class AdminShellTest extends FunctionalTestCase
         self::assertLessThan($languageMenu, $themeMenu, 'the theme before the language');
     }
 
-    public function testThereIsNoFooterAndTheFishartMarkSitsAtTheBottomOfTheSidebar(): void
+    public function testThePageFooterCarriesTheGuideLinkAndTheFishartMark(): void
     {
         $login = (string) $this->browser->get('/admin/login')->getBody();
         $this->actingAs($this->createUser('ann@example.com'));
         $dashboard = (string) $this->browser->get('/admin')->getBody();
 
-        $link = '<a class="admin-sidebar-brand-link" href="https://fishart.co.il" target="_blank" rel="noopener"><img class="admin-fishart" src="/admin-assets/fishart.png?v=';
-        foreach (['login' => $login, 'dashboard' => $dashboard] as $page => $body) {
-            self::assertStringNotContainsString('admin-footer', $body, $page);
-            self::assertStringNotContainsString('<footer', $body, $page);
-            self::assertStringNotContainsString('Powered by', $body, $page);
-        }
-        self::assertStringNotContainsString('fishart', $login, 'guest pages carry no logo');
-        self::assertStringContainsString($link, self::between($dashboard, '<aside class="admin-sidebar"', '</aside>'));
-        self::assertMatchesRegularExpression('~</nav>\s*<div class="admin-sidebar-footer">\s*<a class="admin-sidebar-guide" href="/admin/ai-guide">AI guide</a>\s*<a class="admin-sidebar-brand-link" href="https://fishart\.co\.il" target="_blank" rel="noopener"><img class="admin-fishart" src="/admin-assets/fishart\.png\?v=[0-9a-f]{12}" alt="fishart" height="16"></a>\s*</div>\s*<button type="button" class="admin-sidebar-toggle" data-sidebar-toggle [^>]*>.*?</button>\s*</aside>~s', $dashboard, 'below the nav, after the AI guide link; the rail toggle is a child of the sidebar itself, outside the scrolling nav');
+        $brand = '<p class="admin-footer-brand">' . date('Y') . ' © <a class="admin-footer-brand-link" href="https://fishart\.co\.il" target="_blank" rel="noopener"><img class="admin-fishart" src="/admin-assets/fishart\.png\?v=[0-9a-f]{12}" alt="fishart" height="16"></a></p>';
+        self::assertMatchesRegularExpression('~</main>\s*<footer class="admin-footer">\s*<a class="admin-footer-link" href="/admin/ai-guide">AI guide</a>\s*' . $brand . '\s*</footer>\s*</div>\s*</body>~', $dashboard, 'the footer ends the page: the guide link at the start, the mark at the end');
+        self::assertMatchesRegularExpression('~</main>\s*<footer class="admin-footer">\s*' . $brand . '\s*</footer>\s*</body>~', $login, 'guest pages carry the footer too, without the guide link');
+        self::assertStringNotContainsString('ai-guide', $login, 'the guide needs a signed-in user');
+        self::assertStringNotContainsString('fishart', self::between($dashboard, '<aside class="admin-sidebar"', '</aside>'), 'the mark left the sidebar');
+        self::assertStringNotContainsString('admin-sidebar-footer', $dashboard);
+        self::assertMatchesRegularExpression('~</nav>\s*<button type="button" class="admin-sidebar-toggle" data-sidebar-toggle [^>]*>.*?</button>\s*</aside>~s', $dashboard, 'the rail toggle is a child of the sidebar itself, outside the scrolling nav');
     }
 
     public function testLoginPageForGuestsAndRedirectForSignedInUsers(): void

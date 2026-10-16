@@ -23,6 +23,7 @@ use AtarCms\Content\Taxonomy;
 use AtarCms\Content\Term;
 use AtarCms\Content\TermInput;
 use AtarCms\Content\TermService;
+use AtarCms\Http\Exception\ValidationFailed;
 use AtarCms\I18n\Locales;
 use AtarCms\Kernel\Clock;
 use AtarCms\Kernel\Paths;
@@ -43,13 +44,14 @@ use Random\Randomizer;
 
 /**
  * Fills an empty site (DemoWiper) with demo content for every configured language, through the services only: the
- * site settings, placeholder pictures in a "Demo" folder, the sections of the root taxonomy (three, two subsections
- * each), two articles per leaf section, six news with tags, the pages of the root collection, the preset pages
+ * site settings, placeholder pictures in a "Demo" folder, the sections of the root taxonomy, two articles per leaf
+ * section, six news with tags, the pages of the root collection (sections, pages and tags from config/demo.php through
+ * DemoStructure, else the generic DemoTexts ones: three sections of two subsections each), the preset pages
  * (PresetPages makes them again after the wipe; the "privacy" and "accessibility" presets get a privacy policy and an
  * accessibility statement as templates, any other preset text by field type), every single() page (fields filled by
  * type), the menus of the theme's other locations (without the presets: a theme links those itself, the skeleton from
  * its footer) and the main menu's order. Translations are linked (createTranslation, then the language's texts). The
- * same configuration always gives the same content.
+ * same configuration (config/demo.php included) always gives the same content.
  */
 final class DemoSeeder
 {
@@ -80,6 +82,9 @@ final class DemoSeeder
     /** @var array<string, array<string, int>> locale => what => how many */
     private array $counts = [];
 
+    /** @var list<string> what was not made, and why (guarded()) */
+    private array $skipped = [];
+
     public function __construct(
         private readonly Collections $collections,
         private readonly Locales $locales,
@@ -98,19 +103,24 @@ final class DemoSeeder
         private readonly Paths $paths,
         private readonly PresetPages $presets,
         private readonly EntryRepository $entryRepository,
+        private readonly DemoStructure $structure,
     ) {
         $this->random = self::randomizer();
     }
 
     /**
-     * @return array<string, array<string, int>> locale => counts (sections, entries per collection, tags, menu items),
-     *                                           plus "" => ['files' => n]
+     * A section, page or entry whose address is taken (or that the services refuse otherwise) is skipped and named in
+     * "skipped"; the seed goes on.
+     *
+     * @return array{counts: array<string, array<string, int>>, files: int, skipped: list<string>} counts: locale =>
+     *                                                                                             what => how many
      */
     public function seed(?User $actor): array
     {
         $this->random = self::randomizer();
         $this->lorem = [];
         $this->counts = [];
+        $this->skipped = [];
         $this->serial = 0;
         $this->pictures = [];
         $this->actor = $actor;
@@ -130,8 +140,8 @@ final class DemoSeeder
                 continue;
             }
             if ($collection->single) {
-                $single = $this->createSingle($collection);
-                if ($collection->route !== '/') {
+                $single = $this->guarded('single', $collection->name, fn(): array => $this->createSingle($collection));
+                if ($single !== null && $collection->route !== '/') {
                     $singles[] = $single;
                 }
 
@@ -151,8 +161,11 @@ final class DemoSeeder
                 continue;
             }
             if ($collection->route === Taxonomy::ROOT_ROUTE) {
-                foreach (DemoTexts::PAGES as $slug => $titles) {
-                    $pages[] = $this->createPage($collection, $slug, $titles, $now->modify('-30 days'));
+                foreach ($this->structure->pages() as $slug => $titles) {
+                    $page = $this->guarded('page', $slug, fn(): array => $this->createPage($collection, $slug, $titles, $now->modify('-30 days')));
+                    if ($page !== null) {
+                        $pages[] = $page;
+                    }
                 }
 
                 continue;
@@ -165,7 +178,11 @@ final class DemoSeeder
         $this->createMenus([...$pages, ...$singles]);
         $this->orderMainMenu(count($tops));
 
-        return [...$this->counts, '' => ['files' => count($this->pictures, COUNT_RECURSIVE) - count($this->pictures)]];
+        return [
+            'counts' => $this->counts,
+            'files' => count($this->pictures, COUNT_RECURSIVE) - count($this->pictures),
+            'skipped' => $this->skipped,
+        ];
     }
 
     /**
@@ -179,7 +196,8 @@ final class DemoSeeder
      */
     public function problems(bool $create = true): array
     {
-        $problems = [];
+        // config/demo.php first: a mistake there must stop the seed before the wipe.
+        $problems = $this->structure->problems();
         if (!function_exists('imagejpeg') || !ShareFont::available()) {
             $problems[] = 'PHP\'s GD extension must write JPEG and draw text (FreeType): the demo pictures are drawn with it.';
         }
@@ -213,6 +231,27 @@ final class DemoSeeder
     private static function randomizer(): Randomizer
     {
         return new Randomizer(new Xoshiro256StarStar(hash('sha256', 'atar-demo', true)));
+    }
+
+    /**
+     * Runs $make; when a service refuses it (an address already taken, mostly) records "skipped: <kind> "<label>"
+     * (<the first message key>)" and returns null. What $make made before the refusal stays.
+     *
+     * @template T
+     *
+     * @param callable(): T $make
+     *
+     * @return T|null
+     */
+    private function guarded(string $kind, string $label, callable $make): mixed
+    {
+        try {
+            return $make();
+        } catch (ValidationFailed $e) {
+            $this->skipped[] = sprintf('skipped: %s "%s" (%s)', $kind, $label, array_values($e->errors)[0] ?? 'refused');
+
+            return null;
+        }
     }
 
     private function lorem(string $locale): LoremText
@@ -320,8 +359,13 @@ final class DemoSeeder
         $tops = [];
         $leaves = [];
         $position = 0;
-        foreach (DemoTexts::SECTIONS as $slug => $section) {
-            $top = $this->createTerm($taxonomy, $slug, $section['names'], null, $position++);
+        foreach ($this->structure->sections() as $slug => $section) {
+            $top = $this->guarded('section', $slug, fn(): array => $this->createTerm($taxonomy, $slug, $section['names'], null, $position));
+            $position++;
+            if ($top === null) {
+                // Its subsections need it: they are not made either.
+                continue;
+            }
             $tops[] = $top;
             if (!$taxonomy->hierarchical) {
                 $leaves[] = $top;
@@ -330,7 +374,11 @@ final class DemoSeeder
             }
             $childPosition = 0;
             foreach ($section['children'] as $childSlug => $names) {
-                $leaves[] = $this->createTerm($taxonomy, $childSlug, $names, $top, $childPosition++);
+                $leaf = $this->guarded('section', $slug . '/' . $childSlug, fn(): array => $this->createTerm($taxonomy, $childSlug, $names, $top, $childPosition));
+                $childPosition++;
+                if ($leaf !== null) {
+                    $leaves[] = $leaf;
+                }
             }
         }
 
@@ -413,14 +461,15 @@ final class DemoSeeder
     {
         $titles = $this->titles();
         $picture = $this->random->getInt(0, 100);
-        $this->createEntry(
+        $slug = $this->slug($titles, $collection->name);
+        $this->guarded($collection->name, $slug, fn(): array => $this->createEntry(
             $collection,
-            $this->slug($titles, $collection->name),
+            $slug,
             static fn(string $locale): string => $titles[$locale],
             fn(string $locale): array => $this->fields($collection, $locale, $picture, withSummary: $index === 0, withGallery: $index === 0),
-            static fn(string $locale): array => [(string) $collection->routeTaxonomy => [$section[$locale]->id]],
+            static fn(string $locale): array => [(string) $collection->routeTaxonomy => isset($section[$locale]) ? [$section[$locale]->id] : []],
             $published,
-        );
+        ));
     }
 
     private function createNews(Collection $collection, int $index, DateTimeImmutable $published): void
@@ -432,26 +481,28 @@ final class DemoSeeder
                 $tagsField ??= $field;
             }
         }
-        $tagIndexes = [$index % 4, ($index + 1) % 4];
-        $this->createEntry(
+        $tagNames = $this->structure->tags();
+        $slug = $this->slug($titles, $collection->name);
+        $this->guarded($collection->name, $slug, fn(): array => $this->createEntry(
             $collection,
-            $this->slug($titles, $collection->name),
+            $slug,
             static fn(string $locale): string => $titles[$locale],
             fn(string $locale): array => $this->fields($collection, $locale, $index, withSummary: true, withGallery: $index % 2 === 0),
-            function (string $locale) use ($tagsField, $tagIndexes): ?array {
+            function (string $locale) use ($tagsField, $tagNames, $index): ?array {
                 if ($tagsField === null) {
                     return null;
                 }
-                $names = DemoTexts::TAGS[$locale] ?? null;
+                // Two tags of the language's names in turn (lorem ones for a language without names).
+                $names = $tagNames[$locale] ?? [];
                 $tags = [];
-                foreach ($tagIndexes as $i) {
-                    $tags[] = $names[$i] ?? $this->lorem($locale)->title(1, 1);
+                foreach ([$index, $index + 1] as $i) {
+                    $tags[] = $names === [] ? $this->lorem($locale)->title(1, 1) : $names[$i % count($names)];
                 }
 
-                return [(string) $tagsField->taxonomy => $tags];
+                return [(string) $tagsField->taxonomy => array_values(array_unique($tags))];
             },
             $published,
-        );
+        ));
     }
 
     /**
@@ -507,13 +558,15 @@ final class DemoSeeder
                     $values[$name] = $text;
                 }
             }
-            $this->entries->update($entry, new EntryInput(
+            $filled = $this->guarded('preset', $preset . ' (' . $locale . ')', fn(): Entry => $this->entries->update($entry, new EntryInput(
                 title: $entry->title,
                 fields: $values,
                 // The title for search engines is the title, which is also what share images show.
                 metaTitle: $entry->title,
-            ), $this->actor, null);
-            $this->count($locale, $collection->name);
+            ), $this->actor, null));
+            if ($filled !== null) {
+                $this->count($locale, $collection->name);
+            }
         }
     }
 
@@ -563,10 +616,11 @@ final class DemoSeeder
         $prefix = $locale === $this->locales->default() ? '' : '/' . $locale;
         $archive = null;
         $page = null;
+        $first = array_key_first($this->structure->pages());
         foreach ($this->collections->all() as $collection) {
             $archive ??= $collection->archive;
-            if ($collection->route === Taxonomy::ROOT_ROUTE) {
-                $page ??= '/' . array_key_first(DemoTexts::PAGES);
+            if ($collection->route === Taxonomy::ROOT_ROUTE && $first !== null) {
+                $page ??= '/' . $first;
             }
         }
         $links = [$archive, null, $page];

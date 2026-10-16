@@ -94,8 +94,7 @@ AtarCMS and this skeleton are open-source Composer packages (`yanfishel/atarcms-
 GitHub: installing needs no account and no token. A new site is:
 
 ```bash
-composer create-project yanfishel/atarcms my-site --no-interaction \
-  --repository='{"type":"vcs","url":"https://github.com/yanfishel/atarcms"}'
+composer create-project yanfishel/atarcms my-site --no-interaction
 ```
 
 Every way to run it (your computer or a server, with or without Docker, shared hosting) is in
@@ -112,6 +111,14 @@ then open the site's folder and continue with its skill.
 ```
 
 The agent asks before it installs packages or changes a server, and you type the secrets yourself.
+
+**What to have ready.** The agent will interview you; answers prepared up front turn several rounds into one.
+Useful to have: what the site is about and for whom, and its name; the languages; the pages and sections you
+imagine (unsure is fine — the agent proposes); a site you like as a style sample, or a purchased template — then
+**its files and its licence**, not just its address; contacts (phone, email, address or online-only, opening
+hours, messengers) and social links; texts, photos and a logo you already have; anything that must *not* appear
+on the site. Needed only for launch day, not sooner: the domain, an SMTP mailbox for the forms' mail, and
+analytics counter numbers.
 
 ## Everything else
 

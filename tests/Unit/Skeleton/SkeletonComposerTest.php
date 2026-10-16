@@ -25,7 +25,7 @@ final class SkeletonComposerTest extends TestCase
         self::assertIsArray($composer['require']);
         self::assertIsString($composer['require']['yanfishel/atarcms-core']);
         self::assertMatchesRegularExpression('/^\^\d+\.\d+$/', $composer['require']['yanfishel/atarcms-core']);
-        self::assertSame([['type' => 'vcs', 'url' => 'https://github.com/yanfishel/atarcms-core']], $composer['repositories']);
+        self::assertArrayNotHasKey('repositories', $composer, 'the shipped skeleton resolves the core from Packagist');
         self::assertSame('stable', $composer['minimum-stability']);
         self::assertArrayNotHasKey('prefer-stable', $composer);
         self::assertArrayNotHasKey('version', $composer);

@@ -33,7 +33,10 @@ sections and tags, menu items, files (with their sizes and share images), messag
 admin colour, the "hide from search engines" and accessibility toolbar switches, the verification codes, the analytics counters and the advertising pixels; users and the activity history stay. It asks for
 "yes"; `--force` skips the question (needed without a terminal), `--user=you@example.com` makes that user the
 author (default: the first administrator), `--dry-run` only prints what it would delete. Running it again gives the
-same content. The demo settings replace yours: put the real ones back with `php bin/atar settings:import site.json`
+same content. An optional `config/demo.php` (keys `sections`, `pages`, `tags`; the site does not ship one) replaces
+the generic sections, About page and tags with the site's own; a key left out keeps the generic one, and a malformed
+file stops the command before anything is deleted. A section or page whose address the site already uses is skipped
+and named in a `skipped:` line; the rest is made. The demo settings replace yours: put the real ones back with `php bin/atar settings:import site.json`
 (`--example` prints the current settings in that JSON shape, `--dry-run` only validates).
 
 ## Building the site with an AI agent
@@ -139,10 +142,24 @@ docker compose exec -u www-data php php bin/atar user:login-link you@example.com
 
 Open the printed URL within 10 minutes; it works once. More users are added in `/admin/users`.
 
-To enable "Sign in with Google", create an OAuth client of type "Web application" in the Google Cloud
-console with the redirect URI `{APP_URL}/admin/login/google/callback`, then set
-`ATAR_GOOGLE_CLIENT_ID` and `ATAR_GOOGLE_CLIENT_SECRET` in `.env`. Only users that already exist
-(matched by email on their first Google login) can sign in.
+**"Sign in with Google" (optional).** It lets editors use their Google account instead of login links; it never
+creates users — only people already added in `/admin/users` can sign in (matched by e-mail on their first Google
+login). It needs an OAuth client, which any Google account creates for free in the Google Cloud console:
+
+1. Open https://console.cloud.google.com, create (or pick) a project — its name is only visible to you.
+2. Set up the consent screen (today under "Google Auth Platform", formerly "APIs & Services → OAuth consent
+   screen"): the app name your editors will see on Google's page, your support e-mail, audience **External**,
+   and publish the app (leaving it "Testing" lets only listed test users sign in). The sign-in asks only for
+   name and e-mail — no sensitive scopes, so Google's app verification review is not needed.
+3. Create the client (under "Clients", formerly "Credentials → Create credentials → OAuth client ID"): type
+   **Web application**, and the authorized redirect URI exactly `{APP_URL}/admin/login/google/callback`
+   (your real https address; for local Docker development, `http://localhost:8080/admin/login/google/callback`).
+4. Copy the Client ID and Client secret into `.env` as `ATAR_GOOGLE_CLIENT_ID` and
+   `ATAR_GOOGLE_CLIENT_SECRET`. Optionally limit sign-in to your Google Workspace domains with
+   `ATAR_GOOGLE_ALLOWED_DOMAINS` (comma-separated).
+
+Without the two variables the Google button and its routes simply do not exist (404), so the feature is off
+until you want it.
 
 ## Languages
 
@@ -318,8 +335,8 @@ The site is AI-ready without any work of yours. `/llms.txt` is a markdown map of
 languages, a link per public entry and term; after `content.llms_limit` links, default 1000, it points to the
 sitemap). Every public entry page also answers at its address plus `.md` (`/news/hello.md`, `/index.md` for the home
 page) with the page as clean markdown, a canonical link to the HTML page and `noindex`; old addresses redirect like
-the HTML pages. A signed-in agent working in the admin reads `/admin/ai-guide` — the "AI guide" link at the bottom of
-the sidebar — which lists the screens, content types and fields its user may use. "Hide from search engines" hides
+the HTML pages. A signed-in agent working in the admin reads `/admin/ai-guide` — the "AI guide" link in the admin's
+page footer — which lists the screens, content types and fields its user may use. "Hide from search engines" hides
 `/llms.txt` and the `.md` pages along with the sitemap.
 
 ## Admin

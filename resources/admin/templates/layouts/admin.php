@@ -3,12 +3,12 @@
  * The admin page. Signed-in users get the shell: the sidebar (brand, grouped menu, rail toggle), the top bar with
  * the breadcrumbs (a page without a trail names itself), the inbox and the theme, content language and account menus (the account menu links the Profile), and the
  * page with its flash messages. The menu triggers show icons only; each is named by a title and an aria-label with
- * the same text. The AI guide link (also the <head>'s rel="help") and the fishart mark sit centred at the bottom of
- * the sidebar, and the rail toggle beside it on the
+ * the same text. Every page ends with the quiet page footer (partials/footer): the AI guide link — also the <head>'s
+ * rel="help" — for signed-in users, the year and the fishart mark for everyone. The rail toggle hangs on the
  * sidebar's edge (a child of the <aside>, outside the scrolling nav). The sidebar's group names are not headings (the
  * page's h1 comes first); each names its list. The toast stack, a polite live region, is always there (empty without
- * flashes) for scripts to fill. Guests (the login page, error pages) get a centred card without the sidebar and
- * without the mark. The inline script in <head> is the only one: it applies the stored theme and sidebar
+ * flashes) for scripts to fill. Guests (the login page, error pages) get a centred card without the sidebar.
+ * The inline script in <head> is the only one: it applies the stored theme and sidebar
  * state before the stylesheet paints, and marks the page with the "js" class. <html lang dir> name the interface
  * language and its direction (langAttrs: a Hebrew interface is laid out right to left). <html data-accent> carries the admin colour
  * of the settings (the adminBrand helper; green when they cannot be read), whose palette admin.css's tokens apply.
@@ -59,6 +59,7 @@ $trail = $breadcrumbs ?? [];
 <main class="admin-guest-main">
 <?= $content ?>
 </main>
+<?= $this->partial('partials/footer') ?>
 </body>
 <?php else: ?>
 <?php
@@ -92,10 +93,6 @@ $locales = $this->siteLocales();
         </div>
         <?php endforeach ?>
     </nav>
-    <div class="admin-sidebar-footer">
-        <a class="admin-sidebar-guide" href="<?= $this->e($this->url('admin.ai_guide')) ?>"><?= $this->e($this->t('admin.layout.ai_guide')) ?></a>
-        <a class="admin-sidebar-brand-link" href="https://fishart.co.il" target="_blank" rel="noopener"><img class="admin-fishart" src="<?= $this->e($this->asset('fishart.png')) ?>" alt="fishart" height="16"></a>
-    </div>
     <button type="button" class="admin-sidebar-toggle" data-sidebar-toggle title="<?= $this->e($this->t('admin.layout.collapse_menu')) ?>"><?= $this->icon('chevron-left', $this->t('admin.layout.collapse_menu')) ?></button>
 </aside>
 <div class="admin-backdrop" data-drawer-close hidden></div>
@@ -175,6 +172,7 @@ $locales = $this->siteLocales();
         <div class="admin-visually-hidden" role="status" data-toast-announcer></div>
 <?= $content ?>
     </main>
+    <?= trim($this->partial('partials/footer')) ?>
 </div>
 </body>
 <?php endif ?>

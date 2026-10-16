@@ -444,14 +444,10 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px
 .admin-nav-link[aria-current="page"] { background: var(--accent-soft); color: var(--accent-strong); font-weight: 600; }
 .admin-nav-link[aria-current="page"] .admin-icon { color: var(--accent-strong); }
 .admin-nav-label { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.admin-sidebar-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-2); }
-/* The AI agent guide (/admin/ai-guide): a quiet text link beside the fishart mark. */
-.admin-sidebar-guide { display: inline-flex; align-items: center; min-height: var(--control-height); padding: 0 var(--space-1); border-radius: var(--radius-control); color: var(--muted); font-size: .75rem; text-decoration: none; }
-.admin-sidebar-guide:hover { color: var(--text); text-decoration: underline; }
-.admin-sidebar-brand-link { display: inline-flex; align-items: center; min-width: 0; min-height: var(--control-height); padding: 0 var(--space-1); border-radius: var(--radius-control); }
 .admin-fishart { width: auto; height: 16px; filter: var(--logo-filter); }
-/* The rail toggle hangs on the sidebar's inner edge at the bottom, level with the centred fishart mark: a 40 px button
-   (the hit area) around a 32 px circle. It is a child of the <aside>, which does not clip, not of the scrolling nav. */
+/* The rail toggle hangs on the sidebar's inner edge at the bottom: a 40 px button (the hit area) around a 32 px
+   circle. It is a child of the <aside>, which does not clip, not of the scrolling nav, and may overlap the end of a
+   scrolled list's hover pills — hanging half outside, it covers no text. */
 .admin-sidebar-toggle { position: absolute; bottom: var(--space-4); inset-inline-end: 0; z-index: 1; display: none; align-items: center; justify-content: center; width: var(--control-height); height: var(--control-height); padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; transform: translateX(50%); }
 .admin-sidebar-toggle:dir(rtl) { transform: translateX(-50%); }
 .admin-sidebar-toggle::before { content: ""; position: absolute; top: 4px; inset-inline-start: 4px; z-index: -1; width: 32px; height: 32px; border: 1px solid var(--border-strong); border-radius: 50%; background: var(--raised); box-shadow: var(--shadow-card); }
@@ -467,8 +463,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px
     .admin-nav-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
     .admin-nav-group + .admin-nav-group { padding-top: var(--space-3); border-top: 1px solid var(--border); }
     .admin-nav-link { justify-content: center; padding: 0; }
-    .admin-sidebar-brand-link { visibility: hidden; }
-    .admin-sidebar-guide { display: none; }
     .admin-sidebar-toggle .admin-icon { transform: rotate(180deg); }
 }
 
@@ -488,6 +482,13 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px
 .admin-breadcrumbs [aria-current="page"] { color: var(--text); font-weight: 600; }
 .admin-content:focus { outline: none; }
 .admin-content { width: 100%; min-width: 0; max-width: calc(var(--content-width) + 2 * var(--space-5)); margin: 0 auto; padding: var(--space-5); }
+/* The page footer, the last thing on every page (guest pages too): no background, quiet links at the start, the year
+   and the fishart mark at the end. margin-block-start pushes it to the bottom of its column even under a short page. */
+.admin-footer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); margin-block-start: auto; padding: var(--space-2) var(--space-5); }
+.admin-footer-link { display: inline-flex; align-items: center; min-height: var(--control-height); padding: 0 var(--space-1); border-radius: var(--radius-control); color: var(--muted); font-size: .75rem; text-decoration: none; }
+.admin-footer-link:hover { color: var(--text); text-decoration: underline; }
+.admin-footer-brand { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0; margin-inline-start: auto; color: var(--muted); font-size: .75rem; }
+.admin-footer-brand-link { display: inline-flex; align-items: center; min-height: var(--control-height); padding: 0 var(--space-1); border-radius: var(--radius-control); }
 
 /* The top-bar menus (after the inbox: theme, content language, user): <details> popovers that open downwards over the page. */
 .admin-topbar-menus { display: flex; flex: none; align-items: center; gap: var(--space-1); margin-inline-start: auto; }
@@ -565,8 +566,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px
 .js .admin-toast-close { display: inline-flex; }
 .admin-toast-close:hover { background: var(--bg); color: var(--text); }
 
-.admin-guest { display: grid; min-height: 100vh; align-content: center; justify-items: center; gap: var(--space-2); padding: var(--space-4); }
-.admin-guest-main { width: min(28rem, 100%); }
+.admin-guest { display: flex; flex-direction: column; min-height: 100vh; padding: var(--space-4); }
+.admin-guest-main { width: min(28rem, 100%); margin: auto; }
 .admin-login, .admin-error { display: grid; justify-items: start; gap: var(--space-3); padding: var(--space-6); border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow-card); }
 .admin-login h1, .admin-error h1, .admin-login p, .admin-error p { margin: 0; }
 .admin-login-site { display: flex; align-items: center; gap: var(--space-3); font-weight: 700; }

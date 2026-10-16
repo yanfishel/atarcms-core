@@ -60,7 +60,7 @@ packages through Composer (`README.md`, "Using AtarCMS").
 
 5. Watch the Release workflow (`gh run watch`); all three jobs must pass.
 6. Verify from a clean machine or container:
-   `composer create-project yanfishel/atarcms check-site --no-interaction --repository='{"type":"vcs","url":"https://github.com/yanfishel/atarcms"}'`,
+   `composer create-project yanfishel/atarcms check-site --no-interaction`,
    then `php bin/atar doctor` in it (after `.env` and a database).
 
 A failed export can be re-run from the Actions page — each export job on its own. If a target repository already
@@ -86,8 +86,7 @@ rm atarcms-deploy atarcms-deploy.pub
 
 ## Packagist
 
-After the first public release, submit both packages on https://packagist.org (`yanfishel/atarcms-core`,
-`yanfishel/atarcms`) and let Packagist's GitHub integration update them per tag. Once they are listed,
-`composer create-project yanfishel/atarcms my-site` works without `--repository`, and the skeleton's
-`repositories` entry (and the `--repository` flag in the READMEs) can be dropped with the next release.
-No tokens: both repositories are public.
+Both packages are on https://packagist.org (`yanfishel/atarcms-core`, `yanfishel/atarcms`, submitted
+2026-10-15) and update per tag through Packagist's GitHub integration — check both pages after a release. Sites
+resolve everything from Packagist: `composer create-project yanfishel/atarcms my-site` with no `--repository`
+and no tokens (the skeleton's shipped `composer.json` carries no `repositories` entry since v0.1.1).

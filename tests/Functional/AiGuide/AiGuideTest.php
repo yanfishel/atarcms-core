@@ -195,7 +195,7 @@ final class AiGuideTest extends FunctionalTestCase
         $body = (string) $this->browser->get('/admin')->getBody();
 
         self::assertStringContainsString('<link rel="help" href="/admin/ai-guide">', $body);
-        self::assertMatchesRegularExpression('~<div class="admin-sidebar-footer">\s*<a class="admin-sidebar-guide" href="/admin/ai-guide">AI guide</a>~', $body);
+        self::assertMatchesRegularExpression('~<footer class="admin-footer">\s*<a class="admin-footer-link" href="/admin/ai-guide">AI guide</a>~', $body);
     }
 
     public function testTheLoginPageDoesNotLinkTheGuide(): void

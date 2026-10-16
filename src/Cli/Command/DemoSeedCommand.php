@@ -120,17 +120,19 @@ final class DemoSeedCommand implements Command
 
             return 1;
         }
-        $files = $made['']['files'] ?? 0;
-        unset($made['']);
-        foreach ($made as $locale => $counts) {
+        foreach ($made['counts'] as $locale => $counts) {
             $parts = [];
             foreach ($counts as $what => $count) {
                 $parts[] = $count . ' ' . str_replace('_', ' ', $what);
             }
             $output->line(sprintf('%s: %s.', $locale, implode(', ', $parts)));
         }
-        $output->line(sprintf('Uploaded %d demo pictures. Done in %s s.', $files, round(microtime(true) - $started, 1)));
-        $this->audit->record('demo.seeded', $actor?->id, null, null, ['counts' => $made, 'files' => $files]);
+        // What the site already had at its address (or the services refused): the seed went on without it.
+        foreach ($made['skipped'] as $skipped) {
+            $output->line($skipped);
+        }
+        $output->line(sprintf('Uploaded %d demo pictures. Done in %s s.', $made['files'], round(microtime(true) - $started, 1)));
+        $this->audit->record('demo.seeded', $actor?->id, null, null, $made);
 
         return 0;
     }

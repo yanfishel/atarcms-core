@@ -17,8 +17,14 @@ or D); this list is what must be true before visitors come.
    in the admin.
 6. **Administrators**: `bin/atar user:create owner@example.com --role=admin --name="Name"`, then
    `bin/atar user:login-link owner@example.com` (a one-time link, 10 minutes). More users in the admin.
-7. **Google sign-in** (optional): an OAuth client "Web application" with the redirect URI
-   `{APP_URL}/admin/login/google/callback`; `ATAR_GOOGLE_CLIENT_ID`, `ATAR_GOOGLE_CLIENT_SECRET` in `.env`.
+7. **Google sign-in** (optional; it never creates users — only people already in `/admin/users` can sign in).
+   The owner creates an OAuth client in https://console.cloud.google.com (any Google account, free); walk them
+   through: a project, then the consent screen ("Google Auth Platform": app name, support e-mail, audience
+   External, publish — only name and e-mail are asked, so no verification review), then a client of type
+   "Web application" with the authorized redirect URI exactly `{APP_URL}/admin/login/google/callback`.
+   The owner puts the Client ID and secret into `.env` as `ATAR_GOOGLE_CLIENT_ID`,
+   `ATAR_GOOGLE_CLIENT_SECRET` (never in the chat); `ATAR_GOOGLE_ALLOWED_DOMAINS` can limit sign-in to their
+   Workspace domains. The full steps are the site handbook's "Sign in with Google".
 8. **Content**: demo content replaced or removed (it contains invented texts and placeholder pictures); real Privacy
    policy and any legally required pages; real site settings (`bin/atar settings:import` or the admin Settings);
    the site icon and logo uploaded in Settings.

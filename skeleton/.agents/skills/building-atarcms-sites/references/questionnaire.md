@@ -60,7 +60,10 @@ brief and ask for confirmation.
 
 17. Demo content to see the design before real texts? (yes on a new site). It deletes everything that is already
     there.
-18. The domain, the mail provider, who the administrators are (emails), Google sign-in (yes/no).
+18. The domain, the mail provider, who the administrators are (emails), Google sign-in (yes/no). On a yes, tell
+    the owner now that it needs a free OAuth client from https://console.cloud.google.com (their Google account,
+    about ten minutes) and that you will walk them through it at launch — the steps are go-live item 7 and the
+    site handbook's "Sign in with Google".
 19. Visitor statistics? A Yandex Metrica counter number (with Webvisor session replay or without) and/or a Google
     Analytics 4 measurement ID. Visitors then see a cookie banner and are counted only after they accept. Advertising
     pixels? A Meta Pixel ID, a Google Ads conversion ID (`AW-…`), a VK Ads pixel ID, a TikTok Pixel ID; visitors then

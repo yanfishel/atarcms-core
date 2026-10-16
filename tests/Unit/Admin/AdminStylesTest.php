@@ -48,8 +48,6 @@ final class AdminStylesTest extends TestCase
         '[hidden]' => 'the hidden attribute',
         '.admin-sidebar-toggle' => 'shown by ".js .admin-sidebar-toggle"',
         '.admin-brand-name, .admin-nav-heading' => 'the rail, which only shell.js or a stored choice turns on',
-        '.admin-sidebar-brand-link' => 'the rail',
-        '.admin-sidebar-guide' => 'the rail (the AI guide stays linked by the <head>\'s rel="help")',
         '.admin-topbar .admin-burger' => 'shown by ".js .admin-topbar .admin-burger"',
         '.admin-sidebar .admin-drawer-close' => 'shown on phones by ".js .admin-sidebar .admin-drawer-close" (the drawer\'s own close button; no drawer without JavaScript)',
         '.admin-backdrop' => 'shown on phones while not [hidden]',
@@ -399,18 +397,31 @@ final class AdminStylesTest extends TestCase
     }
 
     /**
-     * The top-bar triggers are icon-only squares of the touch-target size; the sidebar logo yields to the rail.
+     * The top-bar triggers are icon-only squares of the touch-target size.
      */
-    public function testTheTopBarTriggersAreIconOnlyAndTheLogoLeavesTheRail(): void
+    public function testTheTopBarTriggersAreIconOnly(): void
     {
         $css = (string) file_get_contents(self::ASSETS . '/admin.css');
 
         self::assertStringNotContainsString('admin-menu-text', $css);
-        self::assertStringNotContainsString('admin-footer', $css);
         self::assertMatchesRegularExpression('/^\.admin-menu-trigger \{[^}]*justify-content: center; width: var\(--control-height\); height: var\(--control-height\);/m', $css);
-        self::assertMatchesRegularExpression('/^\.admin-sidebar-brand-link \{[^}]*min-height: var\(--control-height\);/m', $css);
-        self::assertMatchesRegularExpression('/^    \.admin-sidebar-brand-link \{ visibility: hidden; \}$/m', $css, 'the rail has no room for the logo, but keeps its row: the nav never grows under the edge toggle');
-        self::assertStringNotContainsString('.admin-sidebar-footer { display: none; }', $css);
+    }
+
+    /**
+     * The page footer: no background (it just ends the page), the quiet links at the start, the year and the fishart
+     * mark pushed to the end. The guest page keeps its card centred in the leftover room.
+     */
+    public function testThePageFooterIsQuietAndEndsThePage(): void
+    {
+        $css = (string) file_get_contents(self::ASSETS . '/admin.css');
+
+        $footer = Regex::match('/^\.admin-footer \{([^}]*)\}/m', $css);
+        self::assertStringContainsString('margin-block-start: auto;', $footer[1], 'the footer sits at the bottom even under a short page');
+        self::assertStringNotContainsString('background', $footer[1], 'no background');
+        self::assertStringNotContainsString('border', $footer[1], 'no separating line either');
+        self::assertMatchesRegularExpression('/^\.admin-footer-brand \{[^}]*margin-inline-start: auto;/m', $css, 'the links start the row, the mark ends it');
+        self::assertMatchesRegularExpression('/^\.admin-guest \{[^}]*flex-direction: column;[^}]*min-height: 100vh;/m', $css, 'the guest page is a column, so its footer reaches the bottom');
+        self::assertMatchesRegularExpression('/^\.admin-guest-main \{[^}]*margin: auto;/m', $css, 'the guest card stays centred in the room above the footer');
     }
 
     public function testEveryIconTheTemplatesNameIsInTheSprite(): void
@@ -668,7 +679,8 @@ final class AdminStylesTest extends TestCase
         foreach (['width: 32px;', 'height: 32px;', 'border-radius: 50%;', 'border: 1px solid var(--border-strong);', 'background: var(--raised);', 'box-shadow: var(--shadow-card);'] as $declaration) {
             self::assertStringContainsString($declaration, $circle[1], $declaration);
         }
-        self::assertMatchesRegularExpression('/^\.admin-sidebar-footer \{[^}]*justify-content: center;/m', $css, 'the fishart mark is centred');
+        self::assertMatchesRegularExpression('/^\.admin-sidebar \{[^}]*padding: var\(--space-4\) var\(--space-3\);/m', $css, 'no reserved band under the nav');
+        self::assertDoesNotMatchRegularExpression('/^\.admin-nav \{[^}]*padding-block-end/m', $css, 'no reserved room inside the scroll either');
         self::assertMatchesRegularExpression('/@media \(max-width: 767px\) \{[^@]*\.js \.admin-sidebar-toggle \{ display: none; \}/', $css, 'the burger does the job on phones');
     }
 

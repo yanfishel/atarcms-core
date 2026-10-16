@@ -6,7 +6,7 @@ marked "(test)" are enforced by a test; change the test only together with the r
 ## Files
 
 - `resources/admin/assets/`: `admin.css` (the one stylesheet), `icons.svg` + `icons.LICENSE` (vendored Lucide
-  subset), `fishart.png` (sidebar logo), `logo/` (the AtarCMS logo per admin colour preset, Plan 19: `atar-{preset}.svg`
+  subset), `fishart.png` (the footer's fishart mark), `logo/` (the AtarCMS logo per admin colour preset, Plan 19: `atar-{preset}.svg`
   and `atar-{preset}-{32,180,192,512}.png`, the 180 full-bleed for iOS, with `Cardo-OFL.txt` and `NOTICE.txt`; the admin
   brand and the site's default icons, `Settings\AtarLogo`), `shell.js` (every signed-in page), `tooltip.js` (every
   page, guests too: titles as tooltips, Plan 27; the skeleton theme ships a byte-identical copy), `tabs.js` (entry form, section form, site settings, the dashboard's "In progress" tabs, the profile), `media.js` (library,
@@ -174,10 +174,12 @@ marked "(test)" are enforced by a test; change the test only together with the r
   is not shown; a plain single's item needs its publish permission, as editing it does), current item
   `aria-current="page"`. The brand and the links name themselves in `data-rail-title`; `shell.js` makes it their
   `title` (a tip) only on the rail (not in the phone drawer) or for a label cut short. The rail is a container query
-  (`@container sidebar (max-width: 120px)`): labels visually hidden, headings gone, logo hidden. The edge toggle
-  (`[data-sidebar-toggle]`, JS only) sits at the bottom on the right edge, outside the scrolling nav; the AI guide
-  link (`admin-sidebar-guide`, `admin.layout.ai_guide`, hidden on the rail) and the fishart link are centred in
-  `.admin-sidebar-footer`. There is no page footer. Below 768px: the burger (`[data-drawer-open]`) opens
+  (`@container sidebar (max-width: 120px)`): labels visually hidden, headings gone. The edge toggle
+  (`[data-sidebar-toggle]`, JS only) sits at the bottom on the right edge, outside the scrolling nav. Every page
+  ends with the quiet page footer (`partials/footer.php`,
+  `.admin-footer`: no background, `margin-block-start: auto`): the AI guide link (`admin.layout.ai_guide`; more
+  links may join) at the start for signed-in users, the year and the fishart mark linking fishart.co.il at the end
+  (`.admin-footer-brand`), on guest pages too. Below 768px: the burger (`[data-drawer-open]`) opens
   a drawer (`html.admin-drawer-open`; its own × button, the backdrop `[data-drawer-close]`, Escape and a link click
   close it); the × (Plan 42: the open drawer covers the burger) is `admin-button admin-button-link admin-button-icon
   admin-drawer-close` `[data-drawer-dismiss]`, "Close the menu" (`admin.layout.close_menu`), right after the brand link

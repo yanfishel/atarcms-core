@@ -90,13 +90,17 @@ and commit "Install" (the brief does not exist yet: tick phase 0 in its Status i
 `bin/atar demo:seed --dry-run` (how much content exists); `config/locales.php`, `APP_THEME`. Tell the owner what you
 found.
 
-**1. Brief.** Read `references/questionnaire.md`. Ask the questions in small groups and offer defaults. Write
-`site-brief.md` from `assets/site-brief.template.md`. The owner confirms it. Commit "Site brief".
+**1. Brief.** Read `references/questionnaire.md`. If the owner already handed you a brief or a list of answers
+(the README's "What to have ready"), start from it and ask only what is missing. Ask the questions in small
+groups and offer defaults. Write `site-brief.md` from `assets/site-brief.template.md`. The owner confirms it.
+Commit "Site brief".
 
 **2. Content model.** Read `references/content-model.md`. Change `config/` (locales, collections, taxonomies,
 content). Check that it boots (`bin/atar list`), run `collections:sync` + `migrate` when needed. Removing a
 collection the active theme uses breaks its pages until phase 6: fine on a new site (say so), on a public site
-ask first. Show the model (collections, fields, addresses, menus). Commit "Content model".
+ask first. Write `config/demo.php` with the brief's sections, pages and tags (see `references/content-model.md`):
+demo:seed builds that structure instead of the generic one. Show the model (collections, fields, addresses, menus,
+the demo structure). Commit "Content model".
 
 **3. Design analysis.** Read `references/design-sources.md` (and `references/purchased-template.md` for a template).
 Write the analysis into the brief: tokens, components, page map. Show it before writing any markup. Commit
@@ -106,7 +110,10 @@ Write the analysis into the brief: tokens, components, page map. Show it before 
 dark mode, CSP and accessibility; for a purchased template the smaller scaffold, without `--from`, is often the
 better base). Build in this order, checking with `bin/atar theme:check <name> --no-render`
 and committing whenever a step works: tokens and layout, partials, page templates, catalogs (`lang/<code>.php` for
-every site language, same keys; remove catalogs of languages the site dropped). End with a full
+every site language, same keys; remove catalogs of languages the site dropped). The floating admin bar on public
+pages draws its icons from the theme's own sprite, not the admin's: add every collection's Lucide icon (the
+`icon()` name of `config/collections.php`) to the theme's icon sprite (`icons.svg` under the theme's assets), or
+signed-in editors see a bare "+" on its add buttons. End with a full
 `bin/atar theme:check <name>` (rendering the current content). Rules: `references/theme-guide.md` (sections 1 to 7
 and 9).
 
@@ -118,10 +125,12 @@ after their explicit yes (rule 3); never on a production site with real content.
 1. Settings: `bin/atar settings:import --example` to a file under `storage/tmp/`, fill every key from the brief and
    set `""` for every key the brief does not have (demo:seed wrote demo values for all of them), `--dry-run`, import,
    then `bin/atar share-images:rebuild` (the cards carry the site name).
-2. Structure: the demo sections (Services, Projects, Company), pages and footer menu are generic. The brief's
-   sections, pages and menu items are content, made in the admin (Structure, Sections; Content; Structure, Menus):
-   you do it when you can use a browser, otherwise give the owner the list to create. Deleting or replacing the
-   generic demo sections, entries or menu items is a deletion: ask (rule 3).
+2. Structure: with `config/demo.php` the sections, pages and tags are the brief's already. Read the
+   `skipped:` lines demo:seed printed: an address the site already uses (a single, a preset page) is skipped, not
+   made; rename it in `config/demo.php` if the brief needs both. Only a site seeded without the file has the
+   generic demo sections (Services, Projects, Company) and pages: the brief's are then made in the admin
+   (Structure, Sections; Content; Structure, Menus), and deleting or replacing the generic ones is a deletion: ask
+   (rule 3). The footer menu stays generic either way.
 3. Fields kept optional for the demo (see `references/content-model.md`): add their `->required()` now.
 4. `bin/atar theme:check <name>` (with rendering). Commit "Demo content" (config and brief only).
 
@@ -138,7 +147,7 @@ write the theme switch into the brief's Decisions).
 |---|---|
 | "The owner is in a hurry, skip the brief" | The brief is short; without it you build the wrong site. |
 | "It is only demo content, I will reseed" | `demo:seed` deletes everything first. Dry run, then ask. |
-| "I will write a quick seeder with their structure" | Rule 4. Generic demo content plus sections made in the admin. |
+| "I will write a quick seeder with their structure" | Rule 4. Their structure goes into `config/demo.php`; demo:seed builds it. |
 | "Just this Google Fonts / CDN link" | Blocked by the CSP. Copy the files into `assets/`. |
 | "Copy their hero text as a placeholder" | Rule 6. Placeholders ship. Write your own. |
 | "The template is LTR, Hebrew will be fine" | Rule 8. `theme:check` refuses it. Make the CSS logical. |

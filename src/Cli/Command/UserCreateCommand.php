@@ -11,6 +11,7 @@ use AtarCms\Cli\Command;
 use AtarCms\Cli\Input;
 use AtarCms\Cli\Output;
 use AtarCms\Http\Exception\ValidationFailed;
+use AtarCms\I18n\InterfaceLanguages;
 use AtarCms\I18n\Locales;
 use AtarCms\I18n\Translator;
 
@@ -40,6 +41,12 @@ final class UserCreateCommand implements Command
             }
 
             return 1;
+        }
+        // Without a saved choice the admin follows the browser's Accept-Language, which on a single-language site
+        // reads as a half-translated admin. The site's default language is the sane choice when the admin speaks
+        // it; the Profile can change it.
+        if (InterfaceLanguages::isSupported($this->locales->default())) {
+            $this->users->setLocale($user->id, $this->locales->default());
         }
         $output->line(sprintf('Created user #%d %s (%s).', $user->id, $user->email, $user->role));
 
