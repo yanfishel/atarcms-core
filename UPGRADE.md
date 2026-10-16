@@ -26,6 +26,10 @@ here; every minor version lists its steps here.
 
 ## Versions
 
+### v0.2.1
+
+The usual three commands; nothing else to do. No schema changes.
+
 ### v0.2.0
 
 Change the constraint to `"yanfishel/atarcms-core": "^0.2"` in `composer.json`, then the usual three commands.

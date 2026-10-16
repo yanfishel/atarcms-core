@@ -49,7 +49,7 @@ final class DoctorConfigTest extends TestCase
         foreach ($results as $id => $status) {
             self::assertSame(Status::Ok, $status, $id);
         }
-        self::assertSame(['config.env', 'config.boot', 'config.app', 'config.theme', 'cron'], array_keys($results));
+        self::assertSame(['config.env', 'config.boot', 'config.app', 'config.theme', 'config.admin_menu', 'cron'], array_keys($results));
     }
 
     public function testWithoutEnvAndWithoutTheVariablesNothingBoots(): void
@@ -62,6 +62,7 @@ final class DoctorConfigTest extends TestCase
         self::assertSame(Status::Fail, $results['config.boot']);
         self::assertSame(Status::Skip, $results['config.app']);
         self::assertSame(Status::Skip, $results['config.theme']);
+        self::assertSame(Status::Skip, $results['config.admin_menu']);
     }
 
     public function testAnInvalidUrlStopsTheBootWithItsReason(): void
@@ -88,6 +89,26 @@ final class DoctorConfigTest extends TestCase
         $results = $this->check($this->site(str_replace('APP_THEME=default', 'APP_THEME=gone', self::GOOD_ENV)));
 
         self::assertSame(Status::Fail, $results['config.theme']);
+    }
+
+    /**
+     * The icon's name pattern passes the boot, and only admin pages read the sprite: without this check the mistake
+     * waits in the config and fails every admin page at once (the atarcms.com build hit it with "circle-help").
+     */
+    public function testAnIconMissingFromTheSpriteFailsTheAdminMenuCheck(): void
+    {
+        $site = $this->site(self::GOOD_ENV, withTheme: true);
+        $collections = $site . '/config/collections.php';
+        file_put_contents($collections, str_replace("->icon('align-left')", "->icon('circle-help')", (string) file_get_contents($collections)));
+
+        $context = $this->context($site);
+        self::assertNull($context->bootError(), 'the name passes the boot: only the sprite knows it is wrong');
+        $menu = array_values(array_filter((new ConfigChecks())->run($context), static fn($r): bool => $r->id === 'config.admin_menu'))[0];
+
+        self::assertSame(Status::Fail, $menu->status);
+        self::assertStringContainsString('"circle-help"', $menu->message);
+        self::assertStringContainsString('icons.svg', $menu->message);
+        self::assertSame(Status::Ok, $this->check($this->site(self::GOOD_ENV, withTheme: true))['config.admin_menu'], 'the skeleton config passes');
     }
 
     public function testAnEnvFileOthersCanReadOnlyWarns(): void

@@ -6,8 +6,15 @@
 /** @var array<string, string> $roles */
 /** @var bool $loginLinkHint whether to name the console command that creates a login link (outside production) */
 $this->layout('layouts/admin', ['title' => $this->t('admin.login.title')]);
+$brand = $this->adminBrand();
 ?>
 <section class="admin-login">
+    <?php // From 768px the hero names the site beside the card; the phone shows the card alone, with its own site row. ?>
+    <div class="admin-login-hero">
+        <img class="admin-login-hero-mark<?= $brand->siteIcon ? ' admin-brand-icon' : '' ?>" src="<?= $this->e($brand->markUrl) ?>" alt="" width="96" height="96">
+        <p class="admin-login-hero-name"><?= $this->e($this->siteName()) ?></p>
+    </div>
+    <div class="admin-login-card">
     <p class="admin-login-site"><?= trim($this->partial('partials/brand-mark')) ?><?= $this->e($this->siteName()) ?></p>
     <h1><?= $this->e($this->t('admin.login.title')) ?></h1>
     <p class="admin-muted"><?= $this->e($this->t('admin.login.intro')) ?></p>
@@ -31,4 +38,5 @@ $this->layout('layouts/admin', ['title' => $this->t('admin.login.title')]);
         <?php endforeach ?>
     </form>
     <?php endif ?>
+    </div>
 </section>

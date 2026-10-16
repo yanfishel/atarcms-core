@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace AtarCms\Doctor;
 
+use AtarCms\Admin\AdminMenu;
 use AtarCms\Kernel\Config;
 use AtarCms\Theme\Check\Severity;
 use AtarCms\Theme\Check\ThemeChecker;
 use Throwable;
 
 /**
- * .env, config/ and the theme: the site boots, production runs without debug output over https, and the active
- * theme passes theme:check's static checks.
+ * .env, config/ and the theme: the site boots, production runs without debug output over https, the active
+ * theme passes theme:check's static checks, and the admin menu builds (every icon a sprite symbol).
  */
 final class ConfigChecks implements Check
 {
@@ -22,6 +23,7 @@ final class ConfigChecks implements Check
             $this->boot($context),
             $this->app($context),
             $this->theme($context),
+            $this->adminMenu($context),
             // Login links are pruned when used and sessions by PHP's own clean-up: nothing needs cron.
             CheckResult::ok('cron', 'nothing to schedule (only backups, see install.md)'),
         ];
@@ -114,5 +116,24 @@ final class ConfigChecks implements Check
         }
 
         return CheckResult::ok('config.theme', sprintf('theme %s: no errors (static checks)', $name));
+    }
+
+    /**
+     * Builds the admin menu the way the first admin page would: an icon that is not a sprite symbol passes the boot
+     * (public requests never read icons.svg) but fails every admin page, so the doctor names it first.
+     */
+    private function adminMenu(DoctorContext $context): CheckResult
+    {
+        $app = $context->app();
+        if ($app === null) {
+            return $context->skipWithoutBoot('config.admin_menu');
+        }
+        try {
+            $items = $app->container()->service(AdminMenu::class)->items();
+        } catch (Throwable $e) {
+            return CheckResult::fail('config.admin_menu', 'The admin pages fail: ' . $e->getMessage(), 'fix the item named above in config/ or the module that adds it');
+        }
+
+        return CheckResult::ok('config.admin_menu', sprintf('%d items, every icon a sprite symbol', count($items)));
     }
 }

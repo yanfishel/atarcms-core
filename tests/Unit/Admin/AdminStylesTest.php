@@ -56,6 +56,8 @@ final class AdminStylesTest extends TestCase
         '.admin-theme-option > .admin-icon:last-child' => 'the check mark of a theme choice, shown on the checked one (the theme menu itself is JS only)',
         ':root:not(.js) .admin-toasts:empty' => 'an empty toast stack (with JavaScript the stack is pinned and takes no room)',
         '.admin-toast-close' => 'shown by ".js .admin-toast-close"',
+        '.admin-login-hero' => 'the login brand hero, shown beside the card from 768px; the phone shows the card alone',
+        '.admin-login-site' => 'the card\'s own site row, from 768px the hero names the site instead',
         '.admin-breadcrumbs' => 'phones: the page header names the screen; the drawer, or the plain sidebar without JavaScript, leads back',
         '.admin-youtube-play' => 'shown by ".js .admin-youtube-play" (the video plays in place by script; without JavaScript the card links to YouTube)',
         '.admin-youtube-remove' => 'shown by ".js .admin-youtube-remove" (without JavaScript the input is emptied by hand)',
@@ -445,6 +447,19 @@ final class AdminStylesTest extends TestCase
         self::assertStringContainsString('.admin-table-row { position: relative; }', $css);
         self::assertStringContainsString('.admin-row-link::after { content: ""; position: absolute; inset: 0; }', $css);
         self::assertStringContainsString('.admin-table-row a:not(.admin-row-link), .admin-table-row button, .admin-table-row input, .admin-table-row select, .admin-table-row summary, .admin-table-row label { position: relative; z-index: 1; }', $css);
+    }
+
+    /**
+     * Table boxes ignore the 1×1 clamp of .admin-visually-hidden (overflow does not apply to them), so a hidden
+     * table keeps its full height, stretches the document past the body and unsticks the sidebar. Hide a table by
+     * wrapping it in a visually hidden <div> instead.
+     */
+    public function testNoTablePartCarriesVisuallyHiddenItself(): void
+    {
+        foreach (self::files(self::TEMPLATES, 'php') as $file) {
+            preg_match_all('/<(?:table|caption|colgroup|col|thead|tbody|tfoot|tr|th|td)\b[^>]*admin-visually-hidden/', (string) file_get_contents($file), $matches);
+            self::assertSame([], $matches[0], sprintf('%s: wrap the table in a visually hidden <div> instead', basename($file)));
+        }
     }
 
     public function testTheTokensAreTheOnlyPlaceWithLiteralColours(): void

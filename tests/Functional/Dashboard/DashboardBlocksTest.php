@@ -145,7 +145,7 @@ final class DashboardBlocksTest extends ContentFunctionalTestCase
         self::assertMatchesRegularExpression('~<ol class="admin-chart-hits" aria-hidden="true">~', $chart);
         self::assertSame(30, substr_count($chart, '<li class="admin-chart-hit" title="'));
         self::assertStringContainsString('<li class="admin-chart-hit" title="Sep 28: 3 edits, 1 publication"></li>', $chart, 'creating each entry stored a version too');
-        self::assertMatchesRegularExpression('~<table class="admin-visually-hidden">\s*<caption>Edits and publications per day, last 30 days</caption>~', $chart);
+        self::assertMatchesRegularExpression('~<div class="admin-visually-hidden">\s*<table>\s*<caption>Edits and publications per day, last 30 days</caption>~', $chart, 'the class sits on a wrapping div: table boxes ignore its 1×1 clamp and would stretch the page');
         self::assertStringContainsString('<tr><th scope="row">Sep 28</th><td>3</td><td>1</td></tr>', $chart);
         self::assertStringContainsString('<tr><th scope="row">Sep 27</th><td>0</td><td>1</td></tr>', $chart);
         self::assertSame(30, substr_count($chart, '<th scope="row">'));

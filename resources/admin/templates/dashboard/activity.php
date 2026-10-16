@@ -73,15 +73,18 @@ $caption = $this->t('admin.dashboard.activity.caption', ['days' => $dashboard->r
             <?php endforeach ?>
         </ol>
     </div>
-    <table class="admin-visually-hidden">
-        <caption><?= $this->e($caption) ?></caption>
-        <thead>
-            <tr><th scope="col"><?= $this->e($this->t($weekly ? 'admin.dashboard.activity.column_week' : 'admin.dashboard.activity.column_day')) ?></th><th scope="col"><?= $this->e($this->t('admin.dashboard.activity.edits')) ?></th><th scope="col"><?= $this->e($this->t('admin.dashboard.activity.publications')) ?></th></tr>
-        </thead>
-        <tbody>
-            <?php foreach (array_reverse($columns) as $column): ?>
-            <tr><th scope="row"><?= $this->e($column['label']) ?></th><td><?= $this->e((string) $column['edits']) ?></td><td><?= $this->e((string) $column['publications']) ?></td></tr>
-            <?php endforeach ?>
-        </tbody>
-    </table>
+    <?php // The hidden class sits on the wrapper: a table box ignores its 1×1 clamp and would stretch the page. ?>
+    <div class="admin-visually-hidden">
+        <table>
+            <caption><?= $this->e($caption) ?></caption>
+            <thead>
+                <tr><th scope="col"><?= $this->e($this->t($weekly ? 'admin.dashboard.activity.column_week' : 'admin.dashboard.activity.column_day')) ?></th><th scope="col"><?= $this->e($this->t('admin.dashboard.activity.edits')) ?></th><th scope="col"><?= $this->e($this->t('admin.dashboard.activity.publications')) ?></th></tr>
+            </thead>
+            <tbody>
+                <?php foreach (array_reverse($columns) as $column): ?>
+                <tr><th scope="row"><?= $this->e($column['label']) ?></th><td><?= $this->e((string) $column['edits']) ?></td><td><?= $this->e((string) $column['publications']) ?></td></tr>
+                <?php endforeach ?>
+            </tbody>
+        </table>
+    </div>
 </section>

@@ -128,15 +128,16 @@ final class AdminShellTest extends FunctionalTestCase
         self::assertLessThan($languageMenu, $themeMenu, 'the theme before the language');
     }
 
-    public function testThePageFooterCarriesTheGuideLinkAndTheFishartMark(): void
+    public function testThePageFooterCarriesTheGuideLinkTheProjectLinksAndTheFishartMark(): void
     {
         $login = (string) $this->browser->get('/admin/login')->getBody();
         $this->actingAs($this->createUser('ann@example.com'));
         $dashboard = (string) $this->browser->get('/admin')->getBody();
 
+        $project = '<a class="admin-footer-link" href="https://atarcms\.com" target="_blank" rel="noopener">AtarCMS</a>\s*<a class="admin-footer-link" href="https://github\.com/yanfishel/atarcms" target="_blank" rel="noopener">GitHub</a>';
         $brand = '<p class="admin-footer-brand">' . date('Y') . ' © <a class="admin-footer-brand-link" href="https://fishart\.co\.il" target="_blank" rel="noopener"><img class="admin-fishart" src="/admin-assets/fishart\.png\?v=[0-9a-f]{12}" alt="fishart" height="16"></a></p>';
-        self::assertMatchesRegularExpression('~</main>\s*<footer class="admin-footer">\s*<a class="admin-footer-link" href="/admin/ai-guide">AI guide</a>\s*' . $brand . '\s*</footer>\s*</div>\s*</body>~', $dashboard, 'the footer ends the page: the guide link at the start, the mark at the end');
-        self::assertMatchesRegularExpression('~</main>\s*<footer class="admin-footer">\s*' . $brand . '\s*</footer>\s*</body>~', $login, 'guest pages carry the footer too, without the guide link');
+        self::assertMatchesRegularExpression('~</main>\s*<footer class="admin-footer">\s*<a class="admin-footer-link" href="/admin/ai-guide">AI guide</a>\s*' . $project . '\s*' . $brand . '\s*</footer>\s*</div>\s*</body>~', $dashboard, 'the footer ends the page: the guide link at the start, the project links after it, the mark at the end');
+        self::assertMatchesRegularExpression('~</main>\s*<footer class="admin-footer">\s*' . $project . '\s*' . $brand . '\s*</footer>\s*</body>~', $login, 'guest pages carry the footer too, without the guide link');
         self::assertStringNotContainsString('ai-guide', $login, 'the guide needs a signed-in user');
         self::assertStringNotContainsString('fishart', self::between($dashboard, '<aside class="admin-sidebar"', '</aside>'), 'the mark left the sidebar');
         self::assertStringNotContainsString('admin-sidebar-footer', $dashboard);
@@ -151,7 +152,7 @@ final class AdminShellTest extends FunctionalTestCase
         self::assertStringContainsString('<body class="admin-guest">', (string) $page->getBody());
         self::assertStringNotContainsString('admin-nav', (string) $page->getBody());
         self::assertStringNotContainsString('admin-sidebar', (string) $page->getBody());
-        self::assertMatchesRegularExpression('~<main class="admin-guest-main">\s*<section class="admin-login">\s*<p class="admin-login-site"><img class="admin-brand-mark" src="[^"]+" alt="" width="36" height="36">[^<]+</p>\s*<h1>Sign in</h1>\s*<p class="admin-muted">Sign in to manage the site\.</p>~', (string) $page->getBody());
+        self::assertMatchesRegularExpression('~<main class="admin-guest-main">\s*<section class="admin-login">\s*<div class="admin-login-hero">\s*<img class="admin-login-hero-mark" src="[^"]+" alt="" width="96" height="96">\s*<p class="admin-login-hero-name">Fixture</p>\s*</div>\s*<div class="admin-login-card">\s*<p class="admin-login-site"><img class="admin-brand-mark" src="[^"]+" alt="" width="36" height="36">[^<]+</p>\s*<h1>Sign in</h1>\s*<p class="admin-muted">Sign in to manage the site\.</p>~', (string) $page->getBody(), 'the hero panel (shown beside the card from 768px) leads, then the card with its own brand row (the phone shows only the card)');
         self::assertFalse($page->hasHeader('Set-Cookie'), 'the login page must not start a session');
 
         $this->actingAs($this->createUser('ann@example.com'));

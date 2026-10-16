@@ -94,7 +94,9 @@ marked "(test)" are enforced by a test; change the test only together with the r
   its items' icons against the sprite (`AdminMenu::assertIcons()`, `AdminIcon::symbols()`) when `AdminModule` builds
   it: a typo in `Collection::icon()`, `Taxonomy::icon()` or a module item is a `ConfigException` on the first admin page
   that names the item and the module that added it (`AdminMenu::from()`, called by `AdminModule` before each module's
-  `adminMenu()`); a missing or empty sprite file is one `ConfigException` of `AdminIcon::symbols()`.
+  `adminMenu()`); a missing or empty sprite file is one `ConfigException` of `AdminIcon::symbols()`. `bin/atar doctor`
+  builds the menu the same way (`config.admin_menu` in `ConfigChecks`), so the mistake is named before anyone opens
+  the admin; public requests still never read the sprite.
 - Mirrored icons: the names in `AdminIcon::MIRRORED` (`arrow-left`, `arrow-right`, `chevron-left`, `chevron-right`,
   `external-link`, `log-in`, `log-out`, `folder-input`, `folder-tree`, `align-left`, `list`, `list-tree`, `arrow-down-wide-narrow`)
   render with the extra class `admin-icon-mirror`, flipped in a right-to-left page by
@@ -177,9 +179,10 @@ marked "(test)" are enforced by a test; change the test only together with the r
   (`@container sidebar (max-width: 120px)`): labels visually hidden, headings gone. The edge toggle
   (`[data-sidebar-toggle]`, JS only) sits at the bottom on the right edge, outside the scrolling nav. Every page
   ends with the quiet page footer (`partials/footer.php`,
-  `.admin-footer`: no background, `margin-block-start: auto`): the AI guide link (`admin.layout.ai_guide`; more
-  links may join) at the start for signed-in users, the year and the fishart mark linking fishart.co.il at the end
-  (`.admin-footer-brand`), on guest pages too. Below 768px: the burger (`[data-drawer-open]`) opens
+  `.admin-footer`: no background, `margin-block-start: auto`): at the start the AI guide link
+  (`admin.layout.ai_guide`, signed-in users only) and the project links (AtarCMS → atarcms.com, GitHub →
+  github.com/yanfishel/atarcms; literal brand names, no catalog keys), the year and the fishart mark linking
+  fishart.co.il at the end (`.admin-footer-brand`), on guest pages too. Below 768px: the burger (`[data-drawer-open]`) opens
   a drawer (`html.admin-drawer-open`; its own × button, the backdrop `[data-drawer-close]`, Escape and a link click
   close it); the × (Plan 42: the open drawer covers the burger) is `admin-button admin-button-link admin-button-icon
   admin-drawer-close` `[data-drawer-dismiss]`, "Close the menu" (`admin.layout.close_menu`), right after the brand link
@@ -1016,6 +1019,9 @@ marked "(test)" are enforced by a test; change the test only together with the r
   admin-confirm`; they name the item's language in itself (the `languageName()` helper, as the content language menu does).
   Guests (login, errors): `admin-guest` layout with the `admin-login` / `admin-error` card, no sidebar; the login card
   starts with the brand mark and the site name (`admin-login-site`) and names `bin/atar user:login-link` only outside production (`Config::environment()`).
+  From 768px the login grows a brand hero beside the card (`admin-login-hero`: the mark at 96px over a soft
+  `--accent-soft` gradient with the site name) and the card's own site row gives way to it; phones keep the single
+  card. Error pages stay the plain card at every width.
 
 ## User preferences
 

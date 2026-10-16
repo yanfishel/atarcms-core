@@ -568,13 +568,25 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px
 
 .admin-guest { display: flex; flex-direction: column; min-height: 100vh; padding: var(--space-4); }
 .admin-guest-main { width: min(28rem, 100%); margin: auto; }
-.admin-login, .admin-error { display: grid; justify-items: start; gap: var(--space-3); padding: var(--space-6); border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow-card); }
+.admin-login, .admin-error { overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow-card); }
+.admin-login { display: grid; }
+.admin-login-hero { display: none; }
+.admin-login-card, .admin-error { display: grid; justify-items: start; gap: var(--space-3); padding: var(--space-6); }
 .admin-login h1, .admin-error h1, .admin-login p, .admin-error p { margin: 0; }
 .admin-login-site { display: flex; align-items: center; gap: var(--space-3); font-weight: 700; }
 .admin-login-button { width: 100%; }
 .admin-login-dev { display: grid; gap: var(--space-2); width: 100%; }
 /* The card is a grid with its own gap: its alert needs no margin of its own. */
 .admin-login .admin-alert { margin: 0; }
+/* Wide screens: the brand hero beside the card; the card's own site row gives way to it. */
+@media (min-width: 768px) {
+    .admin-guest-main:has(> .admin-login) { width: min(52rem, 100%); }
+    .admin-login { grid-template-columns: 5fr 7fr; }
+    .admin-login-hero { display: grid; place-content: center; justify-items: center; gap: var(--space-4); padding: var(--space-6); background: linear-gradient(var(--accent-soft), var(--surface)); }
+    .admin-login-hero-mark { display: block; }
+    .admin-login-hero-name { color: var(--accent-strong); font-size: 1.25rem; font-weight: 700; }
+    .admin-login-site { display: none; }
+}
 .admin-error-code { color: var(--accent-strong); font-size: 3.5rem; font-weight: 700; line-height: 1; }
 
 @media (max-width: 1199px) {

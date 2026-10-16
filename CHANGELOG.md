@@ -3,6 +3,17 @@
 Every version of AtarCMS (`yanfishel/atarcms-core`) and of its site skeleton (`yanfishel/atarcms`, same version).
 What a site must do after an update is in `UPGRADE.md`.
 
+## v0.2.1
+
+- The dashboard no longer pulls the sticky sidebar up near the bottom of the page: the activity chart's screen
+  reader table kept its full height although visually hidden and stretched the page past the admin shell.
+- `bin/atar doctor` builds the admin menu (`config.admin_menu`): a `Collection::icon()`, `Taxonomy::icon()` or
+  module item icon that is not a symbol of the admin sprite used to pass every command and fail only on the first
+  admin page; the doctor now names the item, its module and the bad icon.
+- The admin page footer links the AtarCMS site and the GitHub repository, on the login page too.
+- From 768px the login page shows the site's brand beside the sign-in card: the mark large on a soft gradient of
+  the site's admin colour, with the site name.
+
 ## v0.2.0
 
 - Demo content follows the site: an optional `config/demo.php` gives `bin/atar demo:seed` the brief's sections
