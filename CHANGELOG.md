@@ -3,6 +3,17 @@
 Every version of AtarCMS (`yanfishel/atarcms-core`) and of its site skeleton (`yanfishel/atarcms`, same version).
 What a site must do after an update is in `UPGRADE.md`.
 
+## v0.2.2
+
+- `/llms-full.txt` gives LLMs the full text of the site in one request: the `/llms.txt` header, then every public
+  entry page in `/llms.txt`'s order as its markdown twin with a `Source:` line under its title, separated by `---`
+  (terms are left out). After `content.llms_full_limit` entries (default 100) or 1 MiB it stops and points to
+  `/llms.txt`, which now links it. Like `/llms.txt`, it is served for the default locale only and is a 404 while
+  "Hide from search engines" is on.
+- The theme helper `$this->markdownAlternate()` prints `<link rel="alternate" type="text/markdown">` to the
+  current entry page's markdown twin (`/index.md` for a single at `/`), nothing on other pages, previews or while
+  the site is hidden from search engines; the default layout uses it.
+
 ## v0.2.1
 
 - The dashboard no longer pulls the sticky sidebar up near the bottom of the page: the activity chart's screen

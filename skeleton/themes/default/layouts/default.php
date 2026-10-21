@@ -70,6 +70,7 @@ $booking = $withSite ? $this->form('booking') : null;
     <?php endif ?>
     <?= $this->hreflang() ?>
     <?= $this->canonical() ?>
+    <?= $this->markdownAlternate() ?>
     <?= $this->socialMeta($title ?? null, $description, isset($entry) && $entry instanceof AtarCms\Content\Entry ? $entry : null, 'large') ?>
     <?php if (($feed ?? null) !== null): ?>
     <link rel="alternate" type="application/rss+xml" href="<?= $this->e($feed) ?>">

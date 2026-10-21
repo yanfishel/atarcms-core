@@ -40,9 +40,9 @@ passed to a template are local variables (`extract()`); helpers are called as me
 There are no blocks/sections: a layout gets named values (`title`, `aside`, …) and `$content`.
 
 **Escaping.** Echo every value through `$this->e()`. Safe to print raw: a rich-text field's `->html` (sanitized on
-save), and the HTML-returning helpers `img()`, `canonical()`, `hreflang()`, `socialMeta()`, `siteHead()`; and other
-templates' output (`partial()`, `$content`). Template names resolve inside the theme (`ThemeResolver`); the first
-existing candidate wins.
+save), and the HTML-returning helpers `img()`, `canonical()`, `markdownAlternate()`, `hreflang()`, `socialMeta()`,
+`siteHead()`; and other templates' output (`partial()`, `$content`). Template names resolve inside the theme
+(`ThemeResolver`); the first existing candidate wins.
 
 ## 2. Pages: templates tried and data received
 
@@ -123,6 +123,7 @@ theme template (registered by `CoreViewHelpers`, `ContentViewHelpers`, `MediaVie
 | `termTrail(Term $t)` | `list<Term>` root first | breadcrumbs; one read per taxonomy+language per request |
 | `pageTrail()` | `list<array{name: string, url: string}>` root first, the page last (absolute URLs, no home page); `[]` without one | the trail of the page's JSON-LD `BreadcrumbList` (entries below an archive, sections or parents; term pages): visible breadcrumbs that match it; use it when it has 2+ items (an ancestor), else the template's own; previews, search and archives have none |
 | `canonical()` | `<link rel="canonical">` or `''` | entry, single, archive and term pages only |
+| `markdownAlternate()` | `<link rel="alternate" type="text/markdown">` to the page's markdown twin (`/news/hello.md`, `/index.md` for a single at `/`) or `''` | public entry and single pages only; none on previews or while the site is hidden from search engines |
 | `hreflang()` | `<link rel="alternate" hreflang>` lines | |
 | `socialMeta(?string $title, ?string $description = null, ?Entry $entry = null, ?string $imageVariant = null)` | Open Graph + Twitter tags, then the JSON-LD block (WebSite and the site's organization on the home page, Article, BreadcrumbList; only with a canonical URL) | `socialMeta($title, $description, $entry, 'large')` |
 | `pageTitle(?string $title = null)` | `<title>` text by the settings' pattern (`{title} — {site}`) | `null` → site name |
@@ -620,7 +621,7 @@ Minimal working example:
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= $this->e($withSite ? (($fullTitle ?? null) ?? $this->pageTitle($title ?? null)) : ($title ?? '')) ?></title>
     <?php if ($withSite): ?><?= $this->siteHead() ?><?php endif ?>
-    <?= $this->hreflang() ?><?= $this->canonical() ?>
+    <?= $this->hreflang() ?><?= $this->canonical() ?><?= $this->markdownAlternate() ?>
     <?= $this->socialMeta($title ?? null, $description ?? null, isset($entry) && $entry instanceof AtarCms\Content\Entry ? $entry : null, 'large') ?>
     <link rel="stylesheet" href="<?= $this->e($this->asset('css/site.css')) ?>">
 </head>

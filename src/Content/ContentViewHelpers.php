@@ -7,6 +7,7 @@ namespace AtarCms\Content;
 use AtarCms\Admin\AdminBar;
 use AtarCms\Admin\AdminBarAction;
 use AtarCms\Auth\CurrentUser;
+use AtarCms\Content\Markdown\MarkdownTwin;
 use AtarCms\Content\Menu\PublicMenus;
 use AtarCms\Http\RequestMemo;
 use AtarCms\Http\Routing\Router;
@@ -31,6 +32,8 @@ use Psr\Http\Message\ServerRequestInterface;
  * menu('main') (the visible links of a theme menu location in the current locale, with "current" flags),
  * socialMeta($title, $description, $entry, 'large') (the page's Open Graph and Twitter card tags and its JSON-LD, see
  * SocialMeta),
+ * markdownAlternate() (<link rel="alternate" type="text/markdown"> to an entry page's markdown twin, '' on other
+ * pages, previews and while the site is hidden from search engines),
  * siteSettings() (the site settings of the current locale: SEO defaults, phone and email; AtarCms\Settings\Settings),
  * presetEntry('privacy') and presetUrl('privacy') (a preset page of Collection::presets() in the current locale and its
  * address, null while it is missing or not public; every preset is read in one query per request).
@@ -47,6 +50,16 @@ final class ContentViewHelpers
             static fn(ServerRequestInterface $request, ?string $title, ?string $description = null, ?Entry $entry = null, ?string $imageVariant = null): string => $container
                 ->service(SocialMeta::class)
                 ->tags($request, $title, $description, $entry, $imageVariant),
+        );
+        $renderer->requestHelper(
+            'markdownAlternate',
+            static function (ServerRequestInterface $request) use ($container): string {
+                $twin = MarkdownTwin::of($request);
+
+                return $twin === null || $container->service(SiteSettings::class)->forRequest($request)->hideFromSearch
+                    ? ''
+                    : sprintf('<link rel="alternate" type="text/markdown" href="%s">', htmlspecialchars($twin->path, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8'));
+            },
         );
         $renderer->requestHelper(
             'siteSettings',

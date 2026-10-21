@@ -10,6 +10,7 @@
     <?php if (($status ?? 200) < 500): ?><?= $this->siteHead() ?><?php endif ?>
     <?= $this->hreflang() ?>
     <?= $this->canonical() ?>
+    <?= $this->markdownAlternate() ?>
     <?= $this->socialMeta($title ?? null, $description ?? null, isset($entry) && $entry instanceof AtarCms\Content\Entry ? $entry : null, 'large') ?>
     <link rel="stylesheet" href="<?= $this->e($this->asset('app.css')) ?>">
     <script nonce="<?= $this->e($this->nonce()) ?>">window.fixture = true;</script>

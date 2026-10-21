@@ -774,13 +774,22 @@ before taxonomies in config order; a page out of range is a 404). `/robots.txt` 
 `content.robots` string verbatim when set, else "Disallow: /admin" plus the `Sitemap:` line; "Hide from search
 engines" overrides all of it (`Disallow: /`, sitemaps 404, `X-Robots-Tag` — see "Site settings").
 
-`/llms.txt` (`content.llms`, stateless, default locale; `Content\LlmsTxt`) is the sitemap's content as a
+`/llms.txt` (`content.llms`, stateless, default locale; `Content\Llms\LlmsTxt`) is the sitemap's content as a
 markdown map for LLM agents (llmstxt.org): the site's name, the default language's meta description as a
 blockquote, the language list, then, language by language (the default first, suffixes only on a multilingual
 site), one `## {label} ({locale})` section per routed collection and routed taxonomy with `- [title](URL)` per
 public entry or term (the sitemap's chunks, so nested paths and redirect-only terms behave the same; empty
-sections are left out). After `content.llms_limit` links (default 1000) it stops and names the sitemap. "Hide
-from search engines" makes it a 404. The admin's counterpart for AI agents is `/admin/ai-guide`
+sections are left out; `Content\Llms\LlmsContent` gathers both, shared with `/llms-full.txt`). After
+`content.llms_limit` links (default 1000) it stops and names the sitemap. "Hide from search engines" makes it a 404.
+
+`/llms-full.txt` (`content.llms_full`, stateless, default locale; `Content\Llms\LlmsFullTxt`) is the full-text companion
+docs sites publish beside llms.txt: the same header plus a line naming `/llms.txt`, then every public entry page in
+`/llms.txt`'s order as its markdown twin (below; rendered with the ancestors its sitemap chunk loaded) with
+`Source: {URL}` under its `# title`, blocks separated by `---`. The sections stay flat — no `##` section headings,
+each block keeps its twin's heading levels and is a document of its own; terms have no markdown and are left out.
+After `content.llms_full_limit` entries (default 100: a few queries each, so the response stays well under a second
+on a small VPS) or once the text passes 1 MiB (`LlmsFullTxt::MAX_BYTES`, about 250k tokens) it stops and names
+`/llms.txt`. "Hide from search engines" makes it a 404. The admin's counterpart for AI agents is `/admin/ai-guide`
 (docs/admin-ui.md "AI guide").
 
 Every entry page has a markdown twin at its address + `.md` (`content.{collection}.md`, stateless; `/llms.txt`
@@ -790,7 +799,9 @@ archives and feeds, the root route's after it — pages and articles only, never
 `EntryMarkdown::class` makes `ContentController` resolve the entry exactly as for the page and answer with
 `Content\Markdown\EntryMarkdown` instead (`text/plain`, `X-Robots-Tag: noindex`, `Link: <page>; rel="canonical"`): no
 preview, a previous slug or a wrong chain 301s to the canonical twin, "Hide from search engines" makes every twin
-a 404. A literal `{slug}.md` segment reserves the slug (`ReservedSlugs`: with a single at `/`, no page takes
+a 404. Public entry and single pages carry their twin's path as the `Content\Markdown\MarkdownTwin` request
+attribute, and the theme helper `markdownAlternate()` prints it as `<link rel="alternate" type="text/markdown">`
+(nothing while the site is hidden from search engines). A literal `{slug}.md` segment reserves the slug (`ReservedSlugs`: with a single at `/`, no page takes
 `index`). The document: `# title`, the meta description as a blockquote, facts (publication date via
 `SiteTime`, except on a plain single; language with links to the public translations' twins; one line per
 `taxonomies()` taxonomy, linked when routed; one line per scalar field), then a `## {label}` section per block field
@@ -802,8 +813,8 @@ sanitizer's element set (tables stay HTML, videos become links; no markdown libr
 Three surfaces meet AI agents, all built in and all hidden by "Hide from search engines" where public:
 `/admin/ai-guide` (the admin described for a signed-in browser agent, filtered by the user's permissions; the
 page footer's "AI guide" link and `<link rel="help">` point to it — details in docs/admin-ui.md "AI guide"),
-`/llms.txt` (the public site as a markdown map) and the `.md` twins of entry pages (both above, in "Feeds, sitemap
-and robots"). The admin's no-JavaScript rule and semantic markup are what make browser agents reliable there, and
+`/llms.txt` (the public site as a markdown map), `/llms-full.txt` (its full text) and the `.md` twins of entry
+pages (all above, in "Feeds, sitemap and robots"). The admin's no-JavaScript rule and semantic markup are what make browser agents reliable there, and
 `skeleton/.agents/skills/building-atarcms-sites` is the agent skill that builds sites. The README's "AI-ready"
 section is the owner-facing summary. Decisions: one known guide URL instead of hidden per-page hints (hidden text
 never reaches an agent reading the accessibility tree and pollutes screen readers); browser agents only — an editing

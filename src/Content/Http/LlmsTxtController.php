@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace AtarCms\Content\Http;
 
-use AtarCms\Content\LlmsTxt;
+use AtarCms\Content\Llms\LlmsTxt;
 use AtarCms\Http\Exception\NotFound;
 use AtarCms\Http\Responses;
 use AtarCms\Settings\SiteSettings;

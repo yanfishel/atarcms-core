@@ -12,6 +12,7 @@ use AtarCms\Content\Entry;
 use AtarCms\Content\EntryRepository;
 use AtarCms\Content\EntryUrls;
 use AtarCms\Content\Markdown\EntryMarkdown;
+use AtarCms\Content\Markdown\MarkdownTwin;
 use AtarCms\Content\PageSeo;
 use AtarCms\Content\PublicContent;
 use AtarCms\Content\StructuredData\Breadcrumbs;
@@ -108,6 +109,7 @@ final class ContentController
         $url = $preview ? null : $this->urls->absolute($entry, $ancestors, $routeTerm, $knownTerms);
         if ($url !== null) {
             $request = PageTrail::attach(CanonicalUrl::attach($request, $url), $this->breadcrumbs->forEntry($entry, $url, $sections, $knownTerms, $ancestors));
+            $request = MarkdownTwin::attach($request, $this->urls->path($entry, $ancestors, $routeTerm, $knownTerms, markdown: true));
         }
         $seo = PageSeo::forEntry($entry, $sections);
 
@@ -132,7 +134,7 @@ final class ContentController
         $entry = $preview ? $this->entries->first($collection->name, $locale) : $this->content->single($collection, $locale);
         $request = $request->withAttribute(Alternates::class, $entry === null ? new Alternates([]) : $this->alternates($entry));
         if ($entry !== null && !$preview) {
-            $request = CanonicalUrl::attach($request, $this->urls->absolute($entry));
+            $request = MarkdownTwin::attach(CanonicalUrl::attach($request, $this->urls->absolute($entry)), $this->urls->path($entry, markdown: true));
         }
 
         return $this->render($request, $collection, 'show', ['entry' => $entry, 'seo' => $entry === null ? null : PageSeo::forEntry($entry, [])], $preview);

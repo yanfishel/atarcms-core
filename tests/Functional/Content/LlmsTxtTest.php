@@ -29,7 +29,7 @@ final class LlmsTxtTest extends ContentFunctionalTestCase
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('text/plain; charset=utf-8', $response->getHeaderLine('Content-Type'));
         self::assertStringStartsWith("# Fixture\n", $body);
-        self::assertStringContainsString("\nSite languages: en (default), ru\n\nAppend .md to an entry's URL for a markdown version.\n\n## ", $body);
+        self::assertStringContainsString("\nSite languages: en (default), ru\n\nAppend .md to an entry's URL for a markdown version.\n\nThe full text of the entry pages: https://localhost/llms-full.txt\n\n## ", $body);
         self::assertStringContainsString('## Articles (en)', $body);
         self::assertStringContainsString('- [Hello](https://localhost/articles/hello)', $body);
         self::assertStringContainsString('## Articles (ru)', $body);

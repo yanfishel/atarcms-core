@@ -26,6 +26,13 @@ here; every minor version lists its steps here.
 
 ## Versions
 
+### v0.2.2
+
+The usual three commands; nothing else to do. No schema changes. Optional: a theme of your own can print
+`<?= $this->markdownAlternate() ?>` in its layout's `<head>` (next to `canonical()`) to link entry pages to their
+markdown twins, as the default theme now does; replace any `<link rel="alternate" type="text/markdown">` that
+points to `/llms.txt`.
+
 ### v0.2.1
 
 The usual three commands; nothing else to do. No schema changes.

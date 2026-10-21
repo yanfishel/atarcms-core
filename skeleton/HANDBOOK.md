@@ -333,11 +333,13 @@ docker compose exec -u www-data php php bin/atar migrate
 
 The site is AI-ready without any work of yours. `/llms.txt` is a markdown map of the public site (name, description,
 languages, a link per public entry and term; after `content.llms_limit` links, default 1000, it points to the
-sitemap). Every public entry page also answers at its address plus `.md` (`/news/hello.md`, `/index.md` for the home
-page) with the page as clean markdown, a canonical link to the HTML page and `noindex`; old addresses redirect like
-the HTML pages. A signed-in agent working in the admin reads `/admin/ai-guide` — the "AI guide" link in the admin's
+sitemap), and `/llms-full.txt` holds the full text of the entry pages in the same order, each with a `Source:`
+line (after `content.llms_full_limit` pages, default 100, it points to `/llms.txt`). Every public entry page also
+answers at its address plus `.md` (`/news/hello.md`, `/index.md` for the home page) with the page as clean markdown, a canonical link to the HTML page and `noindex`; old addresses redirect like
+the HTML pages; the default layout links each entry page to its twin (`$this->markdownAlternate()`, a
+`<link rel="alternate" type="text/markdown">`). A signed-in agent working in the admin reads `/admin/ai-guide` — the "AI guide" link in the admin's
 page footer — which lists the screens, content types and fields its user may use. "Hide from search engines" hides
-`/llms.txt` and the `.md` pages along with the sitemap.
+`/llms.txt`, `/llms-full.txt` and the `.md` pages along with the sitemap.
 
 ## Admin
 

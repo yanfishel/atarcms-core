@@ -58,6 +58,6 @@ or D); this list is what must be true before visitors come.
 12. **Updates**: `composer update yanfishel/atarcms-core`, `bin/atar migrate`, `bin/atar doctor`, then the steps of
     `vendor/yanfishel/atarcms-core/UPGRADE.md` and `bin/atar theme:check` (install.md, Updating).
 13. **Final look**: every page type in every language over HTTPS; the contact form sends; `/sitemap.xml`,
-    `/robots.txt` and `/llms.txt` answer, and an entry page answers at its address plus `.md` (they are 404 until
-    "Hide from search engines" is switched off). Tell the owner the site is AI-ready: `/llms.txt` and the `.md`
+    `/robots.txt`, `/llms.txt` and `/llms-full.txt` answer, and an entry page answers at its address plus `.md` (they are 404 until
+    "Hide from search engines" is switched off). Tell the owner the site is AI-ready: `/llms.txt`, `/llms-full.txt` and the `.md`
     pages for public agents, `/admin/ai-guide` for agents working in the admin.

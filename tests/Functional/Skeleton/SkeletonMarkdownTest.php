@@ -7,6 +7,7 @@ namespace AtarCms\Tests\Functional\Skeleton;
 use AtarCms\Content\Collections;
 use AtarCms\Content\EntryInput;
 use AtarCms\Content\EntryService;
+use AtarCms\Content\EntryStatus;
 use AtarCms\Http\Exception\ValidationFailed;
 
 /**
@@ -31,6 +32,16 @@ final class SkeletonMarkdownTest extends SkeletonTestCase
         self::assertSame(200, $russian->getStatusCode());
         self::assertSame('<https://localhost/ru>; rel="canonical"', $russian->getHeaderLine('Link'));
         self::assertSame(404, $this->browser->get('/he/index.md')->getStatusCode(), 'no home page in that language yet');
+    }
+
+    public function testTheLayoutLinksAPageToItsTwin(): void
+    {
+        $this->create('home', 'en', new EntryInput('', fields: ['lead' => 'A tidy little site']));
+        $this->create('pages', 'en', new EntryInput('About', slug: 'about', status: EntryStatus::Published));
+
+        self::assertStringContainsString('<link rel="alternate" type="text/markdown" href="/index.md">', (string) $this->browser->get('/')->getBody());
+        self::assertStringContainsString('<link rel="alternate" type="text/markdown" href="/about.md">', (string) $this->browser->get('/about')->getBody());
+        self::assertStringNotContainsString('text/markdown', (string) $this->browser->get('/search?q=tidy')->getBody());
     }
 
     public function testNoPageTakesTheSlugIndex(): void

@@ -21,7 +21,7 @@ surfaces on every side of it:
   empty folder to a launched site (`HANDBOOK.md`, "Building the site with an AI agent").
 - **Run it with agents:** the admin describes itself to a signed-in browser agent at `/admin/ai-guide`
   (`HANDBOOK.md`, "AI agents").
-- **Let AI read it:** the public site publishes `/llms.txt`, and every page answers at its address plus `.md`
+- **Let AI read it:** the public site publishes `/llms.txt` and `/llms-full.txt`, and every page answers at its address plus `.md`
   as clean markdown.
 
 ![The demo site's home page: hero slides with video, dropdown menus, search, a language menu](docs/images/site-home.png)

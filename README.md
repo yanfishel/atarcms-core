@@ -54,10 +54,16 @@ state in scripts, so agents driving the accessibility tree operate it reliably.
 
   Append .md to an entry's URL for a markdown version.
 
+  The full text of the entry pages: https://example.com/llms-full.txt
+
   ## News (en)
 
   - [Spring at Atar](https://example.com/news/spring-at-atar)
   ```
+
+- **`/llms-full.txt`** — the full text of the public entry pages in one request (`/llms.txt`'s order, each page's
+  markdown twin with a `Source:` line); after `content.llms_full_limit` pages (default 100) it points to
+  `/llms.txt`.
 
 - **`{page URL}.md`** — every public entry page has a markdown twin: the same content as clean markdown
   (`text/plain`), with a `Link: rel="canonical"` header back to the HTML page and `X-Robots-Tag: noindex` so
@@ -73,7 +79,7 @@ state in scripts, so agents driving the accessibility tree operate it reliably.
   …
   ```
 
-"Hide from search engines" hides `/llms.txt` and the `.md` twins along with the sitemap, so a site under
+"Hide from search engines" hides `/llms.txt`, `/llms-full.txt` and the `.md` twins along with the sitemap, so a site under
 construction leaks nothing. Details: `docs/architecture.md` ("AI readiness") and `docs/admin-ui.md` ("AI guide").
 
 ## A look inside

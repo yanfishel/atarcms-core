@@ -12,6 +12,7 @@ use AtarCms\Cli\Command\ThemeCheckCommand;
 use AtarCms\Cli\Command\ThemeNewCommand;
 use AtarCms\Content\Http\ContentController;
 use AtarCms\Content\Http\FeedController;
+use AtarCms\Content\Http\LlmsFullTxtController;
 use AtarCms\Content\Http\LlmsTxtController;
 use AtarCms\Content\Http\RobotsController;
 use AtarCms\Content\Http\RootController;
@@ -157,6 +158,7 @@ final class ContentModule extends Module
         $router->get('/sitemap.xml', [SitemapController::class, 'index'], 'content.sitemap')->middleware(RequireDefaultLocale::class)->stateless();
         $router->get('/robots.txt', [RobotsController::class, 'index'], 'content.robots')->middleware(RequireDefaultLocale::class)->stateless();
         $router->get('/llms.txt', [LlmsTxtController::class, 'index'], 'content.llms')->middleware(RequireDefaultLocale::class)->stateless();
+        $router->get('/llms-full.txt', [LlmsFullTxtController::class, 'index'], 'content.llms_full')->middleware(RequireDefaultLocale::class)->stateless();
         $router->get(
             '/sitemap-{kind:entries|terms}-{source:[a-z][a-z0-9_]{0,31}}-{number:[1-9][0-9]{0,5}}.xml',
             [SitemapController::class, 'page'],
