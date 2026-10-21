@@ -26,6 +26,10 @@ here; every minor version lists its steps here.
 
 ## Versions
 
+### v0.2.5
+
+The usual three commands; nothing else to do. No schema changes.
+
 ### v0.2.4
 
 The usual three commands. No schema changes. Optional: a server set up from `deploy/nginx` or `deploy/apache`

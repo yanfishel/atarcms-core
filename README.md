@@ -29,7 +29,9 @@ Being readable and operable by AI agents is the project's central design goal, n
 [atarcms.com](https://atarcms.com) itself — scores a clean sheet in Lighthouse on mobile and desktop, Performance
 included, and passes Google's new **agentic browsing** audit:
 
-![Lighthouse for atarcms.com: Performance 100, Accessibility 100, Best Practices 100, SEO 100, Agentic Browsing 3/3](docs/images/lighthouse.png)
+<p align="center">
+  <img src="docs/images/lighthouse.png" width="400" alt="Lighthouse for atarcms.com: Performance 100, Accessibility 100, Best Practices 100, SEO 100, Agentic Browsing 3/3">
+</p>
 
 Every stage of a site's life has an AI surface:
 

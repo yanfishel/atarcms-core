@@ -3,6 +3,10 @@
 Every version of AtarCMS (`yanfishel/atarcms-core`) and of its site skeleton (`yanfishel/atarcms`, same version).
 What a site must do after an update is in `UPGRADE.md`.
 
+## v0.2.5
+
+- Both READMEs show the Lighthouse scores centred and at their natural size.
+
 ## v0.2.4
 
 - Entry pages' markdown twins (`{address}.md`) are served as `text/markdown; charset=utf-8`, matching the

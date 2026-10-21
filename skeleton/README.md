@@ -33,7 +33,9 @@ A site built on AtarCMS — [atarcms.com](https://atarcms.com) itself — scores
 and desktop, Performance included, and passes Google's new **agentic browsing** audit, which checks that AI agents
 can use the site:
 
-![Lighthouse for atarcms.com: Performance 100, Accessibility 100, Best Practices 100, SEO 100, Agentic Browsing 3/3](docs/images/lighthouse.png)
+<p align="center">
+  <img src="docs/images/lighthouse.png" width="400" alt="Lighthouse for atarcms.com: Performance 100, Accessibility 100, Best Practices 100, SEO 100, Agentic Browsing 3/3">
+</p>
 
 ### Found by search engines — and by AI
 
