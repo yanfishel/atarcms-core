@@ -7,7 +7,7 @@ A release is a git tag `vMAJOR.MINOR.PATCH` on `main` of the development reposit
 `.github/scripts/export-skeleton.sh` exports `skeleton/` of the tag (`git archive`, honouring
 `skeleton/.gitattributes` `export-ignore`, so `compose.override.yaml` and `composer.dev.json` stay behind) as one
 commit on `main` of `yanfishel/atarcms`. Each export is tagged with the same version; sites then get both
-packages through Composer (`README.md`, "Using AtarCMS").
+packages through Composer (`README.md`, "Quick start").
 
 ## Repositories
 

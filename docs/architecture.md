@@ -797,7 +797,7 @@ says so): `/news/hello.md`, `/ru/about/team.md`, a single at `/` answers at `/in
 so no other address gains one). `ContentModule` registers a twin per entry route (singles' with the static
 archives and feeds, the root route's after it — pages and articles only, never section pages); the route attribute
 `EntryMarkdown::class` makes `ContentController` resolve the entry exactly as for the page and answer with
-`Content\Markdown\EntryMarkdown` instead (`text/plain`, `X-Robots-Tag: noindex`, `Link: <page>; rel="canonical"`): no
+`Content\Markdown\EntryMarkdown` instead (`text/markdown`, `X-Robots-Tag: noindex`, `Link: <page>; rel="canonical"`): no
 preview, a previous slug or a wrong chain 301s to the canonical twin, "Hide from search engines" makes every twin
 a 404. Public entry and single pages carry their twin's path as the `Content\Markdown\MarkdownTwin` request
 attribute, and the theme helper `markdownAlternate()` prints it as `<link rel="alternate" type="text/markdown">`

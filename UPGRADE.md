@@ -26,6 +26,12 @@ here; every minor version lists its steps here.
 
 ## Versions
 
+### v0.2.4
+
+The usual three commands. No schema changes. Optional: a server set up from `deploy/nginx` or `deploy/apache`
+before this version can add `text/markdown` to its `gzip_types` / `AddOutputFilterByType DEFLATE` line so the `.md`
+pages are compressed too.
+
 ### v0.2.3
 
 The usual three commands; nothing else to do. No schema changes.

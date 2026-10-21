@@ -44,7 +44,7 @@ final class EntryMarkdownTest extends ContentFunctionalTestCase
         $body = (string) $response->getBody();
 
         self::assertSame(200, $response->getStatusCode());
-        self::assertSame('text/plain; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        self::assertSame('text/markdown; charset=utf-8', $response->getHeaderLine('Content-Type'));
         self::assertSame('noindex', $response->getHeaderLine('X-Robots-Tag'));
         self::assertSame('<https://localhost/articles/hello>; rel="canonical"', $response->getHeaderLine('Link'));
         self::assertFalse($response->hasHeader('Set-Cookie'), 'stateless');

@@ -22,25 +22,27 @@ surfaces on every side of it:
   empty folder to a launched site (`HANDBOOK.md`, "Building the site with an AI agent").
 - **Run it with agents:** the admin describes itself to a signed-in browser agent at `/admin/ai-guide`
   (`HANDBOOK.md`, "AI agents").
-- **Let AI read it:** the public site publishes `/llms.txt` and `/llms-full.txt`, and every page answers at its address plus `.md`
-  as clean markdown.
+- **Let AI read it:** the public site publishes `/llms.txt` and `/llms-full.txt`, and every entry page answers at
+  its address plus `.md` as clean markdown.
 
 ![The demo site's home page: hero slides with video, dropdown menus, search, a language menu](docs/images/site-home.png)
 
 ## What your site can do
 
-The default theme scores a clean sheet in Lighthouse — including Google's new **agentic browsing** audit, which
-checks that AI agents can use the site:
+A site built on AtarCMS — [atarcms.com](https://atarcms.com) itself — scores a clean sheet in Lighthouse on mobile
+and desktop, Performance included, and passes Google's new **agentic browsing** audit, which checks that AI agents
+can use the site:
 
-![Lighthouse: Accessibility 100, Best Practices 100, SEO 100, Agentic Browsing 3/3](docs/images/lighthouse.png)
+![Lighthouse for atarcms.com: Performance 100, Accessibility 100, Best Practices 100, SEO 100, Agentic Browsing 3/3](docs/images/lighthouse.png)
 
 ### Found by search engines — and by AI
 
 Localized sitemaps, hreflang alternates, canonical URLs, titles and descriptions inherited along sections,
 JSON-LD (organization, articles, breadcrumbs), generated share images for link previews, 301 redirects when an
-address changes. And the GEO side: `/llms.txt` maps the whole site for language models in one request, and every
-page has a markdown twin — when someone asks ChatGPT or Claude about your business, your site is the easy source
-to read. "Hide from search engines" hides all of it while the site is under construction.
+address changes. And the GEO side: `/llms.txt` maps the whole site for language models in one request,
+`/llms-full.txt` gives its full text, and every entry page has a markdown twin — when someone asks ChatGPT or Claude
+about your business, your site is the easy source to read. "Hide from search engines" hides all of it while the
+site is under construction.
 
 ### Content that editors manage themselves
 
@@ -65,8 +67,9 @@ your pages.
 
 ### Accessible to every visitor
 
-A built-in accessibility toolbar lets visitors enlarge text, raise contrast, switch to a readable font, enlarge
-the cursor, underline links, stop motion, use a reading guide or hide images — no third-party widget. An
+A built-in accessibility toolbar lets visitors enlarge text, widen spacing, raise contrast, switch to greyscale or
+inverted colours or a readable font, mark links and headings, strengthen the focus ring, enlarge the cursor, stop
+motion, use a reading guide or hide images — no third-party widget. An
 accessibility statement page ships as a preset, the theme respects `prefers-reduced-motion`, and the admin
 itself works without JavaScript.
 
@@ -86,13 +89,14 @@ whole admin mirror correctly in Hebrew.
 
 No build step and no JavaScript frameworks: pages render on the server and ship a few small scripts only where
 needed. Images are converted to WebP and AVIF on demand with phone-sized crops for phones; the shipped nginx,
-Caddy and Apache configs compress text responses; the hero image is preloaded. Small sites on one small VPS stay
-fast.
+Caddy and Apache configs compress text responses; the first hero picture loads first (a video slide's poster is
+preloaded). Small sites on one small VPS stay fast.
 
 ## Install
 
 AtarCMS and this skeleton are open-source Composer packages (`yanfishel/atarcms-core`, `yanfishel/atarcms`, MIT) on
-GitHub: installing needs no account and no token. A new site is:
+Packagist, with their source on GitHub: installing needs no account and no token. You need PHP 8.4 and MariaDB
+10.11+, or just Docker; `php bin/atar doctor` names whatever is missing. A new site is:
 
 ```bash
 composer create-project yanfishel/atarcms my-site --no-interaction
@@ -100,6 +104,8 @@ composer create-project yanfishel/atarcms my-site --no-interaction
 
 Every way to run it (your computer or a server, with or without Docker, shared hosting) is in
 `.agents/skills/building-atarcms-sites/references/install.md`, and `php bin/atar doctor` checks the result.
+With Docker the site runs locally on http://localhost:8080, its mail caught by Mailpit at http://localhost:8025
+(`HANDBOOK.md`, "Development with Docker").
 
 **With an AI agent.** Open your coding agent in an empty folder (on your computer, or with SSH access to the
 server) and paste:
@@ -118,8 +124,8 @@ Useful to have: what the site is about and for whom, and its name; the languages
 imagine (unsure is fine — the agent proposes); a site you like as a style sample, or a purchased template — then
 **its files and its licence**, not just its address; contacts (phone, email, address or online-only, opening
 hours, messengers) and social links; texts, photos and a logo you already have; anything that must *not* appear
-on the site. Needed only for launch day, not sooner: the domain, an SMTP mailbox for the forms' mail, and
-analytics counter numbers.
+on the site. Needed only for launch day, not sooner: the domain, an SMTP mailbox for the forms' mail, analytics
+counter numbers and, optionally, a Google OAuth client for "Sign in with Google".
 
 ## Everything else
 

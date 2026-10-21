@@ -25,7 +25,7 @@ final class SkeletonMarkdownTest extends SkeletonTestCase
         $russian = $this->browser->get('/ru/index.md');
 
         self::assertSame(200, $home->getStatusCode());
-        self::assertSame('text/plain; charset=utf-8', $home->getHeaderLine('Content-Type'));
+        self::assertSame('text/markdown; charset=utf-8', $home->getHeaderLine('Content-Type'));
         self::assertSame('<https://localhost/>; rel="canonical"', $home->getHeaderLine('Link'));
         self::assertStringContainsString("\n- Language: en (translations: [ru](https://localhost/ru/index.md))\n", (string) $home->getBody());
         self::assertStringNotContainsString('Published', (string) $home->getBody(), 'a plain single has no publication date');

@@ -21,6 +21,11 @@ final class Responses
         return $this->body($text, $status, 'text/plain; charset=utf-8');
     }
 
+    public function markdown(string $markdown): ResponseInterface
+    {
+        return $this->body($markdown, 200, 'text/markdown; charset=utf-8');
+    }
+
     /**
      * JSON with <, >, &, ' and " escaped as \u sequences, so the body is also safe if a browser sniffs it as HTML.
      *

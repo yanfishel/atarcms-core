@@ -27,6 +27,14 @@ final class ResponsesTest extends TestCase
         self::assertSame('plain', (string) $response->getBody());
     }
 
+    public function testMarkdown(): void
+    {
+        $response = (new Responses(new Psr17Factory()))->markdown("# Title\n");
+
+        self::assertSame('text/markdown; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        self::assertSame("# Title\n", (string) $response->getBody());
+    }
+
     public function testJson(): void
     {
         $response = (new Responses(new Psr17Factory()))->json(['a' => '<b>&"\'', 'b' => 'я/'], 422);

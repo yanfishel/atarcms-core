@@ -199,13 +199,13 @@ final class ContentController
     }
 
     /**
-     * The markdown twin of a public entry page: plain text, kept out of search indexes, pointing to the page.
+     * The markdown twin of a public entry page: text/markdown, kept out of search indexes, pointing to the page.
      *
      * @param array<int, Entry> $ancestors
      */
     private function markdown(Entry $entry, array $ancestors, string $url): ResponseInterface
     {
-        return $this->responses->text($this->entryMarkdown->render($entry, $ancestors))
+        return $this->responses->markdown($this->entryMarkdown->render($entry, $ancestors))
             ->withHeader('X-Robots-Tag', 'noindex')
             ->withHeader('Link', '<' . $url . '>; rel="canonical"');
     }

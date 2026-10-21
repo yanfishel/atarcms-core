@@ -152,6 +152,7 @@ final class DeployConfigTest extends TestCase
     private const array COMPRESSED_TYPES = [
         'text/css', 'application/javascript', 'text/javascript', 'application/json', 'application/manifest+json',
         'image/svg+xml', 'application/xml', 'text/xml', 'application/rss+xml', 'application/atom+xml', 'text/plain',
+        'text/markdown',
     ];
 
     /** Already compressed media: compressing them again only costs CPU (and would get in the way of byte ranges). */
