@@ -10,6 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/yanfishel/atarcms-core#ai-ready-end-to-end"><img src="https://img.shields.io/badge/AI--ready-out%20of%20the%20box-6d28d9" alt="AI-ready"></a>
+  <a href="https://agentcheck.dev/r/66mU7j2dTbDfM4VwP_oqBulG"><img src="https://agentcheck.dev/api/shared/66mU7j2dTbDfM4VwP_oqBulG/badge.svg" alt="AI Ready: 100/100"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2a7d5c" alt="MIT"></a>
   <a href="https://packagist.org/packages/yanfishel/atarcms"><img src="https://img.shields.io/packagist/v/yanfishel/atarcms?label=packagist" alt="Packagist"></a>
 </p>

@@ -26,6 +26,10 @@ here; every minor version lists its steps here.
 
 ## Versions
 
+### v0.2.3
+
+The usual three commands; nothing else to do. No schema changes.
+
 ### v0.2.2
 
 The usual three commands; nothing else to do. No schema changes. Optional: a theme of your own can print

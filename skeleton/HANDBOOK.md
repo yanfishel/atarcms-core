@@ -7,6 +7,7 @@ install it: `README.md`.
 ## Development with Docker
 
 ```bash
+cp -n .env.example .env        # composer create-project has made it already; every boot needs APP_URL
 docker compose up -d --build
 docker compose exec -u www-data php composer install
 docker compose exec -u www-data php php bin/atar migrate
@@ -18,19 +19,24 @@ build; Docker Desktop on Windows and macOS needs nothing). Never run them as roo
 (`app.key`, image caches) are unreadable for the site.
 
 Open http://localhost:8080. CLI: `docker compose exec -u www-data php php bin/atar list`; `bin/atar doctor` checks
-the installation. Mail the site sends in development lands in Mailpit: http://localhost:8025.
+the installation. Mail the site sends in development lands in Mailpit: http://localhost:8025. The site logs to
+`storage/logs/app-YYYY-MM-DD.log` (one JSON line per record; `LOG_LEVEL` in `.env`, default `info`, `debug` in
+`.env.example`).
 
 ## Demo content
 
 `php bin/atar demo:seed` deletes the site's content and fills every configured language with demo content: three
 sections with two subsections each, two articles per subsection, six news with tags, the About page,
-the home and contacts pages, the texts of the two preset pages (a privacy policy template: what the contact form keeps,
-the browser, the map and videos; an accessibility statement template: the standard, what the site does, known limits
-and the coordinator reached through the site's e-mail and phone; replace both with your own), the footer menu, the site
+the home page (with three hero slides) and the contacts page, the texts of the two preset pages (a privacy policy
+template: what the contact form keeps, the browser, the map and videos; an accessibility statement template: the
+standard, what the site does, known limits and the coordinator reached through the site's e-mail and phone; replace
+both with your own), the footer menu, the site
 settings (names, contacts, messengers, social links), a map
 of Tel Aviv and placeholder pictures labelled with their purpose and size ("Hero · 1600×900"). It deletes entries,
-sections and tags, menu items, files (with their sizes and share images), messages and the site settings except the
-admin colour, the "hide from search engines" and accessibility toolbar switches, the verification codes, the analytics counters and the advertising pixels; users and the activity history stay. It asks for
+sections and tags, menu items, files and media folders (with their sizes and share images), messages and the site
+settings except the "hide from search engines", accessibility toolbar (and its corner) and chat button switches, the
+verification codes, the analytics counters and the advertising pixels (the theme colour is replaced by the demo's);
+users, their admin colours and the activity history stay. It asks for
 "yes"; `--force` skips the question (needed without a terminal), `--user=you@example.com` makes that user the
 author (default: the first administrator), `--dry-run` only prints what it would delete. Running it again gives the
 same content. An optional `config/demo.php` (keys `sections`, `pages`, `tags`; the site does not ship one) replaces
@@ -62,8 +68,12 @@ recipe) is `docs/theme-guide.md` in the AtarCMS repository; a copy ships with th
 without JavaScript (the phone menu and the language dropdown are `<details>`); with it, `assets/js/theme.js` adds the
 Light / Dark / System menu at the header's edge (the choice is kept in the browser and applied before the first paint
 by a small nonce'd script in `<head>`; without a choice the site follows the device) and `assets/js/gallery.js` opens
-gallery photos in the PhotoSwipe 5.4.4 lightbox (MIT, `assets/vendor/`, loaded only on pages with a gallery). It uses Rubik (Latin,
-Cyrillic, Hebrew; `assets/fonts/`, SIL OFL) and a few Lucide icons (`assets/icons.svg`). Colours, type sizes and
+gallery photos in the PhotoSwipe 5.4.4 lightbox (MIT, `assets/vendor/`, loaded only on pages with a gallery);
+`assets/js/tooltip.js` turns every `title` into a styled tip (a byte-exact copy of the admin's), `assets/js/slider.js`
+runs the home page's hero slides (see "Hero slides") and `assets/js/forms.js` the form dialogs (see "Forms and mail").
+It uses Rubik (Latin, Cyrillic, Hebrew; `assets/fonts/`, SIL OFL), a few Lucide icons (`assets/icons.svg`), Simple
+Icons brand marks for social networks and messengers (`assets/brands.svg`) and round language flags (`assets/flags/`,
+also used by the admin). Colours, type sizes and
 spacing are custom properties at the top of `assets/css/site.css`. The layout takes `aside` (the side column's HTML,
 `partials/aside.php`) and `wide` (the page draws its own full-width bands, as the home page does). Helpers it uses
 besides those below: `termChildren('sections', $parent)` (a level of a taxonomy in tree order),
@@ -71,6 +81,19 @@ besides those below: `termChildren('sections', $parent)` (a level of a taxonomy 
 `readableDate($time, false)` (the day in the page's language), `languageName($code)` and `adminBar($entry, $term)` (the quick
 actions of a signed-in user: the admin, "Add" for the collections they may create in, "Edit" for this page, the
 messages with their unread count; nothing for visitors; drawn by `partials/admin-bar.php`).
+
+The active theme is set via the `APP_THEME` env var (default `default`) in `.env`. It is read both
+by PHP (`config/app.php`) and by the web server (`compose.yaml`'s `ATAR_THEME`), which serves the theme's
+`assets/` directory directly (without such a rule PHP serves `/theme-assets/` and `/admin-assets/` itself). A theme
+kept left to right only (a purchased template used as it is) sets `'direction' => 'ltr'` in its `theme.php`:
+`theme:check` then allows physical CSS sides and refuses the theme while `config/locales.php` has a right-to-left
+language.
+
+**Chat button.** The contacts page's admin form has "Show a chat button" after the messengers (Contacts tab, off by
+default, one switch for the whole site). While it is on and a messenger is filled, the default theme shows a round
+button in the bottom end corner (`partials/chat.php`): its panel lists the messengers as plain links (with one
+messenger the button is that link). There is no widget script, no cookie and nothing to add to the Content Security
+Policy.
 
 The theme has its own accessibility toolbar (no third-party overlay, which the Content Security Policy would refuse):
 a round button at the bottom corner opens text size, wider spacing, a readable font, high contrast, greyscale,
@@ -86,8 +109,8 @@ text per language in the same tab, empty = the theme's) and the counters load on
 nothing, and "Cookie settings" in the footer changes the choice (kept 6 months in the `atar_consent` cookie).
 Advertising pixels (Meta Pixel, Google Ads, VK Ads, TikTok Pixel; the same tab) make the banner offer "Accept all",
 "Decline" and "Choose": statistics and advertising are allowed separately, and each loads only after its own consent. If
-nginx restricts `/admin` by IP, keep `/admin-assets/` public: public pages load the logo files, `tooltip.js` and
-`consent.js` from it.
+nginx restricts `/admin` by IP, keep `/admin-assets/` public: public pages load the default logo files (the icons
+without a site icon) and `consent.js` from it.
 Signed-in users are never counted. Without a counter or pixel there is no banner and nothing changes. The core decides and
 loads (`consentHead()`, `consent()`; the theme guide's Cookie banner).
 
@@ -110,22 +133,20 @@ and one address may send 3 messages in 10 minutes and 20 a day (over all forms).
 `$this->contactForm()` (`partials/contact-form.php`). Further forms are defined in `config/forms.php` (the skeleton
 has `booking`, "Book a consultation"): each opens in a dialog from a link (the header's "Book";
 `partials/form-dialog.php`, `assets/js/forms.js`) and has its own page `/forms/{key}` for visitors without JavaScript;
-its texts are the theme catalog's `forms.{key}.*`. Messages are listed in the admin under Messages (permission `messages.manage`:
-administrators and editors) and e-mailed to the site e-mail of the settings when `MAIL_DSN` is set
+its texts are the theme catalog's `forms.{key}.*`, and templates read it with `$this->form('booking')` (null for an
+unknown key; the theme guide has its fields). Messages are listed in the admin's inbox, the inbox icon in the top
+bar with the unread count (`/admin/messages`, permission `messages.manage`: administrators and editors), and e-mailed
+to the form's `recipient` (null: the site e-mail of the settings) when `MAIL_DSN` is set
 (`smtp://user:password@smtp.example.com:587`; `MAIL_FROM` is the sender, default `noreply@` and the site's host). A mail
 that cannot be sent is logged and the message stays in the admin. Check the settings with
 `php bin/atar mail:test you@example.com`.
 
-The active theme is set via the `APP_THEME` env var (default `default`) in `.env`. It is read both
-by PHP (`config/app.php`) and by the web server (`compose.yaml`'s `ATAR_THEME`), which serves the theme's
-`assets/` directory directly (without such a rule PHP serves `/theme-assets/` and `/admin-assets/` itself).
-
 ## Composer and versions
 
-The core comes from its GitHub repository (`composer.json`, a `vcs` repository) at `^0.1`: `composer update
-yanfishel/atarcms-core` takes the 0.1.x fixes; a new minor version (0.2) is a deliberate change of the constraint after
-reading its `UPGRADE.md`. Commit `composer.lock`; never commit `auth.json` (Composer's credentials). While AtarCMS is
-young, its 0.x versions are drafts: an update may need a fresh install (UPGRADE.md says so).
+The core comes from Packagist (`composer.json`) at `^0.2`: `composer update yanfishel/atarcms-core` takes the 0.2.x
+fixes; a new minor version (0.3) is a deliberate change of the constraint after reading its `UPGRADE.md`. Commit
+`composer.lock`; never commit `auth.json` (Composer's credentials). While AtarCMS is young, its 0.x versions are
+drafts: an update may need a fresh install (UPGRADE.md says so).
 
 Inside the AtarCMS repository the skeleton is developed against the working tree instead: `compose.override.yaml`
 (loaded by `docker compose` automatically, never released) mounts the whole repository and selects
@@ -140,7 +161,12 @@ docker compose exec -u www-data php php bin/atar user:create you@example.com --r
 docker compose exec -u www-data php php bin/atar user:login-link you@example.com
 ```
 
-Open the printed URL within 10 minutes; it works once. More users are added in `/admin/users`.
+Open the printed URL within 10 minutes; it works once. More users are added in `/admin/users`; `bin/atar user:disable
+you@example.com` locks one out from the console. A session ends after 2 hours without activity and 12 hours after
+sign-in (`config/session.php`: `idle_timeout`, `absolute_timeout`, in seconds).
+
+In development (`APP_ENV=local`) the login page also offers one-click sign-in as any active user; in every other
+environment that route does not exist (404), so use login links there.
 
 **"Sign in with Google" (optional).** It lets editors use their Google account instead of login links; it never
 creates users — only people already added in `/admin/users` can sign in (matched by e-mail on their first Google
@@ -165,7 +191,11 @@ until you want it.
 
 Locales are listed in `config/locales.php`. The default locale has no URL prefix; the others are served
 under `/{locale}/…` (`/ru/…`). A URL with the default locale's prefix (`/en/…`) redirects to the
-unprefixed one. The admin (`/admin`) has no locale prefix; it speaks each user's interface language (English, Russian, Hebrew, German or French; see "Admin").
+unprefixed one. The admin (`/admin`) has no locale prefix. With `config/locales.php` `'admin' => 'linked'` (the
+default) it speaks the language of the content on screen: the top bar's language menu switches both, and a language
+without an admin catalog (the catalogs are English, Russian, Hebrew, German and French) gets an English interface.
+`'separate'` keeps each user's interface language (chosen in the Profile) apart from the content language of the top
+bar. A site with one language shows nothing about languages in the admin.
 
 UI strings live in PHP arrays: the core ones in the package's `resources/lang/{locale}.php`, the theme's
 in `themes/<name>/lang/{locale}.php` (the theme wins on the same key). In templates:
@@ -174,7 +204,7 @@ in `themes/<name>/lang/{locale}.php` (the theme wins on the same key). In templa
 <?= $this->e($this->t('site.running')) ?>
 <?= $this->e($this->t('shop.items', ['count' => 3])) ?>   // ICU: '{count, plural, one {# item} other {# items}}'
 <html lang="<?= $this->e($this->locale()) ?>">
-<?= $this->hreflang() ?>                                  // <link rel="alternate" hreflang=…> for every locale
+<?= $this->hreflang() ?>                                  // <link rel="alternate" hreflang=…> per translation
 ```
 
 `$this->url('route.name', [...])` links within the current locale. A missing key falls back to the default
@@ -198,8 +228,11 @@ pages, archives, term pages); `og:title` falls back to the site title of the sit
 `og:site_name`; `og:locale` such as `en` or `pt_BR`; `og:image`, the entry's generated share image (with
 `og:image:width` 1200 and `og:image:height` 630), else its main photo in the given variant, else the site's sharing
 image) and `twitter:card` (`summary_large_image` with an image, `summary` without). After them it prints the
-schema.org JSON-LD for search engines: `WebSite` on the home page, `Article` on news items and articles (collections
-with an archive or sections), and `BreadcrumbList` on pages below an archive, a section or a parent page.
+schema.org JSON-LD for search engines: `WebSite` and the site's organization on the home page (its type is
+`config/content.php` `organization_type`, default `Organization`, e.g. `LocalBusiness` or `Restaurant`; with the logo,
+phone, e-mail, address, the map's point and the social links of the settings), `Article` on news items and articles
+(collections with an archive or sections; author and publisher are the organization), and `BreadcrumbList` on pages
+below an archive, a section or a parent page.
 
 **Share images.** Nobody makes images for social networks by hand: when an entry of a collection with a route is
 saved with a main photo, the site draws a 1200 × 630 card from it: the photo darkened, the title for search engines
@@ -231,14 +264,15 @@ pages have none and name themselves.
 ### Site settings
 
 Settings → Site settings in the admin (`/admin/settings`, permission `settings.manage`: administrators) holds the
-site's name and short name, logo, icon, toolbar colour and the accessibility toolbar switch (General), the home page's title and the site description
-for search engines, the page title pattern and a "hide from search engines" switch (SEO) and the search consoles'
-verification codes, the analytics counters, the advertising pixels and the cookie banner's text (Integrations). The names, the SEO texts
-and the banner text are kept per language; the rest is shared by the whole
-site. The contact details are edited on the contacts page itself (Content → Contacts, `config/content.php`
-`'contact_page' => 'contacts'`), in the right column's tabs, and saved with the page: the address and opening hours of
-the form's language with the map (Address), the phone, email and messengers (Contacts) and the social network links
-(Social); whoever may save that page edits them.
+site's name and short name, the theme colour (the browser toolbar's, the default site icon's and the admin's colour)
+and the accessibility toolbar switch (General), the home page's title and the site description for search engines,
+the page title pattern and a "hide from search engines" switch (SEO) and the search consoles' verification codes, the
+analytics counters, the advertising pixels and the cookie banner's text (Integrations); the logo, the icon and the
+image for social sharing are in its Images card. The names, the SEO texts and the banner text are kept per language;
+the rest is shared by the whole site. The contact details are edited on the contacts page itself (Content → Contacts,
+`config/content.php` `'contact_page' => 'contacts'`), in the right column's tabs, and saved with the page: the address
+and opening hours of the form's language with the map (Address), the phone, email, messengers and the chat button
+switch (Contacts) and the social network links (Social); whoever may save that page edits them.
 
 Theme helpers (all in the page's language; every value is user text, so escape what you print):
 
@@ -281,7 +315,8 @@ Collection::make('news')
 
 Field types: `text`, `textarea`, `richText` (sanitized on save; `->minimal()` for a short formatted text such as a
 summary, `->max(N)` limits its visible text), `number`, `boolean`, `date`, `datetime`,
-`select`, `relation`, `youtube`. `->hierarchical()` gives entries a parent (nested URLs such as
+`select`, `relation`, `youtube`, the media fields `image`, `gallery` and `file` (see "Media"), `tags` (see "Taxonomies
+and tags") and `slides` (see "Hero slides"). `->hierarchical()` gives entries a parent (nested URLs such as
 `/about/team`), `->single()` keeps one entry per locale (the home page), and `->single()->plain()` makes it a page
 that is always there: its form shows only its fields (no title, status or SEO inputs), its title is the collection's
 label and every save publishes it. `Field::richText(…)->tall()` gives a page-long editor and `->help('…')` a hint
@@ -319,7 +354,8 @@ database reads by its id see the saved entry (or nothing for a new one), and lis
 content only.
 
 `->indexed()` fields can be filtered and sorted (`$this->entries('news')->where('event_date', '2026-10-01')`).
-After adding, changing or removing one, run:
+After adding, changing or removing one, run the two commands below (`collections:sync` refuses while migrations are
+pending: run `migrate` first):
 
 ```bash
 docker compose exec -u www-data php php bin/atar collections:sync   # writes database/migrations/…_sync_collections.php
@@ -327,14 +363,16 @@ docker compose exec -u www-data php php bin/atar migrate
 ```
 
 `/sitemap.xml` lists every public entry with its translations; `/robots.txt` comes from `config/content.php`
-(`robots`) or a default that hides `/admin`.
+(`robots`) or a default that hides `/admin` and names the sitemap. Each save keeps a version of the entry for
+Earlier versions; `config/content.php` `revisions` sets how many per entry (default 20).
 
 ### AI agents
 
 The site is AI-ready without any work of yours. `/llms.txt` is a markdown map of the public site (name, description,
 languages, a link per public entry and term; after `content.llms_limit` links, default 1000, it points to the
 sitemap), and `/llms-full.txt` holds the full text of the entry pages in the same order, each with a `Source:`
-line (after `content.llms_full_limit` pages, default 100, it points to `/llms.txt`). Every public entry page also
+line (terms are left out; after `content.llms_full_limit` pages, default 100, or 1 MiB it points to `/llms.txt`). Both
+are served for the default language only. Every public entry page also
 answers at its address plus `.md` (`/news/hello.md`, `/index.md` for the home page) with the page as clean markdown, a canonical link to the HTML page and `noindex`; old addresses redirect like
 the HTML pages; the default layout links each entry page to its twin (`$this->markdownAlternate()`, a
 `<link rel="alternate" type="text/markdown">`). A signed-in agent working in the admin reads `/admin/ai-guide` — the "AI guide" link in the admin's
@@ -346,10 +384,11 @@ page footer — which lists the screens, content types and fields its user may u
 Every collection gets a menu item in the admin sidebar, under "Content", with an icon: `newspaper` for
 collections with an archive, `home` for singles, `file-text` otherwise (taxonomies: `folder-tree` when hierarchical,
 else `tag`); `->icon('calendar')` on a `Collection` or `Taxonomy` picks another symbol of
-`resources/admin/assets/icons.svg` (Lucide names; the symbol must be in the sprite). Each collection has a list with
-language, status, category and search filters (singletons open their form directly). The entry form is generated from
-the collection's fields in two columns of tabs: Content and Media on the left, Settings and SEO on the
-right (the contacts page adds Address, Contacts and Social). A field goes to the Content tab unless it says otherwise:
+`resources/admin/assets/icons.svg` (Lucide names; the symbol must be in the sprite, which `bin/atar doctor` checks).
+Each collection has a list with status, category and search filters in the language of the top bar (singletons open
+their form directly). The entry form is generated from the collection's fields in two columns of tabs: Content and
+Media on the left (and a tab per `slides` field, named by its label), Settings and SEO on the right (the contacts page
+adds Address, Contacts and Social). A field goes to the Content tab unless it says otherwise:
 
 ```php
 Field::gallery('images')->tab('media'),      // next to Content: photos, videos, files
@@ -357,22 +396,28 @@ Field::date('event_date')->tab('settings'),  // the right column, under the stat
 ```
 
 The title, status, publication date, parent page, categories, page address and search engine texts (with the preview
-of the share image at the top of the SEO tab) have fixed places. Rich text uses the bundled CKEditor 5 (see "Rich text"). Saving shows a confirmation; saving a form
-that someone else saved in the meantime is refused, so reload and redo your change. The form also offers a language
-switch ("Copy for translation" copies the entry as a draft; in Chrome, "Translate (machine translation)" also
-translates the copy's texts on your computer for you to check and save), Preview (the page as the theme shows it, with the form's
-unsaved values, in a tab of its own; nothing is saved), Earlier versions (restore one) and Delete…. Drafts save
+of the share image at the top of the SEO tab) have fixed places. Rich text uses the bundled CKEditor 5 (see "Rich
+text"). Saving shows a confirmation; saving a form that someone else saved in the meantime is refused, so reload and
+redo your change. Switching the top bar's language on an entry that has no translation in it offers "Copy for
+translation" (it copies the entry as a draft; in Chrome, "Translate (machine translation)" also translates the copy's
+texts on your computer for you to check and save; in the `'separate'` mode the form has its own row of languages for
+this). The form also offers Preview (the page as the theme shows it, with the form's unsaved values, in a tab of its
+own; nothing is saved), Earlier versions (restore one) and Delete…. Drafts save
 themselves about 30 seconds after the last change and when the page is left ("Saved 2 minutes ago" in the bar; a new
 entry is created as a draft by its first autosave); published and scheduled entries are only saved with Save, and
 the form asks before leaving unsaved changes. An author's autosaves between two saves share one earlier version,
 marked "Autosave". A draft with an empty page address takes it from its current title; once published, the address
-stays. Saved drafts stay visible to anyone with `entries.{collection}.view` via `?preview=1`. The top bar holds the
-interface language menu (only when the site has more than one language; each user picks one of the site's languages
-for the admin, the site itself keeps the language of its URLs), the light, dark or device theme, and the user menu
-with Sign out. The admin remembers the
-content language each user last switched to for the lists and "Add new". The admin's building blocks, rules and
-how-tos (screens, field widgets, icons) are in `docs/admin-ui.md` of the AtarCMS repository (not shipped in the
-Composer package).
+stays. Saved drafts stay visible to anyone with `entries.{collection}.view` via `?preview=1`.
+
+The top bar holds the Messages inbox (with the unread count, for `messages.manage`), the light, dark or device theme,
+the language menu (only when the site has more than one language; see "Languages") and the user menu with Profile and
+Sign out. The admin remembers the language each user last switched to. The Dashboard (`/admin`) shows the state of
+the content and its translations, publications, edits and messages over time, and the recent activity; the Profile
+(`/admin/profile`) holds each user's admin colour (default: the site's theme colour) and, in the `'separate'` mode,
+their interface language; Settings → Activity history (`/admin/audit`, permission `audit.view`: administrators) lists
+every recorded action (sign-ins, saves, deletes, settings). The page footer links the AI guide (see "AI agents").
+The admin's building blocks, rules and how-tos (screens, field widgets, icons) are in `docs/admin-ui.md` of the
+AtarCMS repository (not shipped in the Composer package).
 
 Permissions per collection are `entries.{collection}.{view|create|edit|edit_others|publish|delete}`
 (`config/roles.php`). The default author role creates and edits its own drafts; editors publish. A user with
@@ -465,7 +510,9 @@ dropped and unlisted Vimeo links are not supported. They are stored as links and
 (`<iframe class="rich-text-video">`, sized by the theme: the default theme's `site.css` has
 `.rich-text-video { width: 100%; height: auto; aspect-ratio: 16 / 9; border: 0; display: block; }`). Their two player
 hosts are always allowed by the Content Security Policy; `config/security.php` `frame_src` only lists extra hosts
-(maps, other embeds). Editing an entry with a video loads the players from YouTube or Vimeo in the admin.
+(maps, other embeds), and its `img_src` and `connect_src` add image and request hosts (e.g. Google Ads' country
+domains such as `https://www.google.com.ua`). Editing an entry with a video loads the players from YouTube or Vimeo
+in the admin.
 
 ## Sections
 
@@ -495,8 +542,9 @@ Collection::make('pages')->route('/{slug}');                                    
 - `->redirectToFirstChild()` (a routed hierarchical taxonomy): a section with subsections has no page of its own; its
   address redirects (302) to its first subsection by the tree's order, down to the first one without subsections.
   The sitemap lists only the sections that have a page.
-- The default theme's `taxonomies/sections/show.php` lists a section's articles, newest first: an article with a
-  summary is announced (cover, title, summary, a link), one without a summary is shown in full, so a subsection
+- The default theme's `taxonomies/sections/show.php` lists a section's articles in the order the editors set
+  ("Order articles", below; new and moved-in articles come first, an unsorted section is newest first): an article
+  with a summary is announced (cover, title, summary, a link), one without a summary is shown in full, so a subsection
   holding one such article reads as a plain page. Breadcrumbs come from `$this->termTrail($term)` (the section and
   its parents, root first); use `$this->entryUrls($page->entries)` (entry id => address, one query for all their
   sections) instead of `entryUrl()` in lists of articles.
@@ -513,7 +561,8 @@ Collection::make('pages')->route('/{slug}');                                    
   subsection to it), pencil and bin icons open a small window (without JavaScript, a page); the bin is greyed out while the
   section has subsections or articles. Sections with subsections fold: a click on one (or on its "2 subsections" before the arrows) shows or hides them, and the
   browser remembers which are open. A name opens its content: a section the list of its articles, Home and Contacts
-  their page's form, News its list. Every result (a saved order, a refusal) appears as a message in the corner.
+  their page's form, News its list. A section's "Order articles" (`/admin/sections/{id}/order`) arranges its articles
+  for its page by drag or arrows. Every result (a saved order, a refusal) appears as a message in the corner.
   `$this->menu('main')` returns them in that order, sections with their subsections as children; a section is
   `current` on its page and `ancestorOfCurrent` on its subsections' and its articles' pages, News on its entries'.
 - Each section has, per language, a title and a description for search engines (the section form's SEO tab, in the
@@ -529,7 +578,7 @@ Collection::make('pages')->route('/{slug}');                                    
   - Each text is resolved on its own (the title may come from the top section, the description from the subsection).
   - With `->redirectToFirstChild()`, a section with subsections has no page of its own, so a title without `{title}`
     shows only while it has no subsections.
-- The contacts page shows the contact details, the contact form (see "Contact form and mail") and the site's Google
+- The contacts page shows the contact details, the contact form (see "Forms and mail") and the site's Google
   map (`$this->contactMap()`: `embedUrl` for the iframe in the page's language, `linkUrl` for "Open in Google Maps" and `wazeUrl` for "Directions in Waze", each or
   null; null without a map). One map serves every language: it is added, changed and removed in the Address tab of the
   contacts page's admin form (`config/content.php` `'contact_page' => 'contacts'`), in a dialog with four ways to enter it: Google's embed code (Share → Embed a map), a full Google Maps link (short
@@ -551,7 +600,8 @@ Collection::make('news')
 
 Terms are kept per language (`/admin/taxonomies/{taxonomy}`, permission `taxonomies.manage`), with
 "Copy for translation" (and machine translation in Chrome) like entries; "Copy for translation" of an entry carries over the terms that have a
-translation. Anyone who can save an entry can create new tags by typing them. Deleting a term removes it
+translation. A taxonomy filled only by `tags` fields is kept per language without translating: its tags offer no
+"Copy for translation". Anyone who can save an entry can create new tags by typing them. Deleting a term removes it
 from its entries, except a term that entries take their address from (a section): it cannot be deleted while
 they use it, and the admin shows the refusal (see the Sections chapter).
 
@@ -608,19 +658,24 @@ their handle (the order is saved a moment after the drop, and a message says so)
 buttons (they work without JavaScript and save at once). A
 page moves only if you may edit it, and a page cannot move to the top level of a `/{slug}` collection when its slug
 is reserved there. Someone else's newer order makes your save fail instead of overwriting it; moving a page or term
-also makes its edit forms that are already open stale. The editor uses the bundled SortableJS 1.15.7.
+also makes its edit forms that are already open stale. The editor uses the bundled SortableJS 1.15.7. A section's
+articles have their own order screen ("Order articles" on the Sections screen, see "Sections").
 
 ## Media
 
 The media library (`/admin/media`, permission `media.upload`; deleting needs `media.delete`) keeps uploads below
-`storage/uploads/YYYY/MM/` under random names. `config/media.php` sets the allowed types (JPEG, PNG, WebP, GIF and PDF
-by default; SVG is never allowed), the size limit and the pixel limit. Images are re-encoded on upload: camera
-metadata such as the GPS position is removed, the photo's orientation is applied and animated GIFs keep their first
-frame. PDFs are stored as they are and are always downloaded, never shown inline. Folders (any depth) only sort the
+`storage/uploads/YYYY/MM/` under random names. `config/media.php` sets the allowed types (JPEG, PNG, WebP, GIF, PDF,
+MP4 and WebM in the skeleton; SVG is never allowed), the size limit (`max_size`, 10 MB), a separate limit for videos
+(`max_video_size`, 100 MB; PHP's and the web server's body limits must allow it, and the shipped configs do), the
+pixel limit (`max_pixels`), the longest side kept (`max_dimension`, 4096), the re-encoding quality (`quality`, 82)
+and `avif` (false turns AVIF pictures off). Images are re-encoded on upload: camera metadata such as the GPS
+position is removed, the photo's orientation is applied and animated GIFs keep their first frame. PDFs and videos
+are stored as they are; PDFs are always downloaded, never shown inline, and videos play inline (a hero slide's
+video). Folders (any depth) only sort the
 library: they live in the database, so moving a file never changes its address; editors with `media.upload` create,
 rename and move them, deleting one (only when it is empty) needs `media.delete`. A file cannot be deleted while an
-entry uses it (in a field or in rich text) or while it is the site's image for social
-sharing; its page lists where it is used, and the library's "Only unused" filter finds the others. After
+entry uses it (in a field, a slide or rich text) or while it is the site's logo, icon or image for
+social sharing; its page lists where it is used, and the library's "Only unused" filter finds the others. After
 removing a collection or a media or rich-text field from `config/collections.php`, run
 `php bin/atar media:references:prune`: it releases the files those entries or fields still hold (the entries stay).
 Now and then, `php bin/atar media:cleanup --dry-run` lists files nothing refers to any more (left by a delete that
@@ -640,13 +695,15 @@ The theme declares image sizes in `theme.php`:
 ],
 ```
 
-A size is generated on its first request (`/media/{variant}/…`, WebP and the original format), cached in
-`storage/cache/media/` and then served by nginx. Images are never enlarged. After changing a size, run
-`php bin/atar media:variants:clear` (URLs carry a hash of the settings, so browsers load the new files).
+A size is generated on its first request (`/media/{variant}/…`: AVIF where PHP's GD can write it, see `bin/atar
+doctor`'s `gd.avif`, WebP and the original format), cached in `storage/cache/media/` and then served by nginx. Images
+are never enlarged. After changing a size, run `php bin/atar media:variants:clear` (`--variant=thumb` for one size;
+URLs carry a hash of the settings, so browsers load the new files).
 
-In templates, load the media of a list in one query and print images with `img()`, which outputs a `<picture>` with a
-WebP source, `srcset`, `width`/`height` and `loading="lazy"`; `alt` defaults to the image's alternative text in the
-current language:
+In templates, load the media of a list in one query and print images with `img()`, which outputs a `<picture>` with
+AVIF and WebP sources, `srcset`, `width`/`height` and `loading="lazy"`; `alt` defaults to the image's alternative text
+in the current language, else the default language's. Its `sources` option serves another size or picture to some
+screens (art direction, e.g. a taller crop on phones; see the theme guide):
 
 ```php
 <?php $media = $this->mediaFor($page->entries); ?>
@@ -669,13 +726,30 @@ prints it as `og:image` through `socialMeta()`, see "Search engines and social s
 and `/media/` itself, where PHP can never run
 (`deploy/nginx/atarcms.conf.template`); without those rules PHP serves the same files with the same headers.
 
+## Hero slides
+
+`Field::slides('hero')` (the skeleton's home page has one; `->max(N)`, default 10) holds a list of slides, each a
+picture (required: also the video's poster and what shows without motion) with an optional title, subtitle, link,
+button text and video (an MP4 or WebM of the media library; YouTube and Vimeo are not slide videos, use
+`Field::youtube()` elsewhere). The entry form gives the field a tab of its own, named by its label; each slide is
+edited in a dialog and the rows are reordered by drag or arrows. Slide texts are not searched.
+
+Templates read `$entry->field('hero')`: a list of `AtarCms\Content\Field\Slide` (`imageId`, `videoId`, `title`,
+`subtitle`, `url`, `button`), `[]` without slides. The default theme draws them with `partials/hero-slider.php` and
+`assets/js/slider.js` (loaded only on pages with slides): the slides fade every 6 seconds with arrows, dots and Pause,
+stop on hover, focus or a hidden tab, and stay still under `prefers-reduced-motion` and the accessibility toolbar's
+"no animations"; a video slide plays its muted loop only while motion is allowed; without JavaScript the first slide
+shows. The first slide's picture loads first (a video's poster is preloaded from `<head>`). The theme guide's "Hero
+slider" lists other heroes built from the same field. `demo:seed` fills three picture slides per language.
+
 ## Search
 
 `/search?q=…` (`/ru/search?q=…` in another language) lists the published entries of the page's language that contain
 every word of the query, most relevant first (a word in the title counts double), `search_per_page` results per page
-(`config/content.php`, default 10). Russian and English word forms match ("новость" finds "новостями", "run" finds
-"running"); in other languages words match as typed or by their beginning. Words whose stem is shorter than three
-characters are ignored (a MariaDB setting): "она" stems to "он" and cannot be searched.
+(`config/content.php`, default 10). Russian, English, German and French word forms match ("новость" finds
+"новостями", "run" finds "running", "Häuser" finds "Haus"); in other languages words match as typed or by their
+beginning. Words whose stem is shorter than three characters are ignored (a MariaDB setting): "она" stems to "он" and
+cannot be searched.
 
 The default layout has a search form. The theme's `search.php` renders the page with `$query` (the text as typed),
 `$results` (each with `->entry`, `->url` and `->description`: the meta description, or the start of the first text
@@ -701,6 +775,27 @@ of a removed field still matches its entries.
 
 ## Console commands
 
+`php bin/atar list` lists the commands, `php bin/atar help <command>` (or `<command> --help`) prints one's usage. The
+core ships these:
+
+| Command | What it does |
+|---|---|
+| `migrate` / `migrate:status` | apply pending migrations and create missing preset pages / list migrations and whether they are applied |
+| `collections:sync` | write a site migration for added, changed or removed `->indexed()` fields |
+| `doctor [--json] [--strict] [--mail] [--http] [--http-via=<url>] [--http-ca=<pem>]` | check PHP, configuration, storage, database, admin icons, mail and the web server |
+| `user:create <email> --role=<role> [--name=<name>]` | create a user |
+| `user:login-link <email>` / `user:disable <email>` | print a one-time sign-in URL (10 minutes) / disable a user |
+| `mail:test <email>` | send a test mail through `MAIL_DSN` |
+| `settings:import <file.json> [--dry-run] [--user=<email>]`, `settings:import --example` | write the site settings from JSON / print the current ones in that shape |
+| `demo:seed [--force] [--dry-run] [--user=<email>]` | delete the content and fill the site with demo content |
+| `search:reindex` | rebuild the search index |
+| `share-images:rebuild [--collection=<name>]` | bring the share images up to date |
+| `media:variants:clear [--variant=<name>]` | delete cached image sizes (made again on request) |
+| `media:references:prune` | release files held by removed collections or fields |
+| `media:cleanup [--dry-run]` | delete files nothing refers to, older than a day |
+| `theme:new <name> [--from=<theme>]` | start a theme from the scaffold or a copy of another theme |
+| `theme:check [<theme>] [--json] [--no-render]` | check a theme against the site |
+
 Site modules add commands through `Module::commands()`. A command implements `AtarCms\Cli\Command` (only `run()`)
 and declares its name and description with an attribute, so `bin/atar list` never constructs it (and never connects
 to the database for it):
@@ -723,9 +818,10 @@ site:report` and `bin/atar site:report --help` print that tail as the usage line
 
 Set `APP_ENV=production` (a missing or empty value also means production; the value is trimmed and lower-cased),
 `APP_DEBUG=false` and `APP_URL` to the public `https://` URL of the site root (no path, query or fragment; the web and
-`bin/atar` refuse to boot without a valid one). Only HSTS depends on the `production` environment; the
-`__Host-` session cookie is used in every environment except `local` over plain HTTP. Every environment boots the same
-way, from the sources: there is no build step and no compiled cache to clear.
+`bin/atar` refuse to boot without a valid one). Of the site's responses only HSTS depends on the `production`
+environment (`doctor` also expects OPcache there, and `demo:seed` warns); the `__Host-` session cookie is used in
+every environment except `local` over plain HTTP. Every environment boots the same way, from the sources: there is no
+build step and no compiled cache to clear.
 
 The step-by-step installation of a server is `.agents/skills/building-atarcms-sites/references/install.md`: with
 Docker (`compose.production.yaml`: Caddy with automatic HTTPS, PHP-FPM, MariaDB; select it with

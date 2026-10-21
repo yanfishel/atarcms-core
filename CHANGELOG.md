@@ -3,6 +3,15 @@
 Every version of AtarCMS (`yanfishel/atarcms-core`) and of its site skeleton (`yanfishel/atarcms`, same version).
 What a site must do after an update is in `UPGRADE.md`.
 
+## v0.2.3
+
+- The site handbook (`HANDBOOK.md`) is up to date: Composer from Packagist at `^0.2`, the linked admin language,
+  section article order, German and French search stemming, video and AVIF media, hero slides, the chat button, an
+  admin overview, a table of every `bin/atar` command and the config keys it lacked.
+- `bin/atar demo:seed` names exactly which site settings it keeps; the Google OAuth comment in `.env.example`
+  follows the current Google Cloud console.
+- Both READMEs show the agentcheck.dev "AI Ready" score.
+
 ## v0.2.2
 
 - `/llms-full.txt` gives LLMs the full text of the site in one request: the `/llms.txt` header, then every public

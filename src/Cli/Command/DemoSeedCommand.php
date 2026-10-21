@@ -94,8 +94,9 @@ final class DemoSeedCommand implements Command
                 $counts['media'],
                 $counts['messages'],
             ));
-            $output->line('(except the admin colour, "hide from search engines" and the verification codes), then fills the');
-            $output->line('site with demo content. Users and the activity history stay.');
+            $output->line('(except the "hide from search engines", accessibility toolbar and chat button switches, the');
+            $output->line('verification codes, the analytics counters and the advertising pixels), then fills the site with');
+            $output->line('demo content. Users, their admin colours and the activity history stay.');
         }
         if (!$force && $this->prompt->ask('Type "yes" to continue:', $output) !== 'yes') {
             $output->line('Nothing was changed.');

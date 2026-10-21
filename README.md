@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="#ai-ready-end-to-end"><img src="https://img.shields.io/badge/AI--ready-llms.txt%20%C2%B7%20%7Bpage%7D.md%20%C2%B7%20admin%20guide-6d28d9" alt="AI-ready"></a>
+  <a href="https://agentcheck.dev/r/66mU7j2dTbDfM4VwP_oqBulG"><img src="https://agentcheck.dev/api/shared/66mU7j2dTbDfM4VwP_oqBulG/badge.svg" alt="AI Ready: 100/100"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2a7d5c" alt="MIT"></a>
   <img src="https://img.shields.io/badge/PHP-8.4-777BB4?logo=php&logoColor=white" alt="PHP 8.4">
   <a href="https://packagist.org/packages/yanfishel/atarcms-core"><img src="https://img.shields.io/packagist/v/yanfishel/atarcms-core?label=packagist" alt="Packagist"></a>
