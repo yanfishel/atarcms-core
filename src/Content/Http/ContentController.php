@@ -39,7 +39,8 @@ use Psr\Http\Message\ServerRequestInterface;
  * same way and answers with EntryMarkdown's text instead: never a preview, a previous slug and a wrong chain
  * redirect to the canonical twin, and a site hidden from search engines has none. The page itself answers with its
  * twin's markdown (without the twin's noindex: it is the canonical address) when the Accept header prefers text/markdown to text/html (AcceptHeader; never while previewing or
- * hidden), its redirects staying on page addresses; both variants send "Vary: Accept".
+ * hidden), its redirects staying on page addresses; both variants send "Vary: Accept". The HTML page names its twin
+ * in a Link header (rel="alternate", type="text/markdown") wherever the markdownAlternate() helper prints its tag.
  */
 final class ContentController
 {
@@ -121,7 +122,7 @@ final class ContentController
             $request = MarkdownTwin::attach($request, $this->urls->path($entry, $ancestors, $routeTerm, $knownTerms, markdown: true));
         }
         $seo = PageSeo::forEntry($entry, $sections);
-        $response = $this->render($request, $collection, 'show', ['entry' => $entry, 'seo' => $seo], $preview);
+        $response = $this->advertiseTwin($request, $this->render($request, $collection, 'show', ['entry' => $entry, 'seo' => $seo], $preview));
 
         return $negotiable ? self::varyByAccept($response) : $response;
     }
@@ -151,7 +152,7 @@ final class ContentController
         if ($entry !== null && !$preview) {
             $request = MarkdownTwin::attach(CanonicalUrl::attach($request, $this->urls->absolute($entry)), $this->urls->path($entry, markdown: true));
         }
-        $response = $this->render($request, $collection, 'show', ['entry' => $entry, 'seo' => $entry === null ? null : PageSeo::forEntry($entry, [])], $preview);
+        $response = $this->advertiseTwin($request, $this->render($request, $collection, 'show', ['entry' => $entry, 'seo' => $entry === null ? null : PageSeo::forEntry($entry, [])], $preview));
 
         return $negotiable ? self::varyByAccept($response) : $response;
     }
@@ -197,6 +198,19 @@ final class ContentController
         ));
 
         return $preview ? self::private($response) : $response;
+    }
+
+    /**
+     * A page with a markdown twin (MarkdownTwin on the request) names it in a Link header too, wherever the
+     * markdownAlternate() helper prints its tag: not on previews (no MarkdownTwin) and not while the site is hidden
+     * from search engines (it has no twins then). Added beside other Link values (SearchVisibilityMiddleware's
+     * describedby).
+     */
+    private function advertiseTwin(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        $twin = MarkdownTwin::of($request);
+
+        return $twin === null || $this->settings->forRequest($request)->hideFromSearch ? $response : $response->withAddedHeader('Link', $twin->link());
     }
 
     /**
@@ -249,7 +263,7 @@ final class ContentController
      */
     private function markdown(Entry $entry, array $ancestors, string $url): ResponseInterface
     {
-        return $this->responses->markdown($this->entryMarkdown->render($entry, $ancestors))
+        return $this->responses->markdown($this->entryMarkdown->document($entry, $ancestors, $url))
             ->withHeader('Link', '<' . $url . '>; rel="canonical"');
     }
 

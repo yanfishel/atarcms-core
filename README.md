@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="#ai-ready-end-to-end"><img src="https://img.shields.io/badge/AI--ready-llms.txt%20%C2%B7%20%7Bpage%7D.md%20%C2%B7%20admin%20guide-6d28d9" alt="AI-ready"></a>
-  <a href="https://agentcheck.dev/r/66mU7j2dTbDfM4VwP_oqBulG"><img src="https://agentcheck.dev/api/shared/66mU7j2dTbDfM4VwP_oqBulG/badge.svg" alt="AI Ready: 100/100"></a>
+  <a href="https://agentcheck.dev/r/ffn0TAslH6GF4JoZcqxUVWpS"><img src="https://agentcheck.dev/api/shared/ffn0TAslH6GF4JoZcqxUVWpS/badge.svg" alt="AI Ready: 97/100"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2a7d5c" alt="MIT"></a>
   <img src="https://img.shields.io/badge/PHP-8.4-777BB4?logo=php&logoColor=white" alt="PHP 8.4">
   <a href="https://packagist.org/packages/yanfishel/atarcms-core"><img src="https://img.shields.io/packagist/v/yanfishel/atarcms-core?label=packagist" alt="Packagist"></a>
@@ -60,6 +60,8 @@ state in scripts, so agents driving the accessibility tree operate it reliably.
 
   The full text of the entry pages: https://example.com/llms-full.txt
 
+  A markdown sitemap: https://example.com/sitemap.md
+
   ## News (en)
 
   - [Spring at Atar](https://example.com/news/spring-at-atar)
@@ -67,14 +69,24 @@ state in scripts, so agents driving the accessibility tree operate it reliably.
 
 - **`/llms-full.txt`** — the full text of the public entry pages in one request (`/llms.txt`'s order, each page's
   markdown twin with a `Source:` line); after `content.llms_full_limit` pages (default 100) or 1 MiB it points to
-  `/llms.txt`. Both files speak the site's default language.
+  `/llms.txt`. `/sitemap.md` is the same map as a plain markdown sitemap. All three speak the site's default
+  language.
 
 - **`{page URL}.md`** — every public entry page has a markdown twin: the same content as clean markdown
-  (`text/markdown`), with a `Link: rel="canonical"` header back to the HTML page and `X-Robots-Tag: noindex` so
-  search engines never see duplicates. Old addresses redirect with 301, like the HTML pages:
+  (`text/markdown`) under YAML frontmatter (title, description, URL, language, published and updated times), with a
+  `Link: rel="canonical"` header back to the HTML page and `X-Robots-Tag: noindex` so search engines never see
+  duplicates. Old addresses redirect with 301, like the HTML pages:
 
   ```console
   $ curl https://example.com/contacts.md
+  ---
+  title: "Contacts"
+  url: "https://example.com/contacts"
+  lang: "en"
+  published: "2026-10-01T09:00:00+00:00"
+  updated: "2026-10-20T14:12:05+00:00"
+  ---
+
   # Contacts
 
   - Language: en (translations: [he](…/he/contacts.md), [ru](…/ru/contacts.md))
@@ -83,16 +95,31 @@ state in scripts, so agents driving the accessibility tree operate it reliably.
   …
   ```
 
-- **Discovery and negotiation** — every public HTML page sends `Link: </llms.txt>; rel="describedby"`; an entry
-  page asked for with `Accept: text/markdown` (preferred over `text/html`) answers with its markdown twin, both
-  variants sending `Vary: Accept`; the default `robots.txt` states the site's
+- **Discovery and negotiation** — every public HTML page sends `Link: </llms.txt>; rel="describedby"` and allows
+  full snippets in search results and AI answers (`X-Robots-Tag: max-snippet:-1, max-image-preview:large,
+  max-video-preview:-1`, configurable); an entry page names its twin in a
+  `Link: <….md>; rel="alternate"; type="text/markdown"` header, and asked for with `Accept: text/markdown`
+  (preferred over `text/html`) answers with it, both variants sending `Vary: Accept`; the default `robots.txt` states the site's
   [Content Signals](https://contentsignals.org) (`search=yes, ai-input=yes, ai-train=no`). JSON-LD describes every
   page with a canonical URL: the home page's `WebSite` and organization, `Article`, `WebPage`, `CollectionPage`
   and breadcrumbs.
 
-"Hide from search engines" hides `/llms.txt`, `/llms-full.txt` and the `.md` twins along with the sitemap, so a site
-under construction leaks nothing. Details: `docs/architecture.md` ("AI readiness") and `docs/admin-ui.md` ("Shell",
-the AI guide).
+"Hide from search engines" hides `/llms.txt`, `/llms-full.txt`, `/sitemap.md` and the `.md` twins along with the
+sitemap, so a site under construction leaks nothing. Details: `docs/architecture.md` ("AI readiness") and
+`docs/admin-ui.md` ("Shell", the AI guide).
+
+**Independent checks of atarcms.com (October 2026)** — taken before this version's markdown sitemap, frontmatter,
+alternate `Link` header and snippet directives:
+
+| Check | Score |
+| --- | --- |
+| [agentcheck.dev](https://agentcheck.dev/r/ffn0TAslH6GF4JoZcqxUVWpS), full check | 97/100 (A+; all four categories 100) |
+| [Frase Agent Readiness](https://www.frase.io/tools/agent-readiness) | 95/100 |
+| [agent-ready.dev](https://agent-ready.dev/scan/zyJkPhgZ_G) | Vercel Agent Readability 77, llmstxt.org 100, Accessibility 100 |
+| [isitagentready.com](https://isitagentready.com/atarcms.com) (Cloudflare) | 40 — Discoverability 75, Content 100, Bot Access Control 100 |
+
+The rest of isitagentready's score is for API, OAuth, MCP and commerce endpoints that a content site doesn't have
+(an editing API or MCP server is a deliberate non-goal).
 
 ## A look inside
 

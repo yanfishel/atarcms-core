@@ -54,10 +54,12 @@ final class MarkdownNegotiationTest extends ContentFunctionalTestCase
         $hello = $this->entry('articles', 'Hello', ['slug' => 'hello']);
         $this->translation($hello, 'ru', 'Привет', 'privet');
 
-        self::assertStringStartsWith("# Team\n", (string) $this->markdown('/pages/about/team')->getBody());
-        self::assertStringStartsWith("# Contact\n", (string) $this->markdown('/contact')->getBody());
-        self::assertStringStartsWith("# Imprint\n", (string) $this->markdown('/imprint')->getBody());
-        self::assertStringStartsWith("# Привет\n", (string) $this->markdown('/ru/articles/privet')->getBody());
+        // Each starts with its frontmatter, as its twin does.
+        self::assertStringContainsString("\nurl: \"https://localhost/pages/about/team\"\n", (string) $this->markdown('/pages/about/team')->getBody());
+        self::assertStringContainsString("\n---\n\n# Team\n", (string) $this->markdown('/pages/about/team')->getBody());
+        self::assertStringContainsString("\n---\n\n# Contact\n", (string) $this->markdown('/contact')->getBody());
+        self::assertStringContainsString("\n---\n\n# Imprint\n", (string) $this->markdown('/imprint')->getBody());
+        self::assertStringContainsString("\n---\n\n# Привет\n", (string) $this->markdown('/ru/articles/privet')->getBody());
     }
 
     public function testRedirectsStayOnThePageAddress(): void

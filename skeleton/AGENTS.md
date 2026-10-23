@@ -10,7 +10,7 @@ content or prepare it for launch, use the skill in `.agents/skills/building-atar
 
 Working with the running site: the admin describes itself for AI agents at `/admin/ai-guide` (the "AI guide" link in
 the admin's page footer) — read it before editing content through the browser. The public site's map is
-`/llms.txt` (its full text: `/llms-full.txt`), and every public entry page answers at its address plus `.md` as
+`/llms.txt` (its full text: `/llms-full.txt`, a plain markdown sitemap: `/sitemap.md`), and every public entry page answers at its address plus `.md` as
 clean markdown.
 
 Running commands: one user runs the site's PHP, never root. With Docker (`compose.yaml` and a running `php`

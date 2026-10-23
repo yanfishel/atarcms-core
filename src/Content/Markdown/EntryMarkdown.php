@@ -26,6 +26,7 @@ use AtarCms\Content\Field\TextareaType;
 use AtarCms\Content\Field\YouTubeType;
 use AtarCms\Content\Field\YouTubeVideo;
 use AtarCms\Content\PublicContent;
+use AtarCms\Content\StructuredData\StructuredData;
 use AtarCms\Content\Taxonomies;
 use AtarCms\Content\Term;
 use AtarCms\Content\TermRepository;
@@ -41,7 +42,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * The markdown twin of a public entry page ("{address}.md", ContentController with the EntryMarkdown::class route
- * attribute), for AI agents. The document:
+ * attribute), for AI agents. The document (document() puts YAML frontmatter above it):
  * - "# {title}", then "> {meta description}" when the entry has one;
  * - a list of facts: "Published: {date}" (the publication date in the site's time zone, SiteTime; not on a plain()
  *   single, which is always published and has no date of its own), "Language: {locale}" with links to the twins of
@@ -81,6 +82,38 @@ final readonly class EntryMarkdown
     }
 
     /**
+     * The twin as served on its own (the ".md" address and the negotiated page): the YAML frontmatter (Frontmatter) —
+     * title, the meta description when there is one, the canonical page URL, the language, the publication time (not
+     * on a plain() single, like the facts line) and the modification time (StructuredData's dateModified: the later of
+     * the last save and the publication), both in UTC ISO 8601 — then render(). /llms-full.txt uses render() alone.
+     *
+     * @param array<int, Entry> $ancestors the entry's ancestors when already loaded
+     * @param string $url the page's absolute canonical URL
+     */
+    public function document(Entry $entry, array $ancestors, string $url): string
+    {
+        $fields = ['title' => $entry->title];
+        $description = $entry->seo->metaDescription;
+        if ($description !== null && trim($description) !== '') {
+            $fields['description'] = $description;
+        }
+        $fields['url'] = $url;
+        $fields['lang'] = $entry->locale;
+        $modified = $entry->updatedAt;
+        if ($entry->publishedAt !== null) {
+            if (!$entry->collection->plain) {
+                $fields['published'] = StructuredData::time($entry->publishedAt);
+            }
+            $modified = max($modified, $entry->publishedAt);
+        }
+        $fields['updated'] = StructuredData::time($modified);
+
+        return Frontmatter::render($fields) . "\n" . $this->render($entry, $ancestors);
+    }
+
+    /**
+     * The markdown without frontmatter.
+     *
      * @param array<int, Entry> $ancestors the entry's ancestors when already loaded
      */
     public function render(Entry $entry, array $ancestors = []): string

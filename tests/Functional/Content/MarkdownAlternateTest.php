@@ -55,6 +55,22 @@ final class MarkdownAlternateTest extends ContentFunctionalTestCase
         self::assertNull($this->twin('/articles/hello'));
     }
 
+    public function testTheLinkHeaderSitsBesideTheDescribedByLinkAndNeverOnMarkdown(): void
+    {
+        $this->entry('articles', 'Hello', ['slug' => 'hello']);
+
+        self::assertSame(
+            ['</articles/hello.md>; rel="alternate"; type="text/markdown"', '</llms.txt>; rel="describedby"'],
+            $this->browser->get('/articles/hello')->getHeader('Link'),
+        );
+        self::assertSame(['<https://localhost/articles/hello>; rel="canonical"'], $this->browser->get('/articles/hello.md')->getHeader('Link'));
+        self::assertSame(
+            ['<https://localhost/articles/hello>; rel="canonical"'],
+            $this->browser->get('/articles/hello', ['Accept' => 'text/markdown'])->getHeader('Link'),
+            'not on the negotiated markdown',
+        );
+    }
+
     public function testTheHelperEscapesThePath(): void
     {
         $renderer = $this->app->container()->service(Renderer::class);
@@ -72,7 +88,11 @@ final class MarkdownAlternateTest extends ContentFunctionalTestCase
         $response = $this->browser->get($path);
         self::assertSame(200, $response->getStatusCode(), $path);
         preg_match('~<link rel="alternate" type="text/markdown" href="([^"]+)">~', (string) $response->getBody(), $match);
+        $twin = $match[1] ?? null;
+        // The HTTP header says the same as the tag, wherever the tag is printed.
+        $alternates = array_values(array_filter($response->getHeader('Link'), static fn(string $link): bool => str_contains($link, 'rel="alternate"')));
+        self::assertSame($twin === null ? [] : ['<' . $twin . '>; rel="alternate"; type="text/markdown"'], $alternates, $path . ': the Link header');
 
-        return $match[1] ?? null;
+        return $twin;
     }
 }

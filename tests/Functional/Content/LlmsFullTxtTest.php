@@ -39,6 +39,8 @@ final class LlmsFullTxtTest extends ContentFunctionalTestCase
         self::assertStringNotContainsString('Secret note', $body, 'a collection without a route is not public');
         self::assertStringNotContainsString('# PHP', $body, 'terms have no markdown');
         self::assertStringNotContainsString('More content', $body);
+        self::assertStringNotContainsString("\ntitle: \"", $body, 'no frontmatter blocks');
+        self::assertStringNotContainsString("\nurl: \"", $body, 'no frontmatter blocks');
     }
 
     public function testANestedPageRendersWithItsAncestors(): void
@@ -95,7 +97,8 @@ final class LlmsFullTxtTest extends ContentFunctionalTestCase
      */
     private function block(string $path): string
     {
-        $twin = (string) $this->browser->get($path . '.md')->getBody();
+        // The twin's frontmatter stays out of /llms-full.txt.
+        [, $twin] = explode("\n---\n\n", (string) $this->browser->get($path . '.md')->getBody(), 2);
         [$title, $rest] = explode("\n\n", $twin, 2);
 
         return $title . "\nSource: https://localhost" . $path . "\n\n" . $rest;

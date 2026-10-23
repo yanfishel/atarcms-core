@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/yanfishel/atarcms-core#ai-ready-end-to-end"><img src="https://img.shields.io/badge/AI--ready-out%20of%20the%20box-6d28d9" alt="AI-ready"></a>
-  <a href="https://agentcheck.dev/r/66mU7j2dTbDfM4VwP_oqBulG"><img src="https://agentcheck.dev/api/shared/66mU7j2dTbDfM4VwP_oqBulG/badge.svg" alt="AI Ready: 100/100"></a>
+  <a href="https://agentcheck.dev/r/ffn0TAslH6GF4JoZcqxUVWpS"><img src="https://agentcheck.dev/api/shared/ffn0TAslH6GF4JoZcqxUVWpS/badge.svg" alt="AI Ready: 97/100"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2a7d5c" alt="MIT"></a>
   <a href="https://packagist.org/packages/yanfishel/atarcms"><img src="https://img.shields.io/packagist/v/yanfishel/atarcms?label=packagist" alt="Packagist"></a>
 </p>
@@ -22,8 +22,9 @@ surfaces on every side of it:
   empty folder to a launched site (`HANDBOOK.md`, "Building the site with an AI agent").
 - **Run it with agents:** the admin describes itself to a signed-in browser agent at `/admin/ai-guide`
   (`HANDBOOK.md`, "AI agents").
-- **Let AI read it:** the public site publishes `/llms.txt` and `/llms-full.txt`, and every entry page answers at
-  its address plus `.md` as clean markdown (or at its own address for `Accept: text/markdown`).
+- **Let AI read it:** the public site publishes `/llms.txt`, `/llms-full.txt` and `/sitemap.md`, and every entry
+  page answers at its address plus `.md` as clean markdown with YAML frontmatter (or at its own address for
+  `Accept: text/markdown`), announced by a `Link` header.
 
 ![The demo site's home page: hero slides with video, dropdown menus, search, a language menu](docs/images/site-home.png)
 
@@ -42,9 +43,23 @@ can use the site:
 Localized sitemaps, hreflang alternates, canonical URLs, titles and descriptions inherited along sections,
 JSON-LD (organization, articles, pages, collections, breadcrumbs), generated share images for link previews, 301 redirects when an
 address changes. And the GEO side: `/llms.txt` maps the whole site for language models in one request,
-`/llms-full.txt` gives its full text, and every entry page has a markdown twin — when someone asks ChatGPT or Claude
-about your business, your site is the easy source to read. "Hide from search engines" hides all of it while the
-site is under construction.
+`/llms-full.txt` gives its full text, `/sitemap.md` lists every page, every entry page has a markdown twin, and
+public pages allow full snippets in search results and AI answers — when someone asks ChatGPT or Claude about your
+business, your site is the easy source to read. "Hide from search engines" hides all of it while the site is under
+construction.
+
+Independent checks of atarcms.com (October 2026), taken before the markdown sitemap, frontmatter, alternate `Link`
+header and snippet directives arrived:
+
+| Check | Score |
+| --- | --- |
+| [agentcheck.dev](https://agentcheck.dev/r/ffn0TAslH6GF4JoZcqxUVWpS), full check | 97/100 (A+; all four categories 100) |
+| [Frase Agent Readiness](https://www.frase.io/tools/agent-readiness) | 95/100 |
+| [agent-ready.dev](https://agent-ready.dev/scan/zyJkPhgZ_G) | Vercel Agent Readability 77, llmstxt.org 100, Accessibility 100 |
+| [isitagentready.com](https://isitagentready.com/atarcms.com) (Cloudflare) | 40 — Discoverability 75, Content 100, Bot Access Control 100 |
+
+The rest of isitagentready's score is for API, OAuth, MCP and commerce endpoints a content site doesn't have (an
+editing API or MCP server is a deliberate non-goal).
 
 ### Content that editors manage themselves
 

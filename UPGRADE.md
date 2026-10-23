@@ -26,6 +26,12 @@ here; every minor version lists its steps here.
 
 ## Versions
 
+### v0.2.7
+
+The usual three commands. No schema changes. A root page with the slug `sitemap` must be renamed before its next
+save: `/sitemap.md` is now the site's markdown sitemap. Optional: `'snippet_directives' => ''` in
+`config/content.php` turns off the new `X-Robots-Tag` snippet directives.
+
 ### v0.2.6
 
 The usual three commands. No schema changes. Optional: a site with its own `robots` text in `config/content.php`

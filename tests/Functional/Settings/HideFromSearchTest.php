@@ -8,10 +8,15 @@ use AtarCms\Content\EntryStatus;
 use AtarCms\Database\Connection;
 use AtarCms\Http\SearchVisibilityMiddleware;
 use AtarCms\I18n\RequestLocale;
+use AtarCms\Kernel\Application;
+use AtarCms\Kernel\Config;
+use AtarCms\Kernel\ConfigException;
+use AtarCms\Kernel\Paths;
 use AtarCms\Settings\SettingsInput;
 use AtarCms\Settings\SettingsService;
 use AtarCms\Tests\Functional\Content\ContentFunctionalTestCase;
 use AtarCms\Tests\Support\QueryCounter;
+use AtarCms\Tests\Support\TempDirectory;
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 use Psr\Http\Message\ResponseInterface;
@@ -20,11 +25,15 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 final class HideFromSearchTest extends ContentFunctionalTestCase
 {
-    public function testAVisibleSiteChangesNothing(): void
+    use TempDirectory;
+
+    private const string SNIPPETS = 'max-snippet:-1, max-image-preview:large, max-video-preview:-1';
+
+    public function testAVisibleSiteOnlyAllowsFullSnippets(): void
     {
         $this->entry('articles', 'Hello', ['slug' => 'hello']);
 
-        self::assertSame('', $this->browser->get('/articles/hello')->getHeaderLine('X-Robots-Tag'));
+        self::assertSame(self::SNIPPETS, $this->browser->get('/articles/hello')->getHeaderLine('X-Robots-Tag'));
         self::assertStringNotContainsString('Disallow: /' . "\n", (string) $this->browser->get('/robots.txt')->getBody());
         self::assertSame(200, $this->browser->get('/sitemap.xml')->getStatusCode());
     }
@@ -52,7 +61,7 @@ final class HideFromSearchTest extends ContentFunctionalTestCase
         $this->entry('articles', 'Hello', ['slug' => 'hello']);
         $describedBy = '</llms.txt>; rel="describedby"';
 
-        self::assertSame($describedBy, $this->browser->get('/articles/hello')->getHeaderLine('Link'));
+        self::assertContains($describedBy, $this->browser->get('/articles/hello')->getHeader('Link'));
         self::assertSame($describedBy, $this->browser->get('/ru/articles')->getHeaderLine('Link'));
         self::assertSame(
             '<https://localhost/articles/hello>; rel="canonical"',
@@ -70,6 +79,56 @@ final class HideFromSearchTest extends ContentFunctionalTestCase
 
         $this->hide();
         self::assertSame('', $this->browser->get('/articles/hello')->getHeaderLine('Link'), 'no /llms.txt while hidden');
+    }
+
+    public function testPublicHtmlPagesAllowFullSnippetsAndNothingElseDoes(): void
+    {
+        $this->entry('articles', 'Hello', ['slug' => 'hello']);
+        $this->entry('articles', 'Draft', ['slug' => 'draft', 'status' => EntryStatus::Draft]);
+
+        foreach (['/articles/hello', '/ru/articles', '/articles', '/search?q=hello'] as $path) {
+            self::assertSame(self::SNIPPETS, $this->browser->get($path)->getHeaderLine('X-Robots-Tag'), $path);
+        }
+        self::assertSame('noindex', $this->browser->get('/articles/hello.md')->getHeaderLine('X-Robots-Tag'), 'the twin keeps its own');
+        self::assertSame('', $this->browser->get('/articles/hello', ['Accept' => 'text/markdown'])->getHeaderLine('X-Robots-Tag'), 'no HTML');
+        foreach (['/sitemap.xml', '/sitemap.md', '/robots.txt', '/llms.txt', '/llms-full.txt', '/articles/feed.xml', '/articles/nope', '/boom'] as $path) {
+            self::assertSame('', $this->browser->get($path)->getHeaderLine('X-Robots-Tag'), $path);
+        }
+
+        $this->actingAs($this->createUser('ed@example.com', 'editor'));
+        self::assertSame('', $this->browser->get('/admin')->getHeaderLine('X-Robots-Tag'), 'not the admin');
+        self::assertSame('', $this->browser->get('/admin/login')->getHeaderLine('X-Robots-Tag'), 'not the admin');
+        self::assertSame('noindex', $this->browser->get('/articles/draft?preview=1')->getHeaderLine('X-Robots-Tag'), 'the preview keeps its own');
+
+        $this->hide();
+        self::assertSame('noindex, nofollow', $this->browser->get('/articles/hello')->getHeaderLine('X-Robots-Tag'), 'a hidden site');
+    }
+
+    public function testTheSnippetDirectivesAreConfigurable(): void
+    {
+        $this->entry('articles', 'Hello', ['slug' => 'hello']);
+        $container = $this->app->container();
+        $config = $container->service(Config::class);
+
+        $container->set(Config::class, $config->with(['content.snippet_directives' => 'max-snippet:50']));
+        self::assertSame('max-snippet:50', $this->browser->get('/articles/hello')->getHeaderLine('X-Robots-Tag'));
+
+        $container->set(Config::class, $config->with(['content.snippet_directives' => '']));
+        $page = $this->browser->get('/articles/hello');
+        self::assertFalse($page->hasHeader('X-Robots-Tag'), 'an empty string turns them off');
+        self::assertContains('</llms.txt>; rel="describedby"', $page->getHeader('Link'), 'the Link header stays');
+    }
+
+    public function testSnippetDirectivesThatAreNotOneLineFailTheBoot(): void
+    {
+        foreach (["max-snippet:-1\r\nSet-Cookie: x=1", ['max-snippet:-1']] as $value) {
+            try {
+                Application::boot(new Paths(static::SITE, $this->tempDir() . '/storage'), ['content.snippet_directives' => $value]);
+                self::fail('the boot accepted ' . var_export($value, true));
+            } catch (ConfigException $e) {
+                self::assertStringContainsString('content.snippet_directives', $e->getMessage());
+            }
+        }
     }
 
     public function testTheDescribedByLinkIsAppendedToAnExistingLinkHeader(): void

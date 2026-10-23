@@ -375,15 +375,21 @@ The site is AI-ready without any work of yours. `/llms.txt` is a markdown map of
 languages, a link per public entry and term; after `content.llms_limit` links, default 1000, it points to the
 sitemap), and `/llms-full.txt` holds the full text of the entry pages in the same order, each with a `Source:`
 line (terms are left out; after `content.llms_full_limit` pages, default 100, or 1 MiB it points to `/llms.txt`). Both
-are served for the default language only. Every public entry page also
+are served for the default language only, and so is `/sitemap.md`, the same map as a plain markdown sitemap
+(`/llms.txt` links it). Every public entry page also
 answers at its address plus `.md` (`/news/hello.md`, `/index.md` for the home page) with the page as clean markdown, a canonical link to the HTML page and `noindex`; old addresses redirect like
-the HTML pages; the default layout links each entry page to its twin (`$this->markdownAlternate()`, a
-`<link rel="alternate" type="text/markdown">`). The page's own address answers in markdown too when the request's
-`Accept` header prefers `text/markdown` to `text/html` (browsers keep getting HTML; both send `Vary: Accept`), and
-every public HTML page points agents to `/llms.txt` with a `Link: </llms.txt>; rel="describedby"` header. A
+the HTML pages. Each markdown page opens with YAML frontmatter: `title`, `description` (when set), `url`, `lang`,
+`published` (not on a plain single) and `updated`, the times in UTC. The default layout links each entry page to its
+twin (`$this->markdownAlternate()`, a `<link rel="alternate" type="text/markdown">`), and the page sends the same as a
+`Link: </news/hello.md>; rel="alternate"; type="text/markdown"` header. The page's own address answers in markdown
+too when the request's `Accept` header prefers `text/markdown` to `text/html` (browsers keep getting HTML; both send
+`Vary: Accept`), and every public HTML page points agents to `/llms.txt` with a `Link: </llms.txt>; rel="describedby"`
+header and allows full snippets in search results and AI answers with
+`X-Robots-Tag: max-snippet:-1, max-image-preview:large, max-video-preview:-1` (`content.snippet_directives` in
+`config/content.php` changes it; `''` sends none). A
 signed-in agent working in the admin reads `/admin/ai-guide` — the "AI guide" link in the admin's
 page footer — which lists the screens, content types and fields its user may use. "Hide from search engines" hides
-`/llms.txt`, `/llms-full.txt` and the `.md` pages along with the sitemap.
+`/llms.txt`, `/llms-full.txt`, `/sitemap.md` and the `.md` pages along with the sitemap.
 
 ## Admin
 

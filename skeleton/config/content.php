@@ -22,6 +22,10 @@ return [
     // ("Content-Signal: search=yes, ai-input=yes, ai-train=no") and the sitemap is announced. It replaces that default
     // entirely: copy the Content-Signal line into it to keep it.
     // 'robots' => "User-agent: *\nDisallow: /\n",
+    // The X-Robots-Tag of public HTML pages: by default search engines and AI answers may quote any length of text and
+    // show large image and video previews. Another value replaces it (e.g. 'max-snippet:160'); '' sends none. Pages
+    // that are hidden from search engines, previews and the admin never get it.
+    // 'snippet_directives' => 'max-snippet:-1, max-image-preview:large, max-video-preview:-1',
     // Past this many URLs (10–50 000), /sitemap.xml becomes a sitemap index of /sitemap-{entries|terms}-{name}-{n}.xml pages.
     // 'sitemap_limit' => 50000,
     // Results per page of /search (1–100).

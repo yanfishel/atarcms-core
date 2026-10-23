@@ -14,6 +14,9 @@ use AtarCms\Media\Media;
 use AtarCms\Media\MediaRepository;
 use AtarCms\Settings\SettingsInput;
 use AtarCms\Settings\SettingsService;
+use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
 
 /**
  * Every public entry page has a markdown twin at its address + ".md" (EntryMarkdown), resolved like the page itself.
@@ -48,7 +51,7 @@ final class EntryMarkdownTest extends ContentFunctionalTestCase
         self::assertSame('noindex', $response->getHeaderLine('X-Robots-Tag'));
         self::assertSame('<https://localhost/articles/hello>; rel="canonical"', $response->getHeaderLine('Link'));
         self::assertFalse($response->hasHeader('Set-Cookie'), 'stateless');
-        self::assertStringStartsWith("# Hello\n\n> A greeting.\n\n- Published: Sep 28, 2026\n- Language: en\n", $body);
+        self::assertStringStartsWith("# Hello\n\n> A greeting.\n\n- Published: Sep 28, 2026\n- Language: en\n", self::withoutFrontmatter($body));
         self::assertStringContainsString("\n- Topics: [PHP](https://localhost/topics/php)\n", $body);
         self::assertStringContainsString("\n- rating: 7\n", $body);
         self::assertStringContainsString("\n- kind: Report\n", $body);
@@ -77,7 +80,7 @@ final class EntryMarkdownTest extends ContentFunctionalTestCase
         self::assertStringContainsString("\n- Language: en (translations: [ru](https://localhost/ru/articles/privet.md))\n", $english);
         self::assertSame(200, $russian->getStatusCode());
         self::assertSame('<https://localhost/ru/articles/privet>; rel="canonical"', $russian->getHeaderLine('Link'));
-        self::assertStringStartsWith("# Привет\n", (string) $russian->getBody());
+        self::assertStringStartsWith("# Привет\n", self::withoutFrontmatter((string) $russian->getBody()));
         self::assertStringContainsString("\n- Language: ru (translations: [en](https://localhost/articles/hello.md))\n", (string) $russian->getBody());
         self::assertSame(404, $this->browser->get('/ru/articles/hello.md')->getStatusCode(), 'a slug of another language');
     }
@@ -100,7 +103,7 @@ final class EntryMarkdownTest extends ContentFunctionalTestCase
         $short = $this->browser->get('/pages/team.md');
 
         self::assertSame(200, $page->getStatusCode());
-        self::assertStringStartsWith("# Team\n", (string) $page->getBody());
+        self::assertStringStartsWith("# Team\n", self::withoutFrontmatter((string) $page->getBody()));
         self::assertStringContainsString("\n## body\n\n- Ann\n- Bob\n", (string) $page->getBody());
         self::assertSame(301, $short->getStatusCode());
         self::assertSame('/pages/about/team.md', $short->getHeaderLine('Location'), 'a missing parent leads to the canonical twin');
@@ -148,9 +151,9 @@ final class EntryMarkdownTest extends ContentFunctionalTestCase
 
         self::assertSame(200, $contact->getStatusCode());
         self::assertSame('<https://localhost/contact>; rel="canonical"', $contact->getHeaderLine('Link'));
-        self::assertStringStartsWith("# Contact us\n\n- Published: Sep 28, 2026\n", (string) $contact->getBody());
+        self::assertStringStartsWith("# Contact us\n\n- Published: Sep 28, 2026\n", self::withoutFrontmatter((string) $contact->getBody()));
         self::assertStringContainsString("\n- phone: +1 555 0100\n", (string) $contact->getBody());
-        self::assertStringStartsWith("# Welcome\n\n- Language: en\n", $welcome, 'a plain single has no publication date');
+        self::assertStringStartsWith("# Welcome\n\n- Language: en\n", self::withoutFrontmatter($welcome), 'a plain single has no publication date');
         self::assertStringContainsString("\n## intro\n\nHi there\n", $welcome);
         self::assertSame(404, $this->browser->get('/ru/contact.md')->getStatusCode(), 'no entry in that language');
     }
@@ -268,7 +271,45 @@ final class EntryMarkdownTest extends ContentFunctionalTestCase
     {
         $this->entry('articles', 'Learn C #', ['slug' => 'csharp', 'metaDescription' => '1. Not a list']);
 
-        self::assertStringStartsWith("# Learn C \\#\n\n> 1\\. Not a list\n", (string) $this->browser->get('/articles/csharp.md')->getBody());
+        self::assertStringStartsWith("# Learn C \\#\n\n> 1\\. Not a list\n", self::withoutFrontmatter((string) $this->browser->get('/articles/csharp.md')->getBody()));
+    }
+
+    public function testATwinStartsWithYamlFrontmatter(): void
+    {
+        $entry = $this->entry('articles', 'Note: "C#" --- #1', [
+            'slug' => 'note',
+            'metaDescription' => '- a: b',
+            'publishedAt' => new DateTimeImmutable('2026-09-01 08:30:00', new DateTimeZone('UTC')),
+        ]);
+        $updated = $entry->updatedAt->setTimezone(new DateTimeZone('UTC'))->format(DateTimeInterface::ATOM);
+
+        $body = (string) $this->browser->get('/articles/note.md')->getBody();
+
+        self::assertStringStartsWith(
+            "---\ntitle: \"Note: \\\"C#\\\" --- #1\"\ndescription: \"- a: b\"\nurl: \"https://localhost/articles/note\"\nlang: \"en\"\n"
+            . "published: \"2026-09-01T08:30:00+00:00\"\nupdated: \"" . $updated . "\"\n---\n\n# Note: ",
+            $body,
+        );
+        self::assertSame(1, substr_count($body, "\n---\n"), 'only the closing fence: the title cannot close the block early');
+    }
+
+    public function testTheFrontmatterOfAPlainSingleHasNoPublicationDateAndNoEmptyDescription(): void
+    {
+        $this->entry('welcome', 'ignored', ['locale' => 'ru', 'fields' => ['intro' => '<p>Привет</p>']]);
+
+        $body = (string) $this->browser->get('/ru/welcome.md')->getBody();
+
+        self::assertMatchesRegularExpression('~\A---\ntitle: "[^"\n]+"\nurl: "https://localhost/ru/welcome"\nlang: "ru"\nupdated: "[0-9T:+-]+"\n---\n\n# ~', $body);
+    }
+
+    /**
+     * The markdown after the twin's frontmatter block.
+     */
+    private static function withoutFrontmatter(string $body): string
+    {
+        self::assertStringStartsWith("---\ntitle: ", $body);
+
+        return explode("\n---\n\n", $body, 2)[1] ?? self::fail('no frontmatter');
     }
 
     private function rename(Entry $entry, string $slug): Entry

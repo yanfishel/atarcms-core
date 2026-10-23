@@ -14,6 +14,7 @@ use AtarCms\Content\Http\ContentController;
 use AtarCms\Content\Http\FeedController;
 use AtarCms\Content\Http\LlmsFullTxtController;
 use AtarCms\Content\Http\LlmsTxtController;
+use AtarCms\Content\Http\MarkdownSitemapController;
 use AtarCms\Content\Http\RobotsController;
 use AtarCms\Content\Http\RootController;
 use AtarCms\Content\Http\SitemapController;
@@ -24,6 +25,7 @@ use AtarCms\Content\Menu\MenuService;
 use AtarCms\Demo\DemoStructure;
 use AtarCms\Http\Routing\Route;
 use AtarCms\Http\Routing\Router;
+use AtarCms\Http\SearchVisibilityMiddleware;
 use AtarCms\I18n\Locales;
 use AtarCms\I18n\RequireDefaultLocale;
 use AtarCms\Kernel\Config;
@@ -71,6 +73,8 @@ final class ContentModule extends Module
         // A mistake in content.main_menu stops the boot, like one in the collections; so does a preset page another
         // route would hide (every module's routes are registered by now: this module is the last).
         $container->service(MainMenu::class);
+        // So does a content.snippet_directives value that is no one-line string (it would fail every public page).
+        SearchVisibilityMiddleware::snippetDirectives($container->service(Config::class));
         self::checkPresets($router, $container->service(Collections::class), $container->service(Locales::class));
     }
 
@@ -159,6 +163,8 @@ final class ContentModule extends Module
         $router->get('/robots.txt', [RobotsController::class, 'index'], 'content.robots')->middleware(RequireDefaultLocale::class)->stateless();
         $router->get('/llms.txt', [LlmsTxtController::class, 'index'], 'content.llms')->middleware(RequireDefaultLocale::class)->stateless();
         $router->get('/llms-full.txt', [LlmsFullTxtController::class, 'index'], 'content.llms_full')->middleware(RequireDefaultLocale::class)->stateless();
+        // Also keeps a root page from the slug "sitemap", whose twin would be this address (ReservedSlugs).
+        $router->get('/sitemap.md', [MarkdownSitemapController::class, 'index'], 'content.sitemap_md')->middleware(RequireDefaultLocale::class)->stateless();
         $router->get(
             '/sitemap-{kind:entries|terms}-{source:[a-z][a-z0-9_]{0,31}}-{number:[1-9][0-9]{0,5}}.xml',
             [SitemapController::class, 'page'],

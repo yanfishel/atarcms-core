@@ -9,8 +9,8 @@ use AtarCms\Kernel\Config;
 
 /**
  * What /llms-full.txt holds (the llms.txt convention of documentation sites): LlmsContent's header and a line naming
- * /llms.txt, then the public entry pages in /llms.txt's order, each as its markdown twin (EntryMarkdown, rendered
- * with the ancestors its sitemap chunk loaded) with "Source: {absolute URL}" under its "# {title}". Blocks are
+ * /llms.txt, then the public entry pages in /llms.txt's order, each as its markdown twin (EntryMarkdown::render(),
+ * without the twin's frontmatter, with the ancestors its sitemap chunk loaded) with "Source: {absolute URL}" under its "# {title}". Blocks are
  * separated by "---". The entries keep their twin's headings and there are no section headings: every block is a
  * document of its own, like the twin it copies. Terms have no markdown and are left out (/llms.txt lists them).
  * After content.llms_full_limit entries (default 100), or once the text passes MAX_BYTES, it stops and names

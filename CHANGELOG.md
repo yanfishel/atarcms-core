@@ -3,6 +3,21 @@
 Every version of AtarCMS (`yanfishel/atarcms-core`) and of its site skeleton (`yanfishel/atarcms`, same version).
 What a site must do after an update is in `UPGRADE.md`.
 
+## v0.2.7
+
+- Entry pages name their markdown twin in an HTTP header too: `Link: </page.md>; rel="alternate";
+  type="text/markdown"`, under the same conditions as the `markdownAlternate()` tag.
+- Every markdown twin (and the markdown an entry page answers for `Accept: text/markdown`) opens with YAML
+  frontmatter: `title`, `description`, `url`, `lang`, `published` and `updated`. `/llms-full.txt` stays without it.
+- `/sitemap.md` is a markdown sitemap of the same public content as `/llms.txt`, which links it; a 404 while the
+  site is hidden from search engines. A root page can no longer take the slug `sitemap`.
+- Public HTML pages allow full snippets in search and AI answers:
+  `X-Robots-Tag: max-snippet:-1, max-image-preview:large, max-video-preview:-1` by default, set by
+  `content.snippet_directives` in `config/content.php` (an empty string turns it off; a value that is not one line
+  fails the boot).
+- Both READMEs show the agentcheck.dev full check (97/100) and a table of four independent agent-readiness checks
+  of atarcms.com.
+
 ## v0.2.6
 
 - Public listings keep to the configured languages: entries and terms of a language removed from
