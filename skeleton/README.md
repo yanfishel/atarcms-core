@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/yanfishel/atarcms-core#ai-ready-end-to-end"><img src="https://img.shields.io/badge/AI--ready-out%20of%20the%20box-6d28d9" alt="AI-ready"></a>
-  <a href="https://agentcheck.dev/r/h8WTMcWLG_bHRqSBzJ4QqkR6"><img src="https://agentcheck.dev/api/shared/h8WTMcWLG_bHRqSBzJ4QqkR6/badge.svg" alt="AI Ready: 97/100"></a>
+  <a href="https://agentcheck.dev/r/2jznthfQ3il92Xe2QIHqzH5c"><img src="https://agentcheck.dev/api/shared/2jznthfQ3il92Xe2QIHqzH5c/badge.svg" alt="AI Ready: 100/100"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2a7d5c" alt="MIT"></a>
   <a href="https://packagist.org/packages/yanfishel/atarcms"><img src="https://img.shields.io/packagist/v/yanfishel/atarcms?label=packagist" alt="Packagist"></a>
 </p>
@@ -48,13 +48,13 @@ public pages allow full snippets in search results and AI answers — when someo
 business, your site is the easy source to read. "Hide from search engines" hides all of it while the site is under
 construction.
 
-Independent checks of atarcms.com (October 2026, on v0.2.7):
+Independent checks of atarcms.com (October 2026, on v0.2.8):
 
 | Check | Score |
 | --- | --- |
-| [agentcheck.dev](https://agentcheck.dev/r/h8WTMcWLG_bHRqSBzJ4QqkR6), full check | 97/100 (A+; all four categories 100) |
+| [agentcheck.dev](https://agentcheck.dev/r/2jznthfQ3il92Xe2QIHqzH5c), full check | 100/100 (A+; all four categories and all 10 pages 100) |
 | [Frase Agent Readiness](https://www.frase.io/tools/agent-readiness) | 100/100 |
-| [agent-ready.dev](https://agent-ready.dev/scan/LIqtZ8eRVH) | Vercel Agent Readability 81, llmstxt.org 100, Accessibility 100 |
+| [agent-ready.dev](https://agent-ready.dev/scan/UjZ735KLTG) | Vercel Agent Readability 86, llmstxt.org 100, Accessibility 100 |
 | [isitagentready.com](https://isitagentready.com/atarcms.com) (Cloudflare) | 40 — Discoverability 75, Content 100, Bot Access Control 100 |
 
 The rest of isitagentready's score is for API, OAuth, MCP and commerce endpoints a content site doesn't have (an
