@@ -6,10 +6,12 @@ namespace AtarCms\Tests\Functional;
 
 use AtarCms\Kernel\Application;
 use Nyholm\Psr7\Factory\Psr17Factory;
-use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 
-final class LocaleRoutingTest extends TestCase
+/**
+ * Requests to the fixture site, each through a newly booted application, against freshly migrated tables.
+ */
+final class LocaleRoutingTest extends FunctionalTestCase
 {
     public function testLocalizedPathRoutesToTheSameController(): void
     {
@@ -66,10 +68,5 @@ final class LocaleRoutingTest extends TestCase
 
         return Application::fromSite(__DIR__ . '/../Fixtures/site')
             ->handle((new Psr17Factory())->createServerRequest('GET', $uri));
-    }
-
-    protected function tearDown(): void
-    {
-        putenv('APP_DEBUG');
     }
 }

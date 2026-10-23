@@ -134,6 +134,9 @@ final class SocialMetaTagsTest extends ContentFunctionalTestCase
             '<meta property="og:site_name" content="Fixture">',
             '<meta property="og:locale" content="ru">',
             '<meta name="twitter:card" content="summary">',
-        ]), $renderer->callHelper('socialMeta', [null, ' '], $request));
+            '<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"CollectionPage","name":"Fixture",'
+                . '"url":"https://localhost/ru/x?a=1' . trim((string) json_encode('&', JSON_HEX_AMP), '"') . 'b=2","inLanguage":"ru",'
+                . '"isPartOf":{"@type":"WebSite","@id":"https://localhost/ru#website","name":"Fixture","url":"https://localhost/ru"}}]}</script>',
+        ]), $renderer->callHelper('socialMeta', [null, ' '], $request), 'a page without an entry is a CollectionPage named like og:title');
     }
 }

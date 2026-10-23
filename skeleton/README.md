@@ -23,7 +23,7 @@ surfaces on every side of it:
 - **Run it with agents:** the admin describes itself to a signed-in browser agent at `/admin/ai-guide`
   (`HANDBOOK.md`, "AI agents").
 - **Let AI read it:** the public site publishes `/llms.txt` and `/llms-full.txt`, and every entry page answers at
-  its address plus `.md` as clean markdown.
+  its address plus `.md` as clean markdown (or at its own address for `Accept: text/markdown`).
 
 ![The demo site's home page: hero slides with video, dropdown menus, search, a language menu](docs/images/site-home.png)
 
@@ -40,7 +40,7 @@ can use the site:
 ### Found by search engines — and by AI
 
 Localized sitemaps, hreflang alternates, canonical URLs, titles and descriptions inherited along sections,
-JSON-LD (organization, articles, breadcrumbs), generated share images for link previews, 301 redirects when an
+JSON-LD (organization, articles, pages, collections, breadcrumbs), generated share images for link previews, 301 redirects when an
 address changes. And the GEO side: `/llms.txt` maps the whole site for language models in one request,
 `/llms-full.txt` gives its full text, and every entry page has a markdown twin — when someone asks ChatGPT or Claude
 about your business, your site is the easy source to read. "Hide from search engines" hides all of it while the

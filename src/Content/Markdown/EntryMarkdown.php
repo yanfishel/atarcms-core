@@ -7,7 +7,6 @@ namespace AtarCms\Content\Markdown;
 use AtarCms\Content\Collection;
 use AtarCms\Content\Entry;
 use AtarCms\Content\EntryMedia;
-use AtarCms\Content\EntryRepository;
 use AtarCms\Content\EntryUrls;
 use AtarCms\Content\Field\BooleanType;
 use AtarCms\Content\Field\DateTimeType;
@@ -60,7 +59,6 @@ use Psr\Http\Message\ServerRequestInterface;
 final readonly class EntryMarkdown
 {
     public function __construct(
-        private EntryRepository $entries,
         private EntryUrls $urls,
         private TermRepository $terms,
         private TermUrls $termUrls,
@@ -164,10 +162,7 @@ final readonly class EntryMarkdown
      */
     private function translations(Entry $entry, array $ancestors): string
     {
-        $translations = array_values(array_filter(
-            $this->entries->translations($entry->translationGroup),
-            fn(Entry $translation): bool => $translation->id !== $entry->id && $this->content->isPublic($translation),
-        ));
+        $translations = $this->content->translations($entry);
         $base = $this->config->appUrl();
         $links = [];
         foreach ($this->urls->paths($translations, $ancestors, markdown: true) as $id => $path) {

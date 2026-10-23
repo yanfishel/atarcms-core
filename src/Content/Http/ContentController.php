@@ -19,6 +19,7 @@ use AtarCms\Content\StructuredData\Breadcrumbs;
 use AtarCms\Content\StructuredData\PageTrail;
 use AtarCms\Content\TermTree;
 use AtarCms\Content\TermUrls;
+use AtarCms\Http\AcceptHeader;
 use AtarCms\Http\CanonicalUrl;
 use AtarCms\Http\Exception\NotFound;
 use AtarCms\Http\Responses;
@@ -36,7 +37,9 @@ use Psr\Http\Message\ServerRequestInterface;
  * the title and description resolved along the entry's sections; null on a single() page without its entry).
  * An entry page's markdown twin (the EntryMarkdown::class route attribute, "{address}.md") resolves its entry the
  * same way and answers with EntryMarkdown's text instead: never a preview, a previous slug and a wrong chain
- * redirect to the canonical twin, and a site hidden from search engines has none.
+ * redirect to the canonical twin, and a site hidden from search engines has none. The page itself answers with its
+ * twin's markdown (without the twin's noindex: it is the canonical address) when the Accept header prefers text/markdown to text/html (AcceptHeader; never while previewing or
+ * hidden), its redirects staying on page addresses; both variants send "Vary: Accept".
  */
 final class ContentController
 {
@@ -60,7 +63,11 @@ final class ContentController
     {
         $collection = ContentRequest::collection($request, $this->collections);
         $locale = ContentRequest::locale($request, $collection, $this->locales);
-        $markdown = $this->markdownRequested($request);
+        // The twin route answers in markdown, and so does the page when the Accept header prefers it; redirects keep
+        // to the address that was asked for (the twin's, or the page's, which negotiates again).
+        $twin = $this->markdownRequested($request);
+        $negotiable = !$twin && $this->negotiable($request);
+        $markdown = $twin || ($negotiable && self::prefersMarkdown($request));
         $path = $request->getAttribute('slug');
         if (!is_string($path)) {
             throw new LogicException('Content show routes need a {slug} parameter');
@@ -71,7 +78,7 @@ final class ContentController
         $preview = !$markdown && $this->isPreview($request, $collection);
         if ($entry === null && !$preview && !SlugRedirects::deferred($request)) {
             // A previous slug of a published entry: its current address (a twin's: the current twin).
-            $moved = $this->slugRedirects->entry($request, $collection, $locale, $slug, $markdown);
+            $moved = $this->slugRedirects->entry($request, $collection, $locale, $slug, $twin);
             if ($moved !== null) {
                 return $moved;
             }
@@ -93,14 +100,16 @@ final class ContentController
         if ($this->urls->slugPath($entry, $ancestors) !== $path || ($trail !== null && $request->getAttribute((string) $collection->routeTaxonomy) !== $trail)) {
             // Missing or wrong parent or section segments: send visitors and search engines to the canonical URL (a
             // markdown twin to the canonical twin).
-            $target = $this->urls->path($entry, $ancestors, $routeTerm, $knownTerms, $markdown) ?? throw new LogicException('A routed entry has no URL');
+            $target = $this->urls->path($entry, $ancestors, $routeTerm, $knownTerms, $twin) ?? throw new LogicException('A routed entry has no URL');
 
             return $preview
                 ? self::private($this->responses->redirect($target . '?preview=1', 302))
                 : $this->responses->redirect($target, 301);
         }
         if ($markdown) {
-            return $this->markdown($entry, $ancestors, (string) $this->urls->absolute($entry, $ancestors, $routeTerm, $knownTerms));
+            $response = $this->markdown($entry, $ancestors, (string) $this->urls->absolute($entry, $ancestors, $routeTerm, $knownTerms));
+
+            return $twin ? self::noindex($response) : self::varyByAccept($response);
         }
 
         // The section texts and breadcrumbs come from the route term and its ancestors loaded above: no extra query.
@@ -112,8 +121,9 @@ final class ContentController
             $request = MarkdownTwin::attach($request, $this->urls->path($entry, $ancestors, $routeTerm, $knownTerms, markdown: true));
         }
         $seo = PageSeo::forEntry($entry, $sections);
+        $response = $this->render($request, $collection, 'show', ['entry' => $entry, 'seo' => $seo], $preview);
 
-        return $this->render($request, $collection, 'show', ['entry' => $entry, 'seo' => $seo], $preview);
+        return $negotiable ? self::varyByAccept($response) : $response;
     }
 
     /**
@@ -128,16 +138,22 @@ final class ContentController
             $entry = $this->content->single($collection, $locale)
                 ?? throw new NotFound(sprintf('The single %s has no public entry in "%s"', $collection->name, $locale));
 
-            return $this->markdown($entry, [], (string) $this->urls->absolute($entry));
+            return self::noindex($this->markdown($entry, [], (string) $this->urls->absolute($entry)));
         }
+        // A previewing request ("?preview=1") never negotiates; a single without its public entry stays HTML.
+        $negotiable = $this->negotiable($request);
         $preview = $this->isPreview($request, $collection);
         $entry = $preview ? $this->entries->first($collection->name, $locale) : $this->content->single($collection, $locale);
+        if ($entry !== null && $negotiable && self::prefersMarkdown($request)) {
+            return self::varyByAccept($this->markdown($entry, [], (string) $this->urls->absolute($entry)));
+        }
         $request = $request->withAttribute(Alternates::class, $entry === null ? new Alternates([]) : $this->alternates($entry));
         if ($entry !== null && !$preview) {
             $request = MarkdownTwin::attach(CanonicalUrl::attach($request, $this->urls->absolute($entry)), $this->urls->path($entry, markdown: true));
         }
+        $response = $this->render($request, $collection, 'show', ['entry' => $entry, 'seo' => $entry === null ? null : PageSeo::forEntry($entry, [])], $preview);
 
-        return $this->render($request, $collection, 'show', ['entry' => $entry, 'seo' => $entry === null ? null : PageSeo::forEntry($entry, [])], $preview);
+        return $negotiable ? self::varyByAccept($response) : $response;
     }
 
     public function index(ServerRequestInterface $request): ResponseInterface
@@ -199,15 +215,47 @@ final class ContentController
     }
 
     /**
-     * The markdown twin of a public entry page: text/markdown, kept out of search indexes, pointing to the page.
+     * Whether an entry page (not its twin) may answer in markdown when the Accept header prefers it: never while
+     * previewing ("?preview=1") or while the site is hidden from search engines (it has no twins then).
+     */
+    private function negotiable(ServerRequestInterface $request): bool
+    {
+        return ($request->getQueryParams()['preview'] ?? null) !== '1' && !$this->settings->forRequest($request)->hideFromSearch;
+    }
+
+    /**
+     * Whether the Accept header prefers text/markdown to text/html (a tie, "*\/*" and browsers' headers get HTML).
+     */
+    private static function prefersMarkdown(ServerRequestInterface $request): bool
+    {
+        return AcceptHeader::prefers($request->getHeaderLine('Accept'), 'text/markdown', 'text/html');
+    }
+
+    /**
+     * Both variants of a negotiable entry page say that they depend on the Accept header (shared caches keep them
+     * apart).
+     */
+    private static function varyByAccept(ResponseInterface $response): ResponseInterface
+    {
+        return $response->withAddedHeader('Vary', 'Accept');
+    }
+
+    /**
+     * A public entry page as markdown, pointing to the page as canonical. The twin's own address is kept out of
+     * search indexes (noindex()); the page's address answering in markdown (negotiated) is the canonical one and is
+     * not.
      *
      * @param array<int, Entry> $ancestors
      */
     private function markdown(Entry $entry, array $ancestors, string $url): ResponseInterface
     {
         return $this->responses->markdown($this->entryMarkdown->render($entry, $ancestors))
-            ->withHeader('X-Robots-Tag', 'noindex')
             ->withHeader('Link', '<' . $url . '>; rel="canonical"');
+    }
+
+    private static function noindex(ResponseInterface $response): ResponseInterface
+    {
+        return $response->withHeader('X-Robots-Tag', 'noindex');
     }
 
     /**
@@ -232,10 +280,7 @@ final class ContentController
      */
     private function alternates(Entry $entry, array $ancestors = []): Alternates
     {
-        $translations = array_values(array_filter(
-            $this->entries->translations($entry->translationGroup),
-            fn(Entry $translation): bool => $translation->id === $entry->id || $this->content->isPublic($translation),
-        ));
+        $translations = [$entry, ...$this->content->translations($entry)];
         $paths = [];
         foreach ($this->urls->paths($translations, $ancestors) as $id => $path) {
             foreach ($translations as $translation) {

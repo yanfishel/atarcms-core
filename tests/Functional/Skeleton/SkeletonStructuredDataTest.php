@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace AtarCms\Tests\Functional\Skeleton;
 
-use AtarCms\Demo\DemoSeeder;
 use AtarCms\I18n\Translator;
 use AtarCms\Kernel\Config;
 use AtarCms\Settings\SiteSettings;
@@ -20,7 +19,7 @@ final class SkeletonStructuredDataTest extends SkeletonTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->app->container()->service(DemoSeeder::class)->seed(null);
+        $this->seedDemo();
     }
 
     public function testTheHomePageIsTheWebSiteOfTheOrganizationInEveryLanguage(): void
@@ -31,6 +30,7 @@ final class SkeletonStructuredDataTest extends SkeletonTestCase
             $site = $settings->of($locale);
             self::assertSame([
                 '@type' => 'WebSite',
+                '@id' => $url . '#website',
                 'name' => $settings->siteName($locale),
                 'url' => $url,
                 'inLanguage' => $locale,
@@ -121,13 +121,23 @@ final class SkeletonStructuredDataTest extends SkeletonTestCase
         self::assertSame([[$home, '/'], ['About us', null]], $this->crumbs((string) $this->browser->get('/about')->getBody()), 'a page without an ancestor keeps the template\'s items');
     }
 
-    public function testPlainPagesHaveNoStructuredData(): void
+    public function testPlainPagesAreWebPagesAndArchivesCollectionPages(): void
     {
-        foreach (['/about', '/contacts', '/privacy', '/he/accessibility', '/news', '/search?q=lorem'] as $path) {
+        foreach (['/about' => 'WebPage', '/contacts' => 'WebPage', '/privacy' => 'WebPage', '/he/accessibility' => 'WebPage', '/news' => 'CollectionPage'] as $path => $type) {
             $response = $this->browser->get($path);
             self::assertSame(200, $response->getStatusCode(), $path);
-            self::assertNull($this->graph((string) $response->getBody()), $path);
+            $graph = $this->graph((string) $response->getBody());
+            self::assertCount(1, $graph ?? [], $path);
+            self::assertSame($type, $graph[0]['@type'] ?? null, $path);
+            self::assertSame('https://localhost' . $path, $graph[0]['url'] ?? null, $path);
+            $site = $graph[0]['isPartOf'] ?? null;
+            self::assertIsArray($site, $path);
+            $home = str_starts_with($path, '/he/') ? 'https://localhost/he' : 'https://localhost/';
+            self::assertSame($home . '#website', $site['@id'] ?? null, $path . ': part of the home page\'s WebSite of its language');
+            self::assertSame($home, $site['url'] ?? null, $path);
         }
+        self::assertSame('he', $this->node((string) $this->browser->get('/he/accessibility')->getBody(), 'WebPage')['inLanguage'] ?? null);
+        self::assertNull($this->graph((string) $this->browser->get('/search?q=lorem')->getBody()), 'no canonical URL');
     }
 
     /**

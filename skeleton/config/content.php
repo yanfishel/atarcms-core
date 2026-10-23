@@ -18,7 +18,9 @@ return [
     // 'organization_type' => 'LocalBusiness',
     // Snapshots kept per entry for restoring earlier versions.
     'revisions' => 20,
-    // The body of /robots.txt. Without it, /admin is disallowed and the sitemap is announced.
+    // The body of /robots.txt. Without it, /admin is disallowed, the Content Signals are stated
+    // ("Content-Signal: search=yes, ai-input=yes, ai-train=no") and the sitemap is announced. It replaces that default
+    // entirely: copy the Content-Signal line into it to keep it.
     // 'robots' => "User-agent: *\nDisallow: /\n",
     // Past this many URLs (10–50 000), /sitemap.xml becomes a sitemap index of /sitemap-{entries|terms}-{name}-{n}.xml pages.
     // 'sitemap_limit' => 50000,

@@ -231,8 +231,9 @@ image) and `twitter:card` (`summary_large_image` with an image, `summary` withou
 schema.org JSON-LD for search engines: `WebSite` and the site's organization on the home page (its type is
 `config/content.php` `organization_type`, default `Organization`, e.g. `LocalBusiness` or `Restaurant`; with the logo,
 phone, e-mail, address, the map's point and the social links of the settings), `Article` on news items and articles
-(collections with an archive or sections; author and publisher are the organization), and `BreadcrumbList` on pages
-below an archive, a section or a parent page.
+(collections with an archive or sections; author and publisher are the organization), `WebPage` on other entry
+pages and `CollectionPage` on archives and term pages (both part of the home page's `WebSite` in their language), and
+`BreadcrumbList` on pages below an archive, a section or a parent page.
 
 **Share images.** Nobody makes images for social networks by hand: when an entry of a collection with a route is
 saved with a main photo, the site draws a 1200 × 630 card from it: the photo darkened, the title for search engines
@@ -363,7 +364,9 @@ docker compose exec -u www-data php php bin/atar migrate
 ```
 
 `/sitemap.xml` lists every public entry with its translations; `/robots.txt` comes from `config/content.php`
-(`robots`) or a default that hides `/admin` and names the sitemap. Each save keeps a version of the entry for
+(`robots`, which replaces the default entirely) or a default that hides `/admin`, states the site's Content Signals
+(`Content-Signal: search=yes, ai-input=yes, ai-train=no`: search and AI answers may use the content, model training
+may not) and names the sitemap. Each save keeps a version of the entry for
 Earlier versions; `config/content.php` `revisions` sets how many per entry (default 20).
 
 ### AI agents
@@ -375,7 +378,10 @@ line (terms are left out; after `content.llms_full_limit` pages, default 100, or
 are served for the default language only. Every public entry page also
 answers at its address plus `.md` (`/news/hello.md`, `/index.md` for the home page) with the page as clean markdown, a canonical link to the HTML page and `noindex`; old addresses redirect like
 the HTML pages; the default layout links each entry page to its twin (`$this->markdownAlternate()`, a
-`<link rel="alternate" type="text/markdown">`). A signed-in agent working in the admin reads `/admin/ai-guide` — the "AI guide" link in the admin's
+`<link rel="alternate" type="text/markdown">`). The page's own address answers in markdown too when the request's
+`Accept` header prefers `text/markdown` to `text/html` (browsers keep getting HTML; both send `Vary: Accept`), and
+every public HTML page points agents to `/llms.txt` with a `Link: </llms.txt>; rel="describedby"` header. A
+signed-in agent working in the admin reads `/admin/ai-guide` — the "AI guide" link in the admin's
 page footer — which lists the screens, content types and fields its user may use. "Hide from search engines" hides
 `/llms.txt`, `/llms-full.txt` and the `.md` pages along with the sitemap.
 

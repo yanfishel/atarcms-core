@@ -3,6 +3,20 @@
 Every version of AtarCMS (`yanfishel/atarcms-core`) and of its site skeleton (`yanfishel/atarcms`, same version).
 What a site must do after an update is in `UPGRADE.md`.
 
+## v0.2.6
+
+- Public listings keep to the configured languages: entries and terms of a language removed from
+  `config/locales.php` no longer appear in `/sitemap.xml` (as pages or hreflang alternates), the paging of
+  `/llms.txt` and `/llms-full.txt`, or the translation links of the markdown twins.
+- Public HTML pages point AI agents to `/llms.txt` with a `Link: </llms.txt>; rel="describedby"` header (not while
+  the site is hidden from search engines, not on previews).
+- Entry pages answer `Accept: text/markdown` with their markdown twin at the page's own address (browsers still get
+  HTML); both variants send `Vary: Accept`.
+- The default `robots.txt` declares `Content-Signal: search=yes, ai-input=yes, ai-train=no` (contentsignals.org).
+- Every page with a canonical URL has schema.org JSON-LD: plain pages are a `WebPage`, archives and term pages a
+  `CollectionPage`, each part of the `WebSite` of its language (whose `@id` is now its home URL + `#website`).
+- The core's test suite runs in parallel through ParaTest (development only).
+
 ## v0.2.5
 
 - Both READMEs show the Lighthouse scores centred and at their natural size.

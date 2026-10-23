@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace AtarCms\Tests\Functional\Skeleton;
 
 use AtarCms\Cli\Output;
-use AtarCms\Demo\DemoSeeder;
 use AtarCms\Kernel\Application;
 use AtarCms\Kernel\Paths;
 
@@ -16,7 +15,7 @@ final class ThemeCheckCommandTest extends SkeletonTestCase
 {
     public function testTheActiveThemePassesWithItsPages(): void
     {
-        $this->app->container()->service(DemoSeeder::class)->seed(null);
+        $this->seedDemo();
 
         [$code, $out] = $this->console($this->app, ['theme:check']);
 

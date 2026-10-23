@@ -90,7 +90,9 @@ final class PublicContent
     }
 
     /**
-     * @return list<Entry> every public entry of $collection in every locale, by translation group, then locale
+     * Every public entry of $collection in every configured locale.
+     *
+     * @return list<Entry> by translation group, then locale
      */
     public function all(Collection $collection): array
     {
@@ -103,7 +105,7 @@ final class PublicContent
     }
 
     /**
-     * The number of public entries of $collection in every locale (sitemap URLs).
+     * The number of public entries of $collection in every configured locale (sitemap URLs).
      */
     public function publicCount(Collection $collection): int
     {
@@ -113,7 +115,7 @@ final class PublicContent
     }
 
     /**
-     * The number of translation groups with at least one public entry of $collection.
+     * The number of translation groups with at least one public entry of $collection in a configured locale.
      */
     public function publicGroupCount(Collection $collection): int
     {
@@ -173,15 +175,35 @@ final class PublicContent
     }
 
     /**
-     * The public entries of $collection in every locale, as an SQL condition and its bindings.
+     * The public translations of $entry in the configured locales, ordered by locale; not the entry itself.
+     *
+     * @return list<Entry>
+     */
+    public function translations(Entry $entry): array
+    {
+        $locales = $this->locales->all();
+
+        return array_values(array_filter(
+            $this->entries->translations($entry->translationGroup),
+            fn(Entry $translation): bool => $translation->id !== $entry->id && in_array($translation->locale, $locales, true) && $this->isPublic($translation),
+        ));
+    }
+
+    /**
+     * The public entries of $collection in every configured locale, as an SQL condition and its bindings: a site that
+     * drops a language keeps its rows in the database, but they no longer have pages.
      *
      * @return array{0: string, 1: list<mixed>}
      */
     private function publicIn(Collection $collection): array
     {
         [$public, $bindings] = Entry::publicSql($this->clock->now());
+        $locales = $this->locales->all();
 
-        return ['collection = ? AND ' . $public, [$collection->name, ...$bindings]];
+        return [
+            'collection = ? AND locale IN (' . implode(', ', array_fill(0, count($locales), '?')) . ') AND ' . $public,
+            [$collection->name, ...$locales, ...$bindings],
+        ];
     }
 
     private function readLocale(Collection $collection, string $locale): string

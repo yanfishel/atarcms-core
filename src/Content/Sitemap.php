@@ -9,7 +9,8 @@ use AtarCms\Kernel\Config;
 use AtarCms\Kernel\ConfigException;
 
 /**
- * What /sitemap.xml lists: the public entries of routed collections and the terms of routed taxonomies. Up to
+ * What /sitemap.xml lists: the public entries of routed collections and the terms of routed taxonomies, in the
+ * configured locales only (rows of a dropped language have no pages). Up to
  * content.sitemap_limit URLs (default and maximum 50 000, the protocol's limit) it is one urlset; above that it is
  * a sitemap index of pages. A page holds whole translation groups of one source, at most limit / locales groups,
  * so a page never exceeds the limit and hreflang alternates stay together.
@@ -64,7 +65,7 @@ final class Sitemap
             $total += $this->content->publicCount($collection);
         }
         foreach ($this->routedTaxonomies() as $taxonomy) {
-            $total += $this->terms->count($taxonomy->name);
+            $total += $this->terms->count($taxonomy->name, $this->locales->all());
         }
 
         return $total;
@@ -85,7 +86,7 @@ final class Sitemap
             array_push($pages, ...$this->pagesOf(SitemapPage::ENTRIES, $collection->name, $this->content->publicGroupCount($collection)));
         }
         foreach ($this->routedTaxonomies() as $taxonomy) {
-            array_push($pages, ...$this->pagesOf(SitemapPage::TERMS, $taxonomy->name, $this->terms->groupCount($taxonomy->name)));
+            array_push($pages, ...$this->pagesOf(SitemapPage::TERMS, $taxonomy->name, $this->terms->groupCount($taxonomy->name, $this->locales->all())));
         }
 
         return $pages;
@@ -105,7 +106,7 @@ final class Sitemap
             $groups = $collection !== null && $collection->route !== null ? $this->content->publicGroupCount($collection) : null;
         } elseif ($kind === SitemapPage::TERMS) {
             $taxonomy = $this->collections->taxonomies->find($source);
-            $groups = $taxonomy !== null && $taxonomy->route !== null ? $this->terms->groupCount($taxonomy->name) : null;
+            $groups = $taxonomy !== null && $taxonomy->route !== null ? $this->terms->groupCount($taxonomy->name, $this->locales->all()) : null;
         }
         if ($groups === null || $number > (int) ceil($groups / $this->groupsPerPage())) {
             return null;
@@ -145,7 +146,7 @@ final class Sitemap
      */
     public function terms(SitemapPage $page): array
     {
-        $terms = $this->terms->groupsChunk($page->source, ($page->number - 1) * $this->groupsPerPage(), $this->groupsPerPage());
+        $terms = $this->terms->groupsChunk($page->source, $this->locales->all(), ($page->number - 1) * $this->groupsPerPage(), $this->groupsPerPage());
         if ($this->collections->taxonomies->find($page->source)?->redirectToFirstChild !== true) {
             return $terms;
         }

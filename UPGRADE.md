@@ -26,6 +26,13 @@ here; every minor version lists its steps here.
 
 ## Versions
 
+### v0.2.6
+
+The usual three commands. No schema changes. Optional: a site with its own `robots` text in `config/content.php`
+replaces the default robots.txt entirely, so add `Content-Signal: search=yes, ai-input=yes, ai-train=no` under its
+`User-agent: *` line to declare the content signals. A CDN in front of the site that ignores `Vary` (such as
+Cloudflare's "Cache Everything") must not cache HTML pages, or it may serve the markdown variant to browsers.
+
 ### v0.2.5
 
 The usual three commands; nothing else to do. No schema changes.

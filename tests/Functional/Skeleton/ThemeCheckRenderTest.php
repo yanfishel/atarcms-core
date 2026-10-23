@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace AtarCms\Tests\Functional\Skeleton;
 
-use AtarCms\Demo\DemoSeeder;
 use AtarCms\Kernel\Application;
 use AtarCms\Kernel\Paths;
 use AtarCms\Tests\Support\Cast;
@@ -20,7 +19,7 @@ final class ThemeCheckRenderTest extends SkeletonTestCase
 {
     public function testTheDefaultThemeRendersEveryPageOfTheDemoSite(): void
     {
-        $this->app->container()->service(DemoSeeder::class)->seed(null);
+        $this->seedDemo();
         $report = new Report('default');
 
         (new RenderSmoke())->run($this->application(), $report);
@@ -41,7 +40,7 @@ final class ThemeCheckRenderTest extends SkeletonTestCase
      */
     public function testTheSmokeWritesNothing(): void
     {
-        $this->app->container()->service(DemoSeeder::class)->seed(null);
+        $this->seedDemo();
         $storage = $this->tempDir() . '/storage';
         $before = self::tree($storage);
 
@@ -82,7 +81,7 @@ final class ThemeCheckRenderTest extends SkeletonTestCase
 
     public function testATemplateThatFailsIsReportedWithItsPage(): void
     {
-        $this->app->container()->service(DemoSeeder::class)->seed(null);
+        $this->seedDemo();
         // A copy of the skeleton site with one more theme: the render smoke boots the site with it.
         foreach (glob(self::SITE . '/config/*.php') ?: [] as $file) {
             $this->writeFile('site/config/' . basename($file), (string) file_get_contents($file));

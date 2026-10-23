@@ -23,7 +23,7 @@ packages through Composer (`README.md`, "Quick start").
 <branch>`) and inside the Release workflow. Each job starts MariaDB 11 through `.github/scripts/start-mariadb.sh`
 (it falls back across registries when one rate-limits the pull) and uses PHP 8.4 with the site's extensions.
 
-- `checks`: `composer check` — PHP-CS-Fixer, PHPStan at level max over `src`, `tests` and `skeleton/src` (templates excluded), PHPUnit.
+- `checks`: `composer check` — PHP-CS-Fixer, PHPStan at level max over `src`, `tests` and `skeleton/src` (templates excluded), PHPUnit in parallel through ParaTest (one database per worker, `atar_{N}_test`).
 - `skeleton`: `.github/scripts/skeleton-install.sh` installs `skeleton/` the way a developer of the core does
   (`COMPOSER=composer.dev.json`, the core of the commit through the path repository) with a production `.env`
   (`APP_ENV=production`, an https `APP_URL`), runs `bin/atar migrate` and `demo:seed --force`, then requires

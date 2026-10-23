@@ -9,6 +9,7 @@ use AtarCms\Content\EntryRepository;
 use AtarCms\Content\PublicContent;
 use AtarCms\Content\Sitemap;
 use AtarCms\Content\SitemapPage;
+use AtarCms\Content\Term;
 use AtarCms\I18n\Locales;
 use AtarCms\Kernel\Config;
 use AtarCms\Kernel\ConfigException;
@@ -83,6 +84,30 @@ final class SitemapTest extends ContentTestCase
         $page = $sitemap->find(SitemapPage::ENTRIES, 'articles', 1);
         self::assertNotNull($page);
         self::assertSame([$public], array_map(static fn(Entry $entry): int => $entry->id, $sitemap->entries($page)['entries']));
+    }
+
+    public function testLocalesThatAreNoLongerConfiguredAreLeftOut(): void
+    {
+        $group = EntryRepository::newTranslationGroup();
+        $english = $this->insertEntry(['slug' => 'privacy', 'translation_group' => $group]);
+        $this->insertEntry(['slug' => 'pratiyut', 'locale' => 'he', 'translation_group' => $group]);
+        $this->insertEntry(['slug' => 'only-hebrew', 'locale' => 'he']);
+        $terms = EntryRepository::newTranslationGroup();
+        $php = $this->insertTerm(['translation_group' => $terms]);
+        $this->insertTerm(['slug' => 'php-he', 'locale' => 'he', 'translation_group' => $terms]);
+        $this->insertTerm(['slug' => 'go', 'name' => 'Go', 'locale' => 'he']);
+        $sitemap = $this->sitemap(10);
+
+        self::assertSame(2, $sitemap->total(), 'one English entry and one English term');
+        self::assertSame(1, $this->content()->publicGroupCount($this->collections->get('articles')), 'a Hebrew-only group does not count');
+        self::assertSame(1, $this->content()->publicCount($this->collections->get('articles')));
+        self::assertSame(
+            ['/sitemap-entries-articles-1.xml', '/sitemap-terms-topics-1.xml'],
+            array_map(static fn(SitemapPage $page): string => $page->path(), $sitemap->pages()),
+        );
+        self::assertSame([$english], array_map(static fn(Entry $entry): int => $entry->id, $sitemap->entries(new SitemapPage(SitemapPage::ENTRIES, 'articles', 1))['entries']));
+        self::assertSame([$php], array_map(static fn(Term $term): int => $term->id, $sitemap->terms(new SitemapPage(SitemapPage::TERMS, 'topics', 1))));
+        self::assertSame([$english], array_map(static fn(Entry $entry): int => $entry->id, $this->content()->all($this->collections->get('articles'))));
     }
 
     public function testQueriesPerPageDoNotGrowWithEntries(): void

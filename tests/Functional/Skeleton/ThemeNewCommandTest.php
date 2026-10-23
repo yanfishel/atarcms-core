@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace AtarCms\Tests\Functional\Skeleton;
 
 use AtarCms\Cli\Output;
-use AtarCms\Demo\DemoSeeder;
 use AtarCms\Kernel\Application;
 use AtarCms\Kernel\Paths;
 
@@ -33,7 +32,7 @@ final class ThemeNewCommandTest extends SkeletonTestCase
         self::assertStringContainsString($booking, $out);
         self::assertStringEndsWith("theme:check fresh: 0 errors, 1 warnings\n", $out, 'an empty site');
 
-        $this->app->container()->service(DemoSeeder::class)->seed(null);
+        $this->seedDemo();
         [$code, $out] = $this->console($site, ['theme:check', 'fresh']);
         self::assertSame(0, $code, $out);
         self::assertStringContainsString($booking, $out);

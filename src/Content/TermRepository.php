@@ -75,38 +75,52 @@ final class TermRepository
     }
 
     /**
-     * The number of terms of $taxonomy in every locale (sitemap URLs).
+     * The number of terms of $taxonomy in $locales (sitemap URLs: the configured locales).
+     *
+     * @param list<string> $locales
      */
-    public function count(string $taxonomy): int
+    public function count(string $taxonomy, array $locales): int
     {
-        return Row::int(['count' => $this->db->scalar('SELECT COUNT(*) FROM terms WHERE taxonomy = ?', [$taxonomy])], 'count');
+        return Row::int(['count' => $this->db->scalar(
+            'SELECT COUNT(*) FROM terms WHERE taxonomy = ? AND locale IN (' . self::placeholders($locales) . ')',
+            [$taxonomy, ...$locales],
+        )], 'count');
     }
 
     /**
-     * The number of translation groups of $taxonomy.
+     * The number of translation groups of $taxonomy with a term in $locales.
+     *
+     * @param list<string> $locales
      */
-    public function groupCount(string $taxonomy): int
+    public function groupCount(string $taxonomy, array $locales): int
     {
-        return Row::int(['count' => $this->db->scalar('SELECT COUNT(DISTINCT translation_group) FROM terms WHERE taxonomy = ?', [$taxonomy])], 'count');
+        return Row::int(['count' => $this->db->scalar(
+            'SELECT COUNT(DISTINCT translation_group) FROM terms WHERE taxonomy = ? AND locale IN (' . self::placeholders($locales) . ')',
+            [$taxonomy, ...$locales],
+        )], 'count');
     }
 
     /**
-     * One sitemap page of $taxonomy: the terms of $groups whole translation groups after the first $offset, by
-     * translation group, then locale.
+     * One sitemap page of $taxonomy: the terms in $locales of $groups whole translation groups after the first
+     * $offset, by translation group, then locale. A site that drops a language keeps its terms in the database, but
+     * they no longer have pages.
+     *
+     * @param list<string> $locales
      *
      * @return list<Term>
      */
-    public function groupsChunk(string $taxonomy, int $offset, int $groups): array
+    public function groupsChunk(string $taxonomy, array $locales, int $offset, int $groups): array
     {
         if ($offset < 0 || $groups < 1) {
             throw new InvalidArgumentException('The sitemap chunk needs a non-negative offset and at least one group');
         }
+        $in = 'locale IN (' . self::placeholders($locales) . ')';
 
         return $this->many(
-            'SELECT ' . self::COLUMNS . ' FROM terms WHERE taxonomy = ? AND translation_group IN (SELECT translation_group FROM'
-            . ' (SELECT DISTINCT translation_group FROM terms WHERE taxonomy = ? ORDER BY translation_group LIMIT ? OFFSET ?) g)'
+            'SELECT ' . self::COLUMNS . ' FROM terms WHERE taxonomy = ? AND ' . $in . ' AND translation_group IN (SELECT translation_group FROM'
+            . ' (SELECT DISTINCT translation_group FROM terms WHERE taxonomy = ? AND ' . $in . ' ORDER BY translation_group LIMIT ? OFFSET ?) g)'
             . ' ORDER BY translation_group, locale',
-            [$taxonomy, $taxonomy, $groups, $offset],
+            [$taxonomy, ...$locales, $taxonomy, ...$locales, $groups, $offset],
         );
     }
 

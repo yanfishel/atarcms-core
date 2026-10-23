@@ -24,7 +24,8 @@ use Dom\HTMLDocument;
 
 /**
  * The schema.org JSON-LD that socialMeta() prints after the Open Graph tags: Article on the entries of article-like
- * collections, BreadcrumbList on pages below an archive, a section or a parent. The WebSite of the home page is tested
+ * collections, WebPage on other entry pages, CollectionPage on archives and term pages, BreadcrumbList on pages below
+ * an archive, a section or a parent. The WebSite of the home page is tested
  * on the skeleton (Skeleton\SkeletonStructuredDataTest): the fixture site has no home page collection.
  */
 final class StructuredDataTest extends ContentFunctionalTestCase
@@ -32,6 +33,8 @@ final class StructuredDataTest extends ContentFunctionalTestCase
     use TempDirectory;
 
     private const array PUBLISHER = ['@type' => 'Organization', '@id' => 'https://localhost/#organization', 'name' => 'Fixture', 'url' => 'https://localhost/'];
+
+    private const array WEBSITE = ['@type' => 'WebSite', '@id' => 'https://localhost/#website', 'name' => 'Fixture', 'url' => 'https://localhost/'];
 
     protected function configureContainer(Container $container): void
     {
@@ -123,9 +126,62 @@ final class StructuredDataTest extends ContentFunctionalTestCase
         $this->entry('stories', 'Plan', ['slug' => 'plan', 'terms' => ['sections' => [$section->id]]]);
 
         foreach (['/pages/about', '/terms', '/contact'] as $path) {
-            self::assertNull($this->graph((string) $this->browser->get($path)->getBody()), $path);
+            self::assertSame(['WebPage'], $this->types((string) $this->browser->get($path)->getBody()), $path);
         }
         self::assertSame('Plan', $this->node((string) $this->browser->get('/services/plan')->getBody(), 'Article')['headline'] ?? null, 'a sectioned story');
+        self::assertSame(['Article', 'BreadcrumbList'], $this->types((string) $this->browser->get('/services/plan')->getBody()), 'an article is no WebPage');
+    }
+
+    public function testAnyOtherEntryPageIsAWebPageOfTheSite(): void
+    {
+        $this->entry('pages', 'About', ['slug' => 'about', 'metaTitle' => 'About the club', 'metaDescription' => 'Who we are.']);
+        $this->entry('info', 'Terms', ['slug' => 'terms']);
+        $this->entry('contact', 'Связь', ['locale' => 'ru', 'fields' => ['phone' => '1']]);
+
+        self::assertSame([
+            '@type' => 'WebPage',
+            'name' => 'About the club',
+            'description' => 'Who we are.',
+            'url' => 'https://localhost/pages/about',
+            'inLanguage' => 'en',
+            'isPartOf' => self::WEBSITE,
+        ], $this->node((string) $this->browser->get('/pages/about')->getBody(), 'WebPage'));
+        self::assertSame([
+            '@type' => 'WebPage',
+            'name' => 'Terms',
+            'url' => 'https://localhost/terms',
+            'inLanguage' => 'en',
+            'isPartOf' => self::WEBSITE,
+        ], $this->node((string) $this->browser->get('/terms')->getBody(), 'WebPage'), 'no description at all: no key');
+        $contact = $this->node((string) $this->browser->get('/ru/contact')->getBody(), 'WebPage');
+        self::assertSame('ru', $contact['inLanguage'] ?? null);
+        self::assertSame('https://localhost/ru/contact', $contact['url'] ?? null);
+    }
+
+    public function testArchivesAndTermPagesAreCollectionPages(): void
+    {
+        $this->entry('articles', 'Hello', ['slug' => 'hello']);
+        $this->term('topics', 'PHP');
+        $this->term('topics', 'Ява', ['locale' => 'ru', 'slug' => 'java']);
+        $section = $this->term('sections', 'Services', ['slug' => 'services']);
+        $this->entry('stories', 'Plan', ['slug' => 'plan', 'terms' => ['sections' => [$section->id]]]);
+
+        self::assertSame([
+            '@type' => 'CollectionPage',
+            'name' => 'Articles',
+            'url' => 'https://localhost/articles',
+            'inLanguage' => 'en',
+            'isPartOf' => self::WEBSITE,
+        ], $this->node((string) $this->browser->get('/articles')->getBody(), 'CollectionPage'));
+        self::assertSame([
+            '@type' => 'CollectionPage',
+            'name' => 'Ява',
+            'url' => 'https://localhost/ru/topics/java',
+            'inLanguage' => 'ru',
+            'isPartOf' => ['@type' => 'WebSite', '@id' => 'https://localhost/ru#website', 'name' => 'Fixture', 'url' => 'https://localhost/ru'],
+        ], $this->node((string) $this->browser->get('/ru/topics/java')->getBody(), 'CollectionPage'), 'the WebSite of its language');
+        self::assertSame('https://localhost/topics/php', $this->node((string) $this->browser->get('/topics/php')->getBody(), 'CollectionPage')['url'] ?? null);
+        self::assertSame(['CollectionPage'], $this->types((string) $this->browser->get('/services')->getBody()), 'a section page');
     }
 
     public function testAnArticleSitsBelowItsArchive(): void
@@ -163,11 +219,12 @@ final class StructuredDataTest extends ContentFunctionalTestCase
             $this->node((string) $this->browser->get('/solo/alone')->getBody(), 'BreadcrumbList'),
         );
 
-        self::assertSame([self::breadcrumbs(
+        self::assertSame(self::breadcrumbs(
             ['Services', 'https://localhost/services'],
             ['Consulting', 'https://localhost/services/consulting'],
-        )], $this->graph((string) $this->browser->get('/services/consulting')->getBody()));
-        self::assertNull($this->graph((string) $this->browser->get('/solo')->getBody()), 'a top-level section');
+        ), $this->node((string) $this->browser->get('/services/consulting')->getBody(), 'BreadcrumbList'));
+        self::assertSame(['CollectionPage', 'BreadcrumbList'], $this->types((string) $this->browser->get('/services/consulting')->getBody()));
+        self::assertSame(['CollectionPage'], $this->types((string) $this->browser->get('/solo')->getBody()), 'a top-level section');
     }
 
     public function testANestedPageSitsBelowItsPublicParents(): void
@@ -178,16 +235,17 @@ final class StructuredDataTest extends ContentFunctionalTestCase
         $drafts = $this->entry('pages', 'Drafts', ['slug' => 'drafts', 'parent' => $about, 'status' => EntryStatus::Draft]);
         $this->entry('pages', 'Note', ['slug' => 'note', 'parent' => $drafts]);
 
-        self::assertSame([self::breadcrumbs(
+        self::assertSame(self::breadcrumbs(
             ['About', 'https://localhost/pages/about'],
             ['Team', 'https://localhost/pages/about/team'],
             ['Lead', 'https://localhost/pages/about/team/lead'],
-        )], $this->graph((string) $this->browser->get('/pages/about/team/lead')->getBody()), 'no Article for a page');
-        self::assertSame([self::breadcrumbs(
+        ), $this->node((string) $this->browser->get('/pages/about/team/lead')->getBody(), 'BreadcrumbList'));
+        self::assertSame(['WebPage', 'BreadcrumbList'], $this->types((string) $this->browser->get('/pages/about/team/lead')->getBody()), 'no Article for a page');
+        self::assertSame(self::breadcrumbs(
             ['About', 'https://localhost/pages/about'],
             ['Note', 'https://localhost/pages/about/drafts/note'],
-        )], $this->graph((string) $this->browser->get('/pages/about/drafts/note')->getBody()), 'a draft parent is left out');
-        self::assertNull($this->graph((string) $this->browser->get('/pages/about')->getBody()), 'a top-level page');
+        ), $this->node((string) $this->browser->get('/pages/about/drafts/note')->getBody(), 'BreadcrumbList'), 'a draft parent is left out');
+        self::assertSame(['WebPage'], $this->types((string) $this->browser->get('/pages/about')->getBody()), 'a top-level page has no BreadcrumbList');
     }
 
     public function testThemesReadTheTrailThroughPageTrail(): void
@@ -207,12 +265,12 @@ final class StructuredDataTest extends ContentFunctionalTestCase
         $this->term('topics', 'Physics', ['slug' => 'physics', 'parent' => $science]);
         $this->term('tags', 'Fish', ['slug' => 'fish']);
 
-        self::assertSame([self::breadcrumbs(
+        self::assertSame(self::breadcrumbs(
             ['Science', 'https://localhost/topics/science'],
             ['Physics', 'https://localhost/topics/physics'],
-        )], $this->graph((string) $this->browser->get('/topics/physics')->getBody()));
-        self::assertNull($this->graph((string) $this->browser->get('/topics/science')->getBody()));
-        self::assertNull($this->graph((string) $this->browser->get('/tags/fish')->getBody()));
+        ), $this->node((string) $this->browser->get('/topics/physics')->getBody(), 'BreadcrumbList'));
+        self::assertSame(['CollectionPage'], $this->types((string) $this->browser->get('/topics/science')->getBody()), 'no BreadcrumbList');
+        self::assertSame(['CollectionPage'], $this->types((string) $this->browser->get('/tags/fish')->getBody()), 'no BreadcrumbList');
     }
 
     public function testTheBreadcrumbsReadNothingTheControllersHaveLoaded(): void
@@ -272,7 +330,7 @@ final class StructuredDataTest extends ContentFunctionalTestCase
         $this->entry('articles', 'Hello', ['slug' => 'hello']);
         $this->entry('articles', 'Draft', ['slug' => 'draft', 'status' => EntryStatus::Draft]);
 
-        foreach (['/articles', '/search?q=hello', '/articles/missing'] as $path) {
+        foreach (['/search?q=hello', '/articles/missing'] as $path) {
             self::assertNull($this->graph((string) $this->browser->get($path)->getBody()), $path);
         }
         $this->actingAs($this->createUser('ed@example.com', 'editor'));
@@ -320,6 +378,16 @@ final class StructuredDataTest extends ContentFunctionalTestCase
         self::assertContainsOnlyArray($data['@graph']);
 
         return $data['@graph'];
+    }
+
+    /**
+     * The types of the graph's nodes, in order ([] without a block).
+     *
+     * @return list<mixed>
+     */
+    private function types(string $body): array
+    {
+        return array_map(static fn(array $node): mixed => $node['@type'] ?? null, $this->graph($body) ?? []);
     }
 
     /**

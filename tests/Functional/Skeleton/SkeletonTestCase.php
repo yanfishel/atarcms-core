@@ -7,6 +7,7 @@ namespace AtarCms\Tests\Functional\Skeleton;
 use AtarCms\Kernel\Application;
 use AtarCms\Kernel\Paths;
 use AtarCms\Tests\Functional\FunctionalTestCase;
+use AtarCms\Tests\Support\DemoSnapshot;
 use AtarCms\Tests\Support\TempDirectory;
 
 /**
@@ -49,5 +50,13 @@ abstract class SkeletonTestCase extends FunctionalTestCase
         }
 
         return Application::boot(new Paths(static::SITE, $storage));
+    }
+
+    /**
+     * The demo content (DemoSeeder::seed(null)), seeded once per test process and restored from then on (DemoSnapshot).
+     */
+    protected function seedDemo(): void
+    {
+        DemoSnapshot::seed($this->app, $this->db);
     }
 }

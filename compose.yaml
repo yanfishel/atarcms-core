@@ -21,6 +21,10 @@ services:
       MARIADB_USER: atar
       MARIADB_PASSWORD: atar
       MARIADB_ROOT_PASSWORD: root
+    # Test data only (tmpfs): no flushing to disk on commit; connections for every parallel test worker.
+    command: ["--max-connections=1000", "--innodb-flush-log-at-trx-commit=0", "--innodb-doublewrite=0", "--skip-log-bin"]
+    volumes:
+      - ./docker/mariadb/test-databases.sql:/docker-entrypoint-initdb.d/test-databases.sql:ro
     tmpfs:
       - /var/lib/mysql
     healthcheck:

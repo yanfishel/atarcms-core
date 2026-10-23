@@ -6,17 +6,14 @@ namespace AtarCms\Tests\Functional;
 
 use AtarCms\Kernel\Application;
 use Nyholm\Psr7\Factory\Psr17Factory;
-use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 
-final class LocalizedViewTest extends TestCase
+/**
+ * Requests to the fixture site, each through a newly booted application, against freshly migrated tables.
+ */
+final class LocalizedViewTest extends FunctionalTestCase
 {
     private const string NEWS = '/news/%D0%BF%D1%80%D0%B8%D0%B2%D0%B5%D1%82';
-
-    protected function tearDown(): void
-    {
-        putenv('APP_DEBUG');
-    }
 
     public function testDefaultLocalePage(): void
     {

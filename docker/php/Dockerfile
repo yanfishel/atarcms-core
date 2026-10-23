@@ -8,4 +8,7 @@ RUN apk add --no-cache icu-libs icu-data-full libjpeg-turbo libpng libwebp libav
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-RUN printf 'error_reporting=E_ALL\ndisplay_errors=On\nmemory_limit=512M\n' > /usr/local/etc/php/conf.d/zz-dev.ini
+# OPcache on the command line too: a test process boots the application again and again, including the same config
+# files and templates each time.
+RUN docker-php-ext-enable opcache \
+    && printf 'error_reporting=E_ALL\ndisplay_errors=On\nmemory_limit=512M\nopcache.enable_cli=1\n' > /usr/local/etc/php/conf.d/zz-dev.ini

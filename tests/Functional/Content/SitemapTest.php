@@ -6,6 +6,7 @@ namespace AtarCms\Tests\Functional\Content;
 
 use AtarCms\Content\EntryStatus;
 use AtarCms\Content\TermService;
+use AtarCms\Database\Connection;
 use AtarCms\Kernel\Config;
 
 final class SitemapTest extends ContentFunctionalTestCase
@@ -61,6 +62,35 @@ final class SitemapTest extends ContentFunctionalTestCase
         self::assertStringNotContainsString('north', $xml);
     }
 
+    public function testTranslationsInLocalesNoLongerConfiguredAreNeverListed(): void
+    {
+        // A site that dropped Hebrew from its locales still has Hebrew rows in the database.
+        $hello = $this->entry('articles', 'Hello', ['slug' => 'hello']);
+        $shalom = $this->translation($hello, 'ru', 'Шалом', 'shalom');
+        $php = $this->term('topics', 'PHP');
+        $hebrewTerm = $this->app->container()->service(TermService::class)->createTranslation($php, 'ru', null, null);
+        $db = $this->app->container()->service(Connection::class);
+        $db->execute('UPDATE entries SET locale = ? WHERE id = ?', ['he', $shalom->id]);
+        $db->execute('UPDATE terms SET locale = ? WHERE id = ?', ['he', $hebrewTerm->id]);
+        $hebrewOnly = $this->entry('articles', 'Only Hebrew', ['slug' => 'only-hebrew']);
+        $db->execute('UPDATE entries SET locale = ? WHERE id = ?', ['he', $hebrewOnly->id]);
+
+        $sitemap = (string) $this->browser->get('/sitemap.xml')->getBody();
+        $llms = (string) $this->browser->get('/llms.txt')->getBody();
+        $full = (string) $this->browser->get('/llms-full.txt')->getBody();
+        $markdown = (string) $this->browser->get('/articles/hello.md')->getBody();
+        $page = (string) $this->browser->get('/articles/hello')->getBody();
+
+        self::assertStringContainsString('<loc>https://localhost/articles/hello</loc>', $sitemap);
+        self::assertStringContainsString('<loc>https://localhost/topics/php</loc>', $sitemap);
+        foreach ([$sitemap, $llms, $full, $markdown, $page] as $body) {
+            self::assertStringNotContainsString('/he/', $body);
+            self::assertStringNotContainsString('hreflang="he"', $body);
+        }
+        self::assertStringNotContainsString('<xhtml:link', $sitemap, 'no group has a second configured language');
+        self::assertStringContainsString("\n- Language: en\n", $markdown, 'no translation links');
+    }
+
     public function testSitemapAndRobotsAreNotServedUnderALocalePrefix(): void
     {
         self::assertSame(404, $this->browser->get('/ru/sitemap.xml')->getStatusCode());
@@ -72,7 +102,11 @@ final class SitemapTest extends ContentFunctionalTestCase
         $response = $this->browser->get('/robots.txt');
 
         self::assertSame('text/plain; charset=utf-8', $response->getHeaderLine('Content-Type'));
-        self::assertSame("User-agent: *\nDisallow: /admin\n\nSitemap: https://localhost/sitemap.xml\n", (string) $response->getBody());
+        self::assertSame(
+            "User-agent: *\nContent-Signal: search=yes, ai-input=yes, ai-train=no\nDisallow: /admin\n\nSitemap: https://localhost/sitemap.xml\n",
+            (string) $response->getBody(),
+            'contentsignals.org: search and AI answers yes, training no',
+        );
     }
 
     public function testConfiguredRobots(): void

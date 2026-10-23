@@ -574,7 +574,8 @@ are reserved in `ImageVariants` (refused in `theme.php`, outside srcset families
 suffix (`x.jpg.png`); `/manifest.webmanifest` and `/favicon.ico` (302 to `icon_32`) are stateless
 `SiteIconController` routes (default language, `max-age=3600`; without an icon the logo's PNGs of the site
 colour). `hide_from_search`: `SearchVisibilityMiddleware` adds `X-Robots-Tag: noindex, nofollow` to public
-responses (not `/admin`, `/uploads`, `/media`, nor one with its own header), `robots.txt` disallows everything,
+responses (not `/admin`, `/uploads`, `/media`, nor one with its own header) and leaves out the `/llms.txt` `Link`
+header it otherwise adds to public HTML pages (see "AI readiness"), `robots.txt` disallows everything,
 the sitemaps 404, and the dashboard tells `settings.manage` users. `SocialMeta` (`og:site_name` = the site name)
 falls back to the site title, description and image; feeds are named after the site; theme layouts fall back for
 `<meta name="description">` themselves (not on 5xx pages).
@@ -691,7 +692,9 @@ Structured data: after its tags `socialMeta()` prints the page's schema.org JSON
 data block with an `@graph` list, on the same pages (with a canonical URL), nothing when the graph is empty. It is
 never executed, so it needs no nonce (`ThemeChecker` exempts it too); `json_encode` escapes `<`/`>` (`JSON_HEX_TAG`,
 so no text can close the element) and the line terminators, and replaces invalid UTF-8. The home page (the `single()` collection routed at `/`) is the
-`WebSite` of its language (`name` the site name, `url` the canonical URL, `inLanguage`, `publisher` the site's
+`WebSite` of its language (`@id` its canonical URL + `#website`, such as `https://example.com/#website` and
+`https://example.com/ru#website`: one node per language, as its name, URL and language differ; `name` the site name,
+`url` the canonical URL, `inLanguage`, `publisher` the site's
 organization by its `@id`; no `SearchAction`: Google retired the sitelinks search box), followed by that organization
 (`Content\StructuredData\Organization`, Plan 46): its type is `content.organization_type` (default `Organization`;
 a local business sets `LocalBusiness` or a subtype such as `Restaurant`, a schema.org type name, checked when a page
@@ -704,7 +707,11 @@ never a single; plain and nested pages are not) is an `Article`: `headline` its 
 as `og:description`/`og:image` (left out when empty), `datePublished`, `dateModified` (the later of `updated_at` and
 `published_at`), both UTC ISO 8601 (`StructuredData::time()`), `inLanguage`, `url`, and the site's organization
 (`Organization::reference()`: its type, `@id`, name and `app.url`) for `author` and `publisher` (user decision:
-editors' names are not published). A
+editors' names are not published). Any other entry page (plain and nested pages, singles other than the home page)
+is a `WebPage` and a page without an entry (an archive, a term or section page) a `CollectionPage`: `name` the page
+title as `og:title` has it, `description` as `og:description` (left out when empty), `url`, `inLanguage` (the entry's,
+else the request's) and `isPartOf` the `WebSite` of that language by its `@id` (with its type, the site name and the
+home page's URL in that language, `{app.url}/` or `{app.url}/{locale}`, like an article's organization); no query of their own. A
 `BreadcrumbList` comes from the `Content\StructuredData\PageTrail` request attribute, which `ContentController::show()`
 and `TermController::show()` attach next to the canonical URL (never on previews), built by `Breadcrumbs` from what
 they have already loaded: a sectioned entry below its route term's trail, another entry of a collection with an
@@ -765,13 +772,20 @@ passes `'feed' => $this->url('content.news.feed')` to the layout, which prints t
 
 `/sitemap.xml` (`content.sitemap`, stateless, default locale) lists the public entries of every routed
 collection and the terms of every routed taxonomy, in every language (`Content\Sitemap`); terms a
-`redirectToFirstChild()` taxonomy only redirects (those with children) are left out. Each `<url>` carries
+`redirectToFirstChild()` taxonomy only redirects (those with children) are left out. Only the configured languages
+(`Locales::all()`) count: a site that drops a language keeps its rows, which have no pages any more, so
+`PublicContent`'s sitemap reads and `TermRepository`'s sitemap counts and chunks leave them out (and with them the
+sitemap's alternates and the paging of `/llms.txt` and `/llms-full.txt`); `PublicContent::translations()` does the
+same for the markdown twins' translation links (page hreflang alternates were always filtered by `LocalizedUrls`,
+which `ContentController` now also feeds through it). Each `<url>` carries
 `<loc>`, `<lastmod>` (`updated_at`) and, for a translation group in more than one language, `xhtml:link`
 hreflang alternates plus `x-default` (the default language's URL when it exists). Up to `content.sitemap_limit`
 URLs (10–50000, the default and cap; out of range fails the boot) it is one `<urlset>`; past it an index of
 pages `/sitemap-{entries|terms}-{source}-{n}.xml` (`SitemapPage`: whole translation groups per page, collections
 before taxonomies in config order; a page out of range is a 404). `/robots.txt` (`RobotsController`) is the
-`content.robots` string verbatim when set, else "Disallow: /admin" plus the `Sitemap:` line; "Hide from search
+`content.robots` string verbatim when set, else "Disallow: /admin" and the site's Content Signals
+(contentsignals.org, `Content-Signal: search=yes, ai-input=yes, ai-train=no` in the `User-agent: *` group: search
+and AI answers may use the content, model training may not; no setting) plus the `Sitemap:` line; "Hide from search
 engines" overrides all of it (`Disallow: /`, sitemaps 404, `X-Robots-Tag` — see "Site settings").
 
 `/llms.txt` (`content.llms`, stateless, default locale; `Content\Llms\LlmsTxt`) is the sitemap's content as a
@@ -801,7 +815,15 @@ archives and feeds, the root route's after it — pages and articles only, never
 preview, a previous slug or a wrong chain 301s to the canonical twin, "Hide from search engines" makes every twin
 a 404. Public entry and single pages carry their twin's path as the `Content\Markdown\MarkdownTwin` request
 attribute, and the theme helper `markdownAlternate()` prints it as `<link rel="alternate" type="text/markdown">`
-(nothing while the site is hidden from search engines). A literal `{slug}.md` segment reserves the slug (`ReservedSlugs`: with a single at `/`, no page takes
+(nothing while the site is hidden from search engines). The page's own address negotiates too: when the `Accept`
+header prefers `text/markdown` to `text/html` (`Http\AcceptHeader`: q-values, the most specific range wins; a tie,
+`*/*` and browsers' headers get HTML) it answers with the twin's markdown and `Link` canonical but without the twin's
+`noindex` (that address is the canonical page, which a crawler preferring markdown must not drop), and the HTML and markdown variants of
+every entry and single page send `Vary: Accept`; never with `?preview=1` or while the site is hidden (plain HTML,
+no `Vary`), a single without its public entry stays HTML, and its redirects (previous slug, wrong chain) go to the
+page addresses, which negotiate again. A CDN or cache that ignores `Vary: Accept` (Cloudflare's "Cache Everything",
+for one) could serve the markdown variant to browsers: there, leave the HTML pages uncached or bypass the cache when
+the request's `Accept` holds `text/markdown`. A literal `{slug}.md` segment reserves the slug (`ReservedSlugs`: with a single at `/`, no page takes
 `index`). The document: `# title`, the meta description as a blockquote, facts (publication date via
 `SiteTime`, except on a plain single; language with links to the public translations' twins; one line per
 `taxonomies()` taxonomy, linked when routed; one line per scalar field), then a `## {label}` section per block field
@@ -814,7 +836,11 @@ Three surfaces meet AI agents, all built in and all hidden by "Hide from search 
 `/admin/ai-guide` (the admin described for a signed-in browser agent, filtered by the user's permissions; the
 page footer's "AI guide" link and `<link rel="help">` point to it — details in docs/admin-ui.md "AI guide"),
 `/llms.txt` (the public site as a markdown map), `/llms-full.txt` (its full text) and the `.md` twins of entry
-pages (all above, in "Feeds, sitemap and robots"). The admin's no-JavaScript rule and semantic markup are what make browser agents reliable there, and
+pages (all above, in "Feeds, sitemap and robots"). Every public HTML page (2xx `text/html`, not the admin) points to
+`/llms.txt` with a `Link: </llms.txt>; rel="describedby"` header (`SearchVisibilityMiddleware`, added to a `Link`
+header the response already has; none on a response with its own `X-Robots-Tag` such as a preview or a form page,
+and none while the site is hidden, when `/llms.txt` is a 404) — a header, not a
+`<link>` tag, so themes need nothing. The admin's no-JavaScript rule and semantic markup are what make browser agents reliable there, and
 `skeleton/.agents/skills/building-atarcms-sites` is the agent skill that builds sites. The README's "AI-ready"
 section is the owner-facing summary. Decisions: one known guide URL instead of hidden per-page hints (hidden text
 never reaches an agent reading the accessibility tree and pollutes screen readers); browser agents only — an editing

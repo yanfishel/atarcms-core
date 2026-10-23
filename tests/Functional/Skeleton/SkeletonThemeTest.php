@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace AtarCms\Tests\Functional\Skeleton;
 
 use AtarCms\Content\Preset\PresetPages;
-use AtarCms\Demo\DemoSeeder;
 use AtarCms\Settings\SettingsInput;
 use AtarCms\Settings\SettingsService;
 use AtarCms\Tests\Support\Cast;
@@ -18,7 +17,7 @@ final class SkeletonThemeTest extends SkeletonTestCase
 {
     public function testEveryPageOfTheDemoSiteRendersInEveryLanguage(): void
     {
-        $this->app->container()->service(DemoSeeder::class)->seed(null);
+        $this->seedDemo();
         $article = Cast::string($this->db->scalar("SELECT e.slug FROM entries e WHERE e.collection = 'articles' AND e.locale = 'he' AND JSON_EXTRACT(e.data, '$.summary') IS NOT NULL ORDER BY e.id LIMIT 1"));
         $news = Cast::string($this->db->scalar("SELECT slug FROM entries WHERE collection = 'news' AND locale = 'en' ORDER BY published_at DESC LIMIT 1"));
         $tag = Cast::string($this->db->scalar("SELECT slug FROM terms WHERE taxonomy = 'tags' AND locale = 'ru' ORDER BY id LIMIT 1"));

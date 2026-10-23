@@ -72,7 +72,7 @@ final class SocialMeta
             }
         }
         $tags[] = sprintf('<meta name="twitter:card" content="%s">', $image === null ? 'summary' : 'summary_large_image');
-        $structuredData = $this->structuredData->script($request, $entry, $siteName, $description, $image);
+        $structuredData = $this->structuredData->script($request, $entry, $siteName, $title, $description, $image);
         if ($structuredData !== '') {
             $tags[] = $structuredData;
         }

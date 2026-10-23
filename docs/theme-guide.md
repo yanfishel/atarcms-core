@@ -125,7 +125,7 @@ theme template (registered by `CoreViewHelpers`, `ContentViewHelpers`, `MediaVie
 | `canonical()` | `<link rel="canonical">` or `''` | entry, single, archive and term pages only |
 | `markdownAlternate()` | `<link rel="alternate" type="text/markdown">` to the page's markdown twin (`/news/hello.md`, `/index.md` for a single at `/`) or `''` | public entry and single pages only; none on previews or while the site is hidden from search engines |
 | `hreflang()` | `<link rel="alternate" hreflang>` lines | |
-| `socialMeta(?string $title, ?string $description = null, ?Entry $entry = null, ?string $imageVariant = null)` | Open Graph + Twitter tags, then the JSON-LD block (WebSite and the site's organization on the home page, Article, BreadcrumbList; only with a canonical URL) | `socialMeta($title, $description, $entry, 'large')` |
+| `socialMeta(?string $title, ?string $description = null, ?Entry $entry = null, ?string $imageVariant = null)` | Open Graph + Twitter tags, then the JSON-LD block (WebSite and the site's organization on the home page, Article, WebPage on other entry pages, CollectionPage on archives and term pages — pass `$entry` on entry pages, BreadcrumbList; only with a canonical URL) | `socialMeta($title, $description, $entry, 'large')` |
 | `pageTitle(?string $title = null)` | `<title>` text by the settings' pattern (`{title} — {site}`) | `null` → site name |
 | `editUrl(Entry $e)` | `?string` admin edit URL if the user may edit | superseded in the skeleton by `adminBar()` |
 

@@ -8,19 +8,14 @@ use AtarCms\Cli\Output;
 use AtarCms\Kernel\Application;
 use AtarCms\Tests\Support\Regex;
 use Nyholm\Psr7\Factory\Psr17Factory;
-use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 
-final class ApplicationTest extends TestCase
+/**
+ * Requests to the fixture site, each through a newly booted application, against freshly migrated tables.
+ */
+final class ApplicationTest extends FunctionalTestCase
 {
-    private const string SITE = __DIR__ . '/../Fixtures/site';
-
-    protected function tearDown(): void
-    {
-        putenv('APP_DEBUG');
-    }
-
     public function testRendersHomeThroughThemeLayout(): void
     {
         $response = $this->request('GET', '/');

@@ -83,6 +83,13 @@ state in scripts, so agents driving the accessibility tree operate it reliably.
   …
   ```
 
+- **Discovery and negotiation** — every public HTML page sends `Link: </llms.txt>; rel="describedby"`; an entry
+  page asked for with `Accept: text/markdown` (preferred over `text/html`) answers with its markdown twin, both
+  variants sending `Vary: Accept`; the default `robots.txt` states the site's
+  [Content Signals](https://contentsignals.org) (`search=yes, ai-input=yes, ai-train=no`). JSON-LD describes every
+  page with a canonical URL: the home page's `WebSite` and organization, `Article`, `WebPage`, `CollectionPage`
+  and breadcrumbs.
+
 "Hide from search engines" hides `/llms.txt`, `/llms-full.txt` and the `.md` twins along with the sitemap, so a site
 under construction leaks nothing. Details: `docs/architecture.md` ("AI readiness") and `docs/admin-ui.md` ("Shell",
 the AI guide).
@@ -156,7 +163,7 @@ Everything runs in Docker:
 
 ```bash
 docker compose run --rm php composer install
-docker compose run --rm php composer check   # PHP-CS-Fixer, PHPStan at level max, PHPUnit
+docker compose run --rm php composer check   # PHP-CS-Fixer, PHPStan at level max, PHPUnit in parallel (ParaTest)
 ```
 
 The runnable demo site lives in `skeleton/` (see `skeleton/README.md`).
