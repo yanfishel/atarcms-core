@@ -117,10 +117,6 @@ sitemap, so a site under construction leaks nothing. Details: `docs/architecture
 | [agentcheck.dev](https://agentcheck.dev/r/2jznthfQ3il92Xe2QIHqzH5c), full check | 100/100 (A+; all four categories and all 10 pages 100) |
 | [Frase Agent Readiness](https://www.frase.io/tools/agent-readiness) | 100/100 |
 | [agent-ready.dev](https://agent-ready.dev/scan/UjZ735KLTG) | Vercel Agent Readability 86, llmstxt.org 100, Accessibility 100 |
-| [isitagentready.com](https://isitagentready.com/atarcms.com) (Cloudflare) | 40 — Discoverability 75, Content 100, Bot Access Control 100 |
-
-The rest of isitagentready's score is for API, OAuth, MCP and commerce endpoints that a content site doesn't have
-(an editing API or MCP server is a deliberate non-goal).
 
 ## A look inside
 

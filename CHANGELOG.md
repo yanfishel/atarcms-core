@@ -3,6 +3,10 @@
 Every version of AtarCMS (`yanfishel/atarcms-core`) and of its site skeleton (`yanfishel/atarcms`, same version).
 What a site must do after an update is in `UPGRADE.md`.
 
+## v0.2.10
+
+- Both READMEs list the agentcheck.dev, Frase and agent-ready.dev checks of atarcms.com only.
+
 ## v0.2.9
 
 - Both READMEs show the agentcheck.dev full check of atarcms.com at 100/100 and the other agent-readiness checks
