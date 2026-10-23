@@ -8,6 +8,7 @@ use AtarCms\Content\Collection;
 use AtarCms\Content\Collections;
 use AtarCms\Content\ContentModule;
 use AtarCms\Content\ReservedSlugs;
+use AtarCms\Content\Taxonomies;
 use AtarCms\Content\Taxonomy;
 use AtarCms\Http\Routing\Router;
 use AtarCms\I18n\Locales;
@@ -57,6 +58,31 @@ final class ReservedSlugsTest extends TestCase
         self::assertTrue($reserved->isReserved($pages, 'contact'));
         self::assertFalse($reserved->isReserved($pages, 'about'));
         self::assertFalse($reserved->isReserved($pages, 'llms'), '/llms.txt is no twin');
+    }
+
+    public function testListingTwinsReserveTheirSlugsAndTermTwinsNone(): void
+    {
+        $router = new Router();
+        // An archive at "/" has its twin at "/index.md"; a term twin ("/tag/{slug}.md") and the root twin
+        // ("/{slug}.md") are variable and reserve nothing.
+        ContentModule::registerRoutes($router, new Collections(
+            [
+                Collection::make('posts')->route('/posts/{slug}')->archive('/'),
+                Collection::make('pages')->route('/{slug}'),
+                Collection::make('news')->route('/news/{slug}')->archive('/latest'),
+            ],
+            new Taxonomies([Taxonomy::make('tags')->route('/tag/{slug}'), Taxonomy::make('sections')->hierarchical()->route('/{slug}')]),
+        ));
+        $reserved = new ReservedSlugs($router, new Locales('en', ['en']));
+        $pages = Collection::make('pages')->route('/{slug}');
+
+        self::assertSame('content.posts.index.md', $router->match('GET', '/index.md')->route->name);
+        self::assertSame('content.news.index.md', $router->match('GET', '/latest.md')->route->name);
+        self::assertTrue($reserved->isReserved($pages, 'index'));
+        self::assertTrue($reserved->isReserved($pages, 'latest'));
+        self::assertTrue($reserved->isReserved($pages, 'tag'));
+        self::assertFalse($reserved->isReserved($pages, 'about'));
+        self::assertFalse($reserved->isReserved(Taxonomy::make('tags')->route('/tag/{slug}'), 'releases'));
     }
 
     /**

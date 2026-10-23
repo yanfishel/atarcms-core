@@ -23,10 +23,11 @@ final class RouteSafetyTest extends FunctionalTestCase
 
         self::assertSame(
             [
-                'assets.admin', 'assets.theme', 'content.articles.feed', 'content.articles.md', 'content.contact.md', 'content.events.feed',
-                'content.events.md', 'content.info.md', 'content.llms', 'content.llms_full', 'content.pages.md', 'content.robots', 'content.sitemap',
-                'content.sitemap.page', 'content.sitemap_md', 'content.stories.feed', 'content.stories.md', 'content.welcome.md', 'doctor.probe', 'media.original',
-                'media.share', 'media.variant', 'settings.favicon', 'settings.manifest',
+                'assets.admin', 'assets.theme', 'content.articles.feed', 'content.articles.index.md', 'content.articles.md', 'content.contact.md',
+                'content.events.feed', 'content.events.index.md', 'content.events.md', 'content.info.md', 'content.llms', 'content.llms_full',
+                'content.pages.md', 'content.robots', 'content.sitemap', 'content.sitemap.page', 'content.sitemap_md', 'content.stories.feed',
+                'content.stories.index.md', 'content.stories.md', 'content.welcome.md', 'doctor.probe', 'media.original', 'media.share', 'media.variant',
+                'settings.favicon', 'settings.manifest', 'taxonomy.tags.md', 'taxonomy.topics.md',
             ],
             $stateless,
         );

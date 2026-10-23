@@ -806,7 +806,7 @@ docs sites publish beside llms.txt: the same header plus a line naming `/llms.tx
 `/llms.txt`'s order as its markdown twin (below; rendered with the ancestors its sitemap chunk loaded and without the
 twin's frontmatter) with
 `Source: {URL}` under its `# title`, blocks separated by `---`. The sections stay flat — no `##` section headings,
-each block keeps its twin's heading levels and is a document of its own; terms have no markdown and are left out.
+each block keeps its twin's heading levels and is a document of its own; archives and terms (which have twins of their own since Plan 56) are left out.
 After `content.llms_full_limit` entries (default 100: a few queries each, so the response stays well under a second
 on a small VPS) or once the text passes 1 MiB (`LlmsFullTxt::MAX_BYTES`, about 250k tokens) it stops and names
 `/llms.txt`. "Hide from search engines" makes it a 404. The admin's counterpart for AI agents is `/admin/ai-guide`
@@ -815,8 +815,8 @@ on a small VPS) or once the text passes 1 MiB (`LlmsFullTxt::MAX_BYTES`, about 2
 Every entry page has a markdown twin at its address + `.md` (`content.{collection}.md`, stateless; `/llms.txt`
 says so): `/news/hello.md`, `/ru/about/team.md`, a single at `/` answers at `/index.md` (slugs never contain dots,
 so no other address gains one). `ContentModule` registers a twin per entry route (singles' with the static
-archives and feeds, the root route's after it — pages and articles only, never section pages); the route attribute
-`EntryMarkdown::class` makes `ContentController` resolve the entry exactly as for the page and answer with
+archives and feeds, the root route's after it, serving pages, sections and articles); `Content\Http\MarkdownPages::twin()`
+marks it (stateless, a route attribute), and `ContentController` resolves the entry exactly as for the page and answers with
 `Content\Markdown\EntryMarkdown` instead (`text/markdown`, `X-Robots-Tag: noindex`, `Link: <page>; rel="canonical"`): no
 preview, a previous slug or a wrong chain 301s to the canonical twin, "Hide from search engines" makes every twin
 a 404. Public entry and single pages carry their twin's path as the `Content\Markdown\MarkdownTwin` request
@@ -833,8 +833,9 @@ page addresses, which negotiate again. A CDN or cache that ignores `Vary: Accept
 for one) could serve the markdown variant to browsers: there, leave the HTML pages uncached or bypass the cache when
 the request's `Accept` holds `text/markdown`. A literal `{slug}.md` segment reserves the slug (`ReservedSlugs`: with a single at `/`, no page takes
 `index`). The document (served at both addresses) opens with YAML frontmatter (`EntryMarkdown::document()`,
-`Content\Markdown\Frontmatter`): `title`, `description` (when set), `url` (the canonical page), `lang`, `published`
-(UTC ISO 8601, not on a plain single) and `updated` (JSON-LD's `dateModified` rule), each a one-line double-quoted
+`Content\Markdown\Frontmatter`): `title`, `description` (the meta description, else the site's of the entry's language
+like `og:description`; left out when both are empty), `url` (the canonical page), `lang`, `published` (UTC ISO 8601,
+not on a plain single) and `last_updated` (JSON-LD's `dateModified` rule), each a one-line double-quoted
 YAML scalar (whitespace collapsed, quotes, backslashes and non-printable characters escaped, invalid UTF-8 replaced),
 so no title can end the block or become YAML syntax. Then `# title`, the meta description as a blockquote, facts (publication date via
 `SiteTime`, except on a plain single; language with links to the public translations' twins; one line per
@@ -842,13 +843,34 @@ so no title can end the block or become YAML syntax. Then `# title`, the meta de
 (rich text, textarea, gallery, slides). Rich text goes through `Content\Markdown\RichTextMarkdown`, a DOM walk over the
 sanitizer's element set (tables stay HTML, videos become links; no markdown library).
 
+Collection archives and term pages have twins too (Plan 56; the user reversed the earlier "term pages have none"):
+`content.{collection}.index.md` at the archive's path without a trailing slash + `.md` (`/news.md`; an archive at `/`
+answers at `/index.md`, a static route that reserves the root slug `index`) and `taxonomy.{taxonomy}.md` at the term
+route + `.md` (`/tag/releases.md`); a root taxonomy's sections answer through the root twin (`/about/team.md`, named
+`taxonomy.sections.md` as an alias when a page collection owns the route), which `RootController` resolves like the
+HTML (page, section by trail, article, section by last segment, previous slugs), each step answering with its twin.
+`ContentController::index()` and `TermController::show()` answer with `Content\Markdown\ListingMarkdown`: `?page=N`
+lists the same entries as that HTML page (a page past the last is a 404); previous slugs, wrong section chains and
+`redirectToFirstChild()` redirect to twins; the same headers, negotiation (`Vary: Accept`, the HTML pages'
+`MarkdownTwin` and `Link` alternate) and hidden-site 404s as entry twins, all in `MarkdownPages`. The document:
+frontmatter `title` (the term's name, the collection's translated label), `description` (`PageSeo::forTerm()`: the
+term's own, else a parent section's, else the site's — read from the request's settings, no extra query, as for entry
+twins), `url` (with `?page=N`), `lang`, `last_updated` (the newest modification time of the
+listed entries and the term's own; none on an empty archive page; never `published`), then `# title`, a term's own meta
+description as a quote, `- Language:` with the twins in the other languages, `- Page N of M: [previous](…), [next](…)`,
+`## Entries` (`- [title](page URL) — {date}`, no date for a plain collection's) and, for a term of a hierarchical
+taxonomy with children, `## {taxonomy label}` listing them. Links to other pages go to their canonical page URLs (like
+`/llms.txt` and an entry twin's relation and term lines); links to the same listing (other pages and languages) go to
+twins (like an entry twin's translation links). A term twin costs a fixed number of queries whatever its entries
+(the tree of a hierarchical taxonomy in one query, the entries' URLs batched).
+
 ## AI readiness
 
 Three surfaces meet AI agents, all built in and all hidden by "Hide from search engines" where public:
 `/admin/ai-guide` (the admin described for a signed-in browser agent, filtered by the user's permissions; the
 page footer's "AI guide" link and `<link rel="help">` point to it — details in docs/admin-ui.md "AI guide"),
 `/llms.txt` (the public site as a markdown map), `/llms-full.txt` (its full text), `/sitemap.md` and the `.md` twins
-of entry pages with their frontmatter and `Link` alternate header (all above, in "Feeds, sitemap and robots"). Every public HTML page (2xx `text/html`, not the admin) points to
+of entry, archive and term pages with their frontmatter and `Link` alternate header (all above, in "Feeds, sitemap and robots"). Every public HTML page (2xx `text/html`, not the admin) points to
 `/llms.txt` with a `Link: </llms.txt>; rel="describedby"` header (`SearchVisibilityMiddleware`, added to a `Link`
 header the response already has; none on a response with its own `X-Robots-Tag` such as a preview or a form page,
 and none while the site is hidden, when `/llms.txt` is a 404) — a header, not a

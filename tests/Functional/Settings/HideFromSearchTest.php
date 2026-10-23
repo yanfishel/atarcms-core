@@ -62,7 +62,8 @@ final class HideFromSearchTest extends ContentFunctionalTestCase
         $describedBy = '</llms.txt>; rel="describedby"';
 
         self::assertContains($describedBy, $this->browser->get('/articles/hello')->getHeader('Link'));
-        self::assertSame($describedBy, $this->browser->get('/ru/articles')->getHeaderLine('Link'));
+        self::assertSame('</ru/articles.md>; rel="alternate"; type="text/markdown", ' . $describedBy, $this->browser->get('/ru/articles')->getHeaderLine('Link'));
+        self::assertSame($describedBy, $this->browser->get('/search')->getHeaderLine('Link'));
         self::assertSame(
             '<https://localhost/articles/hello>; rel="canonical"',
             $this->browser->get('/articles/hello.md')->getHeaderLine('Link'),

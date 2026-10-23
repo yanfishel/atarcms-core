@@ -73,18 +73,41 @@ final class MarkdownNegotiationTest extends ContentFunctionalTestCase
         self::assertSame('/pages/about/team', $response->getHeaderLine('Location'), 'the canonical page, which negotiates again');
     }
 
+    public function testTermPagesAndArchivesNegotiateToo(): void
+    {
+        $this->entry('articles', 'Hello', ['slug' => 'hello', 'terms' => ['tags' => ['php']]]);
+        $guides = $this->term('sections', 'Guides');
+        $this->term('sections', 'PHP', ['parent' => $guides]);
+
+        foreach (['/tags/php' => '/tags/php.md', '/articles' => '/articles.md', '/articles?page=1' => '/articles.md', '/guides/php' => '/guides/php.md', '/ru/articles' => '/ru/articles.md'] as $path => $twin) {
+            $response = $this->markdown($path);
+            self::assertSame(200, $response->getStatusCode(), $path);
+            self::assertSame('text/markdown; charset=utf-8', $response->getHeaderLine('Content-Type'), $path);
+            self::assertSame((string) $this->browser->get($twin)->getBody(), (string) $response->getBody(), $path);
+            self::assertFalse($response->hasHeader('X-Robots-Tag'), $path);
+            self::assertSame('Accept', $response->getHeaderLine('Vary'), $path);
+            self::assertFalse($response->hasHeader('Set-Cookie'), $path);
+
+            $html = $this->browser->get($path, ['Accept' => self::BROWSER]);
+            self::assertSame('text/html; charset=utf-8', $html->getHeaderLine('Content-Type'), $path);
+            self::assertSame('Accept', $html->getHeaderLine('Vary'), $path);
+        }
+        $redirect = $this->markdown('/guides');
+        self::assertSame(302, $redirect->getStatusCode());
+        self::assertSame('/guides/php', $redirect->getHeaderLine('Location'), 'redirects stay on page addresses');
+    }
+
     public function testPagesWithoutATwinAndMissingEntriesStayHtml(): void
     {
         $this->entry('articles', 'Hello', ['slug' => 'hello']);
-        $this->term('topics', 'PHP');
 
-        foreach (['/articles', '/topics/php', '/contact'] as $path) {
+        foreach (['/contact', '/search?q=hello'] as $path) {
             $response = $this->markdown($path);
             self::assertSame(200, $response->getStatusCode(), $path);
             self::assertSame('text/html; charset=utf-8', $response->getHeaderLine('Content-Type'), $path);
         }
-        self::assertSame('', $this->markdown('/articles')->getHeaderLine('Vary'));
         self::assertSame(404, $this->markdown('/articles/missing')->getStatusCode());
+        self::assertSame(404, $this->markdown('/tags/missing')->getStatusCode());
     }
 
     public function testPreviewsAndAHiddenSiteStayHtml(): void
@@ -102,6 +125,12 @@ final class MarkdownNegotiationTest extends ContentFunctionalTestCase
         self::assertSame(200, $hidden->getStatusCode());
         self::assertSame('text/html; charset=utf-8', $hidden->getHeaderLine('Content-Type'));
         self::assertSame('', $hidden->getHeaderLine('Vary'), 'a hidden site never negotiates');
+        $this->term('topics', 'PHP');
+        foreach (['/articles', '/topics/php'] as $path) {
+            $listing = $this->markdown($path);
+            self::assertSame('text/html; charset=utf-8', $listing->getHeaderLine('Content-Type'), $path);
+            self::assertSame('', $listing->getHeaderLine('Vary'), $path);
+        }
     }
 
     private function markdown(string $path): ResponseInterface

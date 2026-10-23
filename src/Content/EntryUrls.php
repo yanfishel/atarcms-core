@@ -54,6 +54,28 @@ final class EntryUrls
         return 'content.' . $collection->name . '.index';
     }
 
+    /**
+     * The route of the archive's markdown twin (ListingMarkdown), at archiveMarkdownPath().
+     */
+    public static function archiveMarkdownRoute(Collection $collection): string
+    {
+        return 'content.' . $collection->name . '.index.md';
+    }
+
+    /**
+     * The address of the archive's markdown twin: the archive's path without a trailing slash + ".md" ("/news.md"); an
+     * archive at "/" answers at "/index.md". Null without an archive.
+     */
+    public static function archiveMarkdownPath(Collection $collection): ?string
+    {
+        if ($collection->archive === null) {
+            return null;
+        }
+        $path = rtrim($collection->archive, '/');
+
+        return ($path === '' ? '/index' : $path) . '.md';
+    }
+
     public static function feedRoute(Collection $collection): string
     {
         return 'content.' . $collection->name . '.feed';
@@ -203,11 +225,23 @@ final class EntryUrls
      */
     public function archive(Collection $collection, string $locale, int $page = 1): ?string
     {
+        $path = $this->archivePath($collection, $locale, $page);
+
+        return $path === null ? null : $this->config->appUrl() . $path;
+    }
+
+    /**
+     * The path of page $page of the collection's archive in $locale (see archive()), or of its markdown twin
+     * (archiveMarkdownRoute()) with $markdown; null without an archive.
+     */
+    public function archivePath(Collection $collection, string $locale, int $page = 1, bool $markdown = false): ?string
+    {
         if ($collection->route === null || $collection->archive === null) {
             return null;
         }
+        $route = $markdown ? self::archiveMarkdownRoute($collection) : self::indexRoute($collection);
 
-        return $this->config->appUrl() . $this->urls->path(self::indexRoute($collection), $page > 1 ? ['page' => $page] : [], $locale);
+        return $this->urls->path($route, $page > 1 ? ['page' => $page] : [], $locale);
     }
 
     /**

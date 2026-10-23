@@ -29,15 +29,31 @@ final class MarkdownAlternateTest extends ContentFunctionalTestCase
         self::assertSame(200, $this->browser->get('/pages/about/team.md')->getStatusCode(), 'the link leads to the twin');
     }
 
+    public function testTermPagesAndArchivesPointToTheirTwin(): void
+    {
+        $this->entry('articles', 'Hello', ['slug' => 'hello']);
+        $this->entry('articles', 'World', ['slug' => 'world']);
+        $this->entry('articles', 'Again', ['slug' => 'again']);
+        $this->term('topics', 'PHP');
+        $this->term('topics', 'PHP', ['locale' => 'ru', 'slug' => 'php-ru']);
+        $guides = $this->term('sections', 'Guides');
+        $this->term('sections', 'Basics', ['parent' => $guides]);
+
+        self::assertSame('/articles.md', $this->twin('/articles'));
+        self::assertSame('/articles.md?page=2', $this->twin('/articles?page=2'));
+        self::assertSame('/ru/articles.md', $this->twin('/ru/articles'));
+        self::assertSame('/topics/php.md', $this->twin('/topics/php'));
+        self::assertSame('/ru/topics/php-ru.md', $this->twin('/ru/topics/php-ru'));
+        self::assertSame('/guides/basics.md', $this->twin('/guides/basics'));
+        self::assertSame(200, $this->browser->get('/articles.md?page=2')->getStatusCode(), 'the link leads to the twin');
+    }
+
     public function testPagesWithoutATwinHaveNone(): void
     {
         $this->entry('articles', 'Hello', ['slug' => 'hello']);
         $this->entry('articles', 'Draft', ['slug' => 'draft', 'status' => EntryStatus::Draft]);
-        $this->term('topics', 'PHP');
 
         self::assertNull($this->twin('/contact'), 'a single before its entry exists');
-        self::assertNull($this->twin('/articles'));
-        self::assertNull($this->twin('/topics/php'));
         self::assertNull($this->twin('/search?q=hello'));
         self::assertStringNotContainsString('text/markdown', (string) $this->browser->get('/articles/missing')->getBody());
 
@@ -53,6 +69,7 @@ final class MarkdownAlternateTest extends ContentFunctionalTestCase
             ->save('en', new SettingsInput(hideFromSearch: true), null, null);
 
         self::assertNull($this->twin('/articles/hello'));
+        self::assertNull($this->twin('/articles'));
     }
 
     public function testTheLinkHeaderSitsBesideTheDescribedByLinkAndNeverOnMarkdown(): void

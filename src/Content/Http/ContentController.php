@@ -12,6 +12,7 @@ use AtarCms\Content\Entry;
 use AtarCms\Content\EntryRepository;
 use AtarCms\Content\EntryUrls;
 use AtarCms\Content\Markdown\EntryMarkdown;
+use AtarCms\Content\Markdown\ListingMarkdown;
 use AtarCms\Content\Markdown\MarkdownTwin;
 use AtarCms\Content\PageSeo;
 use AtarCms\Content\PublicContent;
@@ -19,13 +20,11 @@ use AtarCms\Content\StructuredData\Breadcrumbs;
 use AtarCms\Content\StructuredData\PageTrail;
 use AtarCms\Content\TermTree;
 use AtarCms\Content\TermUrls;
-use AtarCms\Http\AcceptHeader;
 use AtarCms\Http\CanonicalUrl;
 use AtarCms\Http\Exception\NotFound;
 use AtarCms\Http\Responses;
 use AtarCms\I18n\Alternates;
 use AtarCms\I18n\Locales;
-use AtarCms\Settings\SiteSettings;
 use AtarCms\View\Renderer;
 use LogicException;
 use Psr\Http\Message\ResponseInterface;
@@ -35,12 +34,13 @@ use Psr\Http\Message\ServerRequestInterface;
  * Public collection pages. Templates: collections/{collection}/{view}.php, falling back to {view}.php.
  * "?preview=1" shows drafts to users who can view the collection's entries. Entry pages also receive $seo (PageSeo:
  * the title and description resolved along the entry's sections; null on a single() page without its entry).
- * An entry page's markdown twin (the EntryMarkdown::class route attribute, "{address}.md") resolves its entry the
- * same way and answers with EntryMarkdown's text instead: never a preview, a previous slug and a wrong chain
- * redirect to the canonical twin, and a site hidden from search engines has none. The page itself answers with its
- * twin's markdown (without the twin's noindex: it is the canonical address) when the Accept header prefers text/markdown to text/html (AcceptHeader; never while previewing or
- * hidden), its redirects staying on page addresses; both variants send "Vary: Accept". The HTML page names its twin
- * in a Link header (rel="alternate", type="text/markdown") wherever the markdownAlternate() helper prints its tag.
+ * An entry page's markdown twin (a MarkdownPages::twin() route, "{address}.md") resolves its entry the same way and
+ * answers with EntryMarkdown's text instead: never a preview, a previous slug and a wrong chain redirect to the
+ * canonical twin, and a site hidden from search engines has none. The page itself answers with its twin's markdown
+ * (without the twin's noindex: it is the canonical address) when the Accept header prefers text/markdown to
+ * text/html (never while previewing or hidden), its redirects staying on page addresses; both variants send
+ * "Vary: Accept". The HTML page names its twin in a Link header (rel="alternate", type="text/markdown") wherever the
+ * markdownAlternate() helper prints its tag (MarkdownPages). Archives do the same with ListingMarkdown (index()).
  */
 final class ContentController
 {
@@ -57,7 +57,8 @@ final class ContentController
         private readonly Breadcrumbs $breadcrumbs,
         private readonly SlugRedirects $slugRedirects,
         private readonly EntryMarkdown $entryMarkdown,
-        private readonly SiteSettings $settings,
+        private readonly ListingMarkdown $listingMarkdown,
+        private readonly MarkdownPages $markdownPages,
     ) {}
 
     public function show(ServerRequestInterface $request): ResponseInterface
@@ -66,9 +67,9 @@ final class ContentController
         $locale = ContentRequest::locale($request, $collection, $this->locales);
         // The twin route answers in markdown, and so does the page when the Accept header prefers it; redirects keep
         // to the address that was asked for (the twin's, or the page's, which negotiates again).
-        $twin = $this->markdownRequested($request);
-        $negotiable = !$twin && $this->negotiable($request);
-        $markdown = $twin || ($negotiable && self::prefersMarkdown($request));
+        $twin = $this->markdownPages->requested($request);
+        $negotiable = !$twin && $this->markdownPages->negotiable($request);
+        $markdown = $twin || ($negotiable && MarkdownPages::prefersMarkdown($request));
         $path = $request->getAttribute('slug');
         if (!is_string($path)) {
             throw new LogicException('Content show routes need a {slug} parameter');
@@ -108,9 +109,7 @@ final class ContentController
                 : $this->responses->redirect($target, 301);
         }
         if ($markdown) {
-            $response = $this->markdown($entry, $ancestors, (string) $this->urls->absolute($entry, $ancestors, $routeTerm, $knownTerms));
-
-            return $twin ? self::noindex($response) : self::varyByAccept($response);
+            return $this->markdown($request, $entry, $ancestors, (string) $this->urls->absolute($entry, $ancestors, $routeTerm, $knownTerms), $twin);
         }
 
         // The section texts and breadcrumbs come from the route term and its ancestors loaded above: no extra query.
@@ -122,9 +121,7 @@ final class ContentController
             $request = MarkdownTwin::attach($request, $this->urls->path($entry, $ancestors, $routeTerm, $knownTerms, markdown: true));
         }
         $seo = PageSeo::forEntry($entry, $sections);
-        $response = $this->advertiseTwin($request, $this->render($request, $collection, 'show', ['entry' => $entry, 'seo' => $seo], $preview));
-
-        return $negotiable ? self::varyByAccept($response) : $response;
+        return $this->markdownPages->page($request, $this->render($request, $collection, 'show', ['entry' => $entry, 'seo' => $seo], $preview), $negotiable);
     }
 
     /**
@@ -135,44 +132,61 @@ final class ContentController
     {
         $collection = ContentRequest::collection($request, $this->collections);
         $locale = ContentRequest::locale($request, $collection, $this->locales);
-        if ($this->markdownRequested($request)) {
+        if ($this->markdownPages->requested($request)) {
             $entry = $this->content->single($collection, $locale)
                 ?? throw new NotFound(sprintf('The single %s has no public entry in "%s"', $collection->name, $locale));
 
-            return self::noindex($this->markdown($entry, [], (string) $this->urls->absolute($entry)));
+            return $this->markdown($request, $entry, [], (string) $this->urls->absolute($entry), true);
         }
         // A previewing request ("?preview=1") never negotiates; a single without its public entry stays HTML.
-        $negotiable = $this->negotiable($request);
+        $negotiable = $this->markdownPages->negotiable($request);
         $preview = $this->isPreview($request, $collection);
         $entry = $preview ? $this->entries->first($collection->name, $locale) : $this->content->single($collection, $locale);
-        if ($entry !== null && $negotiable && self::prefersMarkdown($request)) {
-            return self::varyByAccept($this->markdown($entry, [], (string) $this->urls->absolute($entry)));
+        if ($entry !== null && $negotiable && MarkdownPages::prefersMarkdown($request)) {
+            return $this->markdown($request, $entry, [], (string) $this->urls->absolute($entry), false);
         }
         $request = $request->withAttribute(Alternates::class, $entry === null ? new Alternates([]) : $this->alternates($entry));
         if ($entry !== null && !$preview) {
             $request = MarkdownTwin::attach(CanonicalUrl::attach($request, $this->urls->absolute($entry)), $this->urls->path($entry, markdown: true));
         }
-        $response = $this->advertiseTwin($request, $this->render($request, $collection, 'show', ['entry' => $entry, 'seo' => $entry === null ? null : PageSeo::forEntry($entry, [])], $preview));
-
-        return $negotiable ? self::varyByAccept($response) : $response;
+        return $this->markdownPages->page(
+            $request,
+            $this->render($request, $collection, 'show', ['entry' => $entry, 'seo' => $entry === null ? null : PageSeo::forEntry($entry, [])], $preview),
+            $negotiable,
+        );
     }
 
+    /**
+     * A page of the collection's archive ("?page=N"). Its markdown twin ("{archive}.md", "?page=N" alike) and the
+     * archive's own address when the Accept header prefers markdown answer with ListingMarkdown's text instead, like an
+     * entry page's.
+     */
     public function index(ServerRequestInterface $request): ResponseInterface
     {
         $collection = ContentRequest::collection($request, $this->collections);
         $locale = ContentRequest::locale($request, $collection, $this->locales);
+        $twin = $this->markdownPages->requested($request);
+        $negotiable = !$twin && $this->markdownPages->negotiable($request);
         $number = PageNumber::fromRequest($request);
         $page = $this->content->query($collection, $locale)->page($number);
         if ($number > $page->lastPage()) {
             throw new NotFound(sprintf('Page %d of %s does not exist', $number, $collection->name));
         }
+        $url = (string) $this->urls->archive($collection, $locale, $number);
+        if ($twin || ($negotiable && MarkdownPages::prefersMarkdown($request))) {
+            return $this->markdownPages->respond(
+                $this->listingMarkdown->archive($collection, $locale, $page, $url, $this->markdownPages->siteDescription($request)),
+                $url,
+                $twin,
+            );
+        }
 
         if (!$collection->translatable) {
             $request = $request->withAttribute(Alternates::class, new Alternates([]));
         }
-        $request = CanonicalUrl::attach($request, $this->urls->archive($collection, $locale, $number));
+        $request = MarkdownTwin::attach(CanonicalUrl::attach($request, $url), $this->urls->archivePath($collection, $locale, $number, true));
 
-        return $this->render($request, $collection, 'index', ['page' => $page], false);
+        return $this->markdownPages->page($request, $this->render($request, $collection, 'index', ['page' => $page], false), $negotiable);
     }
 
     /**
@@ -201,75 +215,17 @@ final class ContentController
     }
 
     /**
-     * A page with a markdown twin (MarkdownTwin on the request) names it in a Link header too, wherever the
-     * markdownAlternate() helper prints its tag: not on previews (no MarkdownTwin) and not while the site is hidden
-     * from search engines (it has no twins then). Added beside other Link values (SearchVisibilityMiddleware's
-     * describedby).
-     */
-    private function advertiseTwin(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
-    {
-        $twin = MarkdownTwin::of($request);
-
-        return $twin === null || $this->settings->forRequest($request)->hideFromSearch ? $response : $response->withAddedHeader('Link', $twin->link());
-    }
-
-    /**
-     * Whether the route is an entry page's markdown twin; a site hidden from search engines has none (like /llms.txt).
-     */
-    private function markdownRequested(ServerRequestInterface $request): bool
-    {
-        if (!EntryMarkdown::requested($request)) {
-            return false;
-        }
-        if ($this->settings->forRequest($request)->hideFromSearch) {
-            throw new NotFound('The site is hidden from search engines');
-        }
-
-        return true;
-    }
-
-    /**
-     * Whether an entry page (not its twin) may answer in markdown when the Accept header prefers it: never while
-     * previewing ("?preview=1") or while the site is hidden from search engines (it has no twins then).
-     */
-    private function negotiable(ServerRequestInterface $request): bool
-    {
-        return ($request->getQueryParams()['preview'] ?? null) !== '1' && !$this->settings->forRequest($request)->hideFromSearch;
-    }
-
-    /**
-     * Whether the Accept header prefers text/markdown to text/html (a tie, "*\/*" and browsers' headers get HTML).
-     */
-    private static function prefersMarkdown(ServerRequestInterface $request): bool
-    {
-        return AcceptHeader::prefers($request->getHeaderLine('Accept'), 'text/markdown', 'text/html');
-    }
-
-    /**
-     * Both variants of a negotiable entry page say that they depend on the Accept header (shared caches keep them
-     * apart).
-     */
-    private static function varyByAccept(ResponseInterface $response): ResponseInterface
-    {
-        return $response->withAddedHeader('Vary', 'Accept');
-    }
-
-    /**
-     * A public entry page as markdown, pointing to the page as canonical. The twin's own address is kept out of
-     * search indexes (noindex()); the page's address answering in markdown (negotiated) is the canonical one and is
-     * not.
+     * A public entry page as markdown, pointing to the page ($url) as canonical: at the twin's address ($twin) kept
+     * out of search indexes, at the page's own (negotiated) varying by Accept (MarkdownPages::respond()).
      *
      * @param array<int, Entry> $ancestors
      */
-    private function markdown(Entry $entry, array $ancestors, string $url): ResponseInterface
+    private function markdown(ServerRequestInterface $request, Entry $entry, array $ancestors, string $url, bool $twin): ResponseInterface
     {
-        return $this->responses->markdown($this->entryMarkdown->document($entry, $ancestors, $url))
-            ->withHeader('Link', '<' . $url . '>; rel="canonical"');
-    }
+        // The entry is in the request's language (ContentRequest::locale()), so the request's settings are its.
+        $document = $this->entryMarkdown->document($entry, $ancestors, $url, $this->markdownPages->siteDescription($request));
 
-    private static function noindex(ResponseInterface $response): ResponseInterface
-    {
-        return $response->withHeader('X-Robots-Tag', 'noindex');
+        return $this->markdownPages->respond($document, $url, $twin);
     }
 
     /**

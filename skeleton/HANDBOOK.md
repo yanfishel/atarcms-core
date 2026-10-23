@@ -376,11 +376,14 @@ languages, a link per public entry and term; after `content.llms_limit` links, d
 sitemap), and `/llms-full.txt` holds the full text of the entry pages in the same order, each with a `Source:`
 line (terms are left out; after `content.llms_full_limit` pages, default 100, or 1 MiB it points to `/llms.txt`). Both
 are served for the default language only, and so is `/sitemap.md`, the same map as a plain markdown sitemap
-(`/llms.txt` links it). Every public entry page also
-answers at its address plus `.md` (`/news/hello.md`, `/index.md` for the home page) with the page as clean markdown, a canonical link to the HTML page and `noindex`; old addresses redirect like
-the HTML pages. Each markdown page opens with YAML frontmatter: `title`, `description` (when set), `url`, `lang`,
-`published` (not on a plain single) and `updated`, the times in UTC. The default layout links each entry page to its
-twin (`$this->markdownAlternate()`, a `<link rel="alternate" type="text/markdown">`), and the page sends the same as a
+(`/llms.txt` links it). Every public entry page, collection archive and term page (tags, sections) also
+answers at its address plus `.md` (`/news/hello.md`, `/news.md`, `/tag/releases.md`, `/index.md` for the home page)
+with the page as clean markdown, a canonical link to the HTML page and `noindex`; an archive or term page lists its
+entries with their dates and links to its other pages (`/news.md?page=2` is the second page), and old addresses
+redirect like the HTML pages. Each markdown page opens with YAML frontmatter: `title`, `description` (the page's,
+else the site's description in Settings), `url`, `lang`, `published` (an entry's, not on a plain single) and
+`last_updated` (for a listing: its newest change), the times in UTC. The default layout links each of these pages to
+its twin (`$this->markdownAlternate()`, a `<link rel="alternate" type="text/markdown">`), and the page sends the same as a
 `Link: </news/hello.md>; rel="alternate"; type="text/markdown"` header. The page's own address answers in markdown
 too when the request's `Accept` header prefers `text/markdown` to `text/html` (browsers keep getting HTML; both send
 `Vary: Accept`), and every public HTML page points agents to `/llms.txt` with a `Link: </llms.txt>; rel="describedby"`

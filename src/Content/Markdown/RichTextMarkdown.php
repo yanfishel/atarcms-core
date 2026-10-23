@@ -77,6 +77,15 @@ final class RichTextMarkdown
     }
 
     /**
+     * Plain text (a title, a name, a label) as markdown text on one line: whitespace runs collapse to one space, then
+     * escape().
+     */
+    public static function line(string $text): string
+    {
+        return self::escape(trim((string) preg_replace('/\s+/u', ' ', $text)));
+    }
+
+    /**
      * $markdown with a "#", ">", "-", "+", "=" or "N." / "N)" at the start of any of its lines escaped: plain text
      * there would otherwise start a heading, a quote, a list or a setext underline.
      */

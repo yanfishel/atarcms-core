@@ -7,8 +7,10 @@ namespace AtarCms\Tests\Unit\Content;
 use AtarCms\Content\Collection;
 use AtarCms\Content\Collections;
 use AtarCms\Content\ContentModule;
+use AtarCms\Content\Http\ContentController;
+use AtarCms\Content\Http\MarkdownPages;
 use AtarCms\Content\Http\RootController;
-use AtarCms\Content\Markdown\EntryMarkdown;
+use AtarCms\Content\Http\TermController;
 use AtarCms\Content\ReservedSlugs;
 use AtarCms\Content\Taxonomies;
 use AtarCms\Content\Taxonomy;
@@ -62,7 +64,7 @@ final class ContentRoutesTest extends TestCase
         self::assertSame('content.pages.md', $page->route->name);
         self::assertSame(['slug' => 'about/team'], $page->params);
         self::assertSame('pages', $page->route->attributes()[Collection::class] ?? null);
-        self::assertTrue($page->route->attributes()[EntryMarkdown::class] ?? false);
+        self::assertTrue($page->route->attributes()[MarkdownPages::class] ?? false);
         self::assertTrue($page->route->isStateless());
         self::assertSame('content.stories.md', $router->match('GET', '/stories/hello.md')->route->name);
         self::assertSame('content.home.md', $router->match('GET', '/index.md')->route->name);
@@ -125,7 +127,7 @@ final class ContentRoutesTest extends TestCase
         self::assertSame('topics', $match->route->attributes()[Taxonomy::class] ?? null);
         self::assertSame('content.pages.show', $router->match('GET', '/about/team')->route->name);
         self::assertSame('/topics/php', $router->url('taxonomy.topics.show', ['slug' => 'php']));
-        self::assertSame(['taxonomy.topics.show'], array_values(array_filter(
+        self::assertSame(['taxonomy.topics.show', 'taxonomy.topics.md'], array_values(array_filter(
             array_map(static fn($route): ?string => $route->name, $router->routes()),
             static fn(?string $name): bool => $name !== null && str_starts_with($name, 'taxonomy.'),
         )));
@@ -205,5 +207,52 @@ final class ContentRoutesTest extends TestCase
         self::assertSame('sections', $match->route->attributes()[Taxonomy::class] ?? null);
         self::assertArrayNotHasKey(Collection::class, $match->route->attributes());
         self::assertSame('content.stories.show', $router->match('GET', '/stories/hello')->route->name);
+
+        $twin = $router->match('GET', '/guides/php.md');
+        self::assertSame('taxonomy.sections.md', $twin->route->name, 'the sections alone have a root twin too');
+        self::assertSame([RootController::class, 'show'], $twin->route->handler);
+        self::assertTrue($twin->route->attributes()[MarkdownPages::class] ?? false);
+        self::assertTrue($twin->route->isStateless());
+    }
+
+    public function testTermPagesAndArchivesHaveStatelessMarkdownTwins(): void
+    {
+        $router = new Router();
+        ContentModule::registerRoutes($router, new Collections(
+            [
+                Collection::make('pages')->route('/{slug}'),
+                Collection::make('news')->route('/news/{slug}')->archive('/news')->feed(),
+                Collection::make('blog')->route('/blog/{slug}')->archive('/blog/'),
+                Collection::make('stories')->route('/{sections}/{slug}')->taxonomies(['sections']),
+            ],
+            new Taxonomies([
+                Taxonomy::make('tags')->route('/tag/{slug}'),
+                Taxonomy::make('sections')->hierarchical()->route('/{slug}'),
+            ]),
+        ));
+
+        $archive = $router->match('GET', '/news.md');
+        self::assertSame('content.news.index.md', $archive->route->name);
+        self::assertSame([ContentController::class, 'index'], $archive->route->handler);
+        self::assertSame('news', $archive->route->attributes()[Collection::class] ?? null);
+        self::assertTrue($archive->route->attributes()[MarkdownPages::class] ?? false);
+        self::assertTrue($archive->route->isStateless());
+        self::assertSame('/news.md?page=2', $router->url('content.news.index.md', ['page' => 2]));
+        self::assertSame('content.blog.index.md', $router->match('GET', '/blog.md')->route->name, 'a trailing slash is left out');
+        self::assertFalse($router->match('GET', '/news')->route->isStateless(), 'the archive itself keeps its session');
+
+        $tag = $router->match('GET', '/tag/releases.md');
+        self::assertSame('taxonomy.tags.md', $tag->route->name);
+        self::assertSame([TermController::class, 'show'], $tag->route->handler);
+        self::assertSame(['slug' => 'releases'], $tag->params);
+        self::assertSame('tags', $tag->route->attributes()[Taxonomy::class] ?? null);
+        self::assertTrue($tag->route->attributes()[MarkdownPages::class] ?? false);
+        self::assertTrue($tag->route->isStateless());
+
+        $root = $router->match('GET', '/guides/php.md');
+        self::assertSame('content.pages.md', $root->route->name, 'pages, sections and articles share the root twin');
+        self::assertSame(['slug' => 'guides/php'], $root->params);
+        self::assertSame('/guides/php.md', $router->url('taxonomy.sections.md', ['slug' => 'guides/php']));
+        self::assertSame('content.news.show', $router->match('GET', '/news/hello')->route->name);
     }
 }

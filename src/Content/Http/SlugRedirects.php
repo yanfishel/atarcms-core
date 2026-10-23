@@ -61,9 +61,10 @@ final class SlugRedirects
     }
 
     /**
-     * The 301 to the term that had $slug in $taxonomy and $locale, or null (a "?page=N" stays in the query).
+     * The 301 to the term that had $slug in $taxonomy and $locale (to its markdown twin with $markdown), or null (a
+     * "?page=N" stays in the query).
      */
-    public function term(ServerRequestInterface $request, string $taxonomy, string $locale, string $slug): ?ResponseInterface
+    public function term(ServerRequestInterface $request, string $taxonomy, string $locale, string $slug, bool $markdown = false): ?ResponseInterface
     {
         $id = $this->history->termId($taxonomy, $locale, $slug);
         $term = $id === null ? null : $this->terms->find($id);
@@ -71,7 +72,7 @@ final class SlugRedirects
             return null;
         }
 
-        return $this->redirect($request, $this->termUrls->path($term));
+        return $this->redirect($request, $this->termUrls->path($term, markdown: $markdown));
     }
 
     /**

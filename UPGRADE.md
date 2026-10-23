@@ -26,6 +26,11 @@ here; every minor version lists its steps here.
 
 ## Versions
 
+### v0.2.8
+
+The usual three commands; nothing else to do. No schema changes. Anything that reads the markdown twins' frontmatter
+finds the modification time under `last_updated` instead of `updated`.
+
 ### v0.2.7
 
 The usual three commands. No schema changes. A root page with the slug `sitemap` must be renamed before its next

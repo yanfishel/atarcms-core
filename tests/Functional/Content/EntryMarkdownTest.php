@@ -125,7 +125,7 @@ final class EntryMarkdownTest extends ContentFunctionalTestCase
         self::assertStringContainsString("\n## summary\n\nHow we started\n", (string) $story->getBody());
         self::assertSame(301, $wrong->getStatusCode());
         self::assertSame('/about/history/founding.md', $wrong->getHeaderLine('Location'));
-        self::assertSame(404, $this->browser->get('/about/history.md')->getStatusCode(), 'a section page has no twin');
+        self::assertStringStartsWith("---\ntitle: \"History\"", (string) $this->browser->get('/about/history.md')->getBody(), 'the section\'s own twin (ListingMarkdown)');
         self::assertSame(404, $this->browser->get('/about/history/ghost.md')->getStatusCode());
     }
 
@@ -222,7 +222,7 @@ final class EntryMarkdownTest extends ContentFunctionalTestCase
             self::assertSame($to, $response->getHeaderLine('Location'), $from);
         }
         self::assertSame('/articles/world', $this->browser->get('/articles/hello')->getHeaderLine('Location'), 'the page keeps its own redirect');
-        self::assertSame(404, $this->browser->get('/history.md')->getStatusCode(), 'never a section, nor its history');
+        self::assertStringStartsWith("---\ntitle: \"History\"", (string) $this->browser->get('/history.md')->getBody(), 'the section answers before any previous slug');
     }
 
     public function testMediaFieldsLinkTheirOriginals(): void
@@ -287,7 +287,7 @@ final class EntryMarkdownTest extends ContentFunctionalTestCase
 
         self::assertStringStartsWith(
             "---\ntitle: \"Note: \\\"C#\\\" --- #1\"\ndescription: \"- a: b\"\nurl: \"https://localhost/articles/note\"\nlang: \"en\"\n"
-            . "published: \"2026-09-01T08:30:00+00:00\"\nupdated: \"" . $updated . "\"\n---\n\n# Note: ",
+            . "published: \"2026-09-01T08:30:00+00:00\"\nlast_updated: \"" . $updated . "\"\n---\n\n# Note: ",
             $body,
         );
         self::assertSame(1, substr_count($body, "\n---\n"), 'only the closing fence: the title cannot close the block early');
@@ -299,7 +299,19 @@ final class EntryMarkdownTest extends ContentFunctionalTestCase
 
         $body = (string) $this->browser->get('/ru/welcome.md')->getBody();
 
-        self::assertMatchesRegularExpression('~\A---\ntitle: "[^"\n]+"\nurl: "https://localhost/ru/welcome"\nlang: "ru"\nupdated: "[0-9T:+-]+"\n---\n\n# ~', $body);
+        self::assertMatchesRegularExpression('~\A---\ntitle: "[^"\n]+"\nurl: "https://localhost/ru/welcome"\nlang: "ru"\nlast_updated: "[0-9T:+-]+"\n---\n\n# ~', $body);
+    }
+
+    public function testWithoutItsOwnDescriptionTheFrontmatterTakesTheSiteDescriptionOfItsLanguage(): void
+    {
+        $this->app->container()->service(SettingsService::class)
+            ->save('ru', new SettingsInput(metaDescription: 'Сайт: "пример"'), null, null);
+        $this->entry('welcome', 'ignored', ['locale' => 'ru', 'fields' => ['intro' => '<p>Привет</p>']]);
+
+        $body = (string) $this->browser->get('/ru/welcome.md')->getBody();
+
+        self::assertMatchesRegularExpression('~\A---\ntitle: "[^"\n]+"\ndescription: "Сайт: \\\\"пример\\\\""\nurl: ~u', $body);
+        self::assertStringNotContainsString('> Сайт', $body, 'the page itself keeps no description of its own');
     }
 
     /**

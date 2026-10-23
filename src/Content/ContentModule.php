@@ -14,12 +14,12 @@ use AtarCms\Content\Http\ContentController;
 use AtarCms\Content\Http\FeedController;
 use AtarCms\Content\Http\LlmsFullTxtController;
 use AtarCms\Content\Http\LlmsTxtController;
+use AtarCms\Content\Http\MarkdownPages;
 use AtarCms\Content\Http\MarkdownSitemapController;
 use AtarCms\Content\Http\RobotsController;
 use AtarCms\Content\Http\RootController;
 use AtarCms\Content\Http\SitemapController;
 use AtarCms\Content\Http\TermController;
-use AtarCms\Content\Markdown\EntryMarkdown;
 use AtarCms\Content\Menu\MainMenu;
 use AtarCms\Content\Menu\MenuService;
 use AtarCms\Demo\DemoStructure;
@@ -142,8 +142,10 @@ final class ContentModule extends Module
      * share one root route, registered last: it carries the taxonomy's name and the collection's, matches every chain
      * of segments when there are sections or articles ("/about/team/hello"), and RootController resolves it. It is
      * named after the collection (the taxonomy's route name is a Router::alias()); the articles' own routes are never
-     * matched and only build their URLs. Every entry route has a stateless markdown twin (markdownTwin(),
-     * EntryUrls::markdownPattern()): the singles' are static and come with the archives, the root route's follows it.
+     * matched and only build their URLs. Every entry, archive and term route has a stateless markdown twin
+     * (MarkdownPages::twin(): EntryUrls::markdownPattern(), EntryUrls::archiveMarkdownPath(), TermUrls::markdownPattern()):
+     * the singles' and the archives' are static and come first, the root route's follows it and serves pages, sections
+     * and articles alike.
      */
     public static function registerRoutes(Router $router, Collections $collections): void
     {
@@ -194,6 +196,9 @@ final class ContentModule extends Module
             if ($item->archive !== null) {
                 $router->get($item->archive, [ContentController::class, 'index'], EntryUrls::indexRoute($item))
                     ->attribute(Collection::class, $item->name);
+                // The archive's twin is a static path too ("/news.md").
+                MarkdownPages::twin($router->get((string) EntryUrls::archiveMarkdownPath($item), [ContentController::class, 'index'], EntryUrls::archiveMarkdownRoute($item)))
+                    ->attribute(Collection::class, $item->name);
             }
             $feedPath = $item->feed ? $item->feedPath() : null;
             if ($feedPath !== null) {
@@ -212,6 +217,8 @@ final class ContentModule extends Module
             }
             if ($item instanceof Taxonomy) {
                 $router->get((string) $item->routePattern(), [TermController::class, 'show'], TermUrls::showRoute($item))
+                    ->attribute(Taxonomy::class, $item->name);
+                MarkdownPages::twin($router->get((string) TermUrls::markdownPattern($item), [TermController::class, 'show'], TermUrls::markdownRoute($item)))
                     ->attribute(Taxonomy::class, $item->name);
 
                 continue;
@@ -236,16 +243,14 @@ final class ContentModule extends Module
             $root->attribute(Collection::class, $rootCollection->name);
             $router->alias(TermUrls::showRoute($rootTaxonomy), $name);
         }
-        if ($rootCollection !== null || $sectioned !== []) {
-            // The root route's twin serves the pages and the articles (never the sections: term pages have none).
-            $twin = $router->get(
-                '/{slug:' . ($nested ? Slug::PATH_PATTERN : Slug::PATTERN) . '}.md',
-                [RootController::class, 'show'],
-                $rootCollection === null ? null : EntryUrls::markdownRoute($rootCollection),
-            )->attribute(Taxonomy::class, $rootTaxonomy->name)->attribute(EntryMarkdown::class, true)->stateless();
-            if ($rootCollection !== null) {
-                $twin->attribute(Collection::class, $rootCollection->name);
-            }
+        // The root route's twin serves the pages, the sections and the articles, resolved like the root route; named
+        // like it, with the taxonomy's twin route name as an alias when a collection owns the name.
+        $twinName = $rootCollection === null ? TermUrls::markdownRoute($rootTaxonomy) : EntryUrls::markdownRoute($rootCollection);
+        $twin = MarkdownPages::twin($router->get('/{slug:' . ($nested ? Slug::PATH_PATTERN : Slug::PATTERN) . '}.md', [RootController::class, 'show'], $twinName))
+            ->attribute(Taxonomy::class, $rootTaxonomy->name);
+        if ($rootCollection !== null) {
+            $twin->attribute(Collection::class, $rootCollection->name);
+            $router->alias(TermUrls::markdownRoute($rootTaxonomy), $twinName);
         }
         foreach ($sectioned as $collection) {
             $router->get((string) $collection->routePattern(), [RootController::class, 'show'], EntryUrls::showRoute($collection));
@@ -255,15 +260,13 @@ final class ContentModule extends Module
 
     /**
      * The markdown twin of $collection's entry route (EntryUrls::markdownPattern()): the same handler and middleware,
-     * stateless, marked with the EntryMarkdown::class attribute.
+     * stateless, marked as a twin (MarkdownPages::twin()).
      *
      * @param array{0: class-string, 1: string} $handler
      */
     private static function markdownTwin(Router $router, Collection $collection, array $handler): Route
     {
-        return $router->get((string) EntryUrls::markdownPattern($collection), $handler, EntryUrls::markdownRoute($collection))
-            ->attribute(EntryMarkdown::class, true)
-            ->stateless();
+        return MarkdownPages::twin($router->get((string) EntryUrls::markdownPattern($collection), $handler, EntryUrls::markdownRoute($collection)));
     }
 
     private static function literalPrefixLength(string $route): int

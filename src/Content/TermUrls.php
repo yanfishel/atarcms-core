@@ -29,6 +29,25 @@ final class TermUrls
     }
 
     /**
+     * The route of the term page's markdown twin (ListingMarkdown): the show route's address + ".md".
+     */
+    public static function markdownRoute(Taxonomy $taxonomy): string
+    {
+        return 'taxonomy.' . $taxonomy->name . '.md';
+    }
+
+    /**
+     * The router pattern of the markdown twins of $taxonomy's term pages: its pattern + ".md" (slugs never contain
+     * dots). Null without a route.
+     */
+    public static function markdownPattern(Taxonomy $taxonomy): ?string
+    {
+        $pattern = $taxonomy->routePattern();
+
+        return $pattern === null ? null : $pattern . '.md';
+    }
+
+    /**
      * The {slug} route parameter of the term: its slug, or its trail in a root tree. Ancestors missing from $known are
      * loaded with one query.
      *
@@ -86,30 +105,33 @@ final class TermUrls
      * links), or null when its taxonomy has no route.
      *
      * @param array<int, Term> $known see slugPath()
+     * @param bool $markdown the path of the page's markdown twin (markdownRoute()) instead
      */
-    public function path(Term $term, int $page = 1, array $known = []): ?string
+    public function path(Term $term, int $page = 1, array $known = [], bool $markdown = false): ?string
     {
         $taxonomy = $this->taxonomies->find($term->taxonomy);
         if ($taxonomy === null || $taxonomy->route === null) {
             return null;
         }
+        $route = $markdown ? self::markdownRoute($taxonomy) : self::showRoute($taxonomy);
 
-        return $this->urls->path(self::showRoute($taxonomy), ['slug' => $this->slugPath($term, $known), ...($page > 1 ? ['page' => $page] : [])], $term->locale);
+        return $this->urls->path($route, ['slug' => $this->slugPath($term, $known), ...($page > 1 ? ['page' => $page] : [])], $term->locale);
     }
 
     /**
      * The paths of many terms (a sitemap page, a term's translations) with at most one query.
      *
      * @param array<Term> $terms
+     * @param bool $markdown the paths of the pages' markdown twins (markdownRoute()) instead
      *
      * @return array<int, string> term id => path; terms of taxonomies without a route are omitted
      */
-    public function paths(array $terms): array
+    public function paths(array $terms, bool $markdown = false): array
     {
         $known = $this->ancestors($terms);
         $paths = [];
         foreach ($terms as $term) {
-            $path = $this->path($term, 1, $known);
+            $path = $this->path($term, 1, $known, $markdown);
             if ($path !== null) {
                 $paths[$term->id] = $path;
             }

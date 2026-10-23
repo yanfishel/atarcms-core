@@ -32,8 +32,8 @@ use Psr\Http\Message\ServerRequestInterface;
  * menu('main') (the visible links of a theme menu location in the current locale, with "current" flags),
  * socialMeta($title, $description, $entry, 'large') (the page's Open Graph and Twitter card tags and its JSON-LD, see
  * SocialMeta),
- * markdownAlternate() (<link rel="alternate" type="text/markdown"> to an entry page's markdown twin, '' on other
- * pages, previews and while the site is hidden from search engines),
+ * markdownAlternate() (<link rel="alternate" type="text/markdown"> to the markdown twin of an entry, archive or term
+ * page, '' on other pages, previews and while the site is hidden from search engines),
  * siteSettings() (the site settings of the current locale: SEO defaults, phone and email; AtarCms\Settings\Settings),
  * presetEntry('privacy') and presetUrl('privacy') (a preset page of Collection::presets() in the current locale and its
  * address, null while it is missing or not public; every preset is read in one query per request).

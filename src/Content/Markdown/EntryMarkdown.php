@@ -38,11 +38,10 @@ use AtarCms\Media\Media;
 use AtarCms\Media\MediaRepository;
 use AtarCms\Media\MediaUrls;
 use DateTimeImmutable;
-use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * The markdown twin of a public entry page ("{address}.md", ContentController with the EntryMarkdown::class route
- * attribute), for AI agents. The document (document() puts YAML frontmatter above it):
+ * The markdown twin of a public entry page ("{address}.md", ContentController on a MarkdownPages::twin() route), for
+ * AI agents (ListingMarkdown does archives and term pages). The document (document() puts YAML frontmatter above it):
  * - "# {title}", then "> {meta description}" when the entry has one;
  * - a list of facts: "Published: {date}" (the publication date in the site's time zone, SiteTime; not on a plain()
  *   single, which is always published and has no date of its own), "Language: {locale}" with links to the twins of
@@ -74,27 +73,22 @@ final readonly class EntryMarkdown
     ) {}
 
     /**
-     * Whether the matched route is an entry page's markdown twin (ContentModule::registerRoutes()).
-     */
-    public static function requested(ServerRequestInterface $request): bool
-    {
-        return $request->getAttribute(self::class) === true;
-    }
-
-    /**
      * The twin as served on its own (the ".md" address and the negotiated page): the YAML frontmatter (Frontmatter) —
-     * title, the meta description when there is one, the canonical page URL, the language, the publication time (not
-     * on a plain() single, like the facts line) and the modification time (StructuredData's dateModified: the later of
-     * the last save and the publication), both in UTC ISO 8601 — then render(). /llms-full.txt uses render() alone.
+     * title, the description (the entry's meta description, else $siteDescription, like og:description; left out when
+     * both are empty), the canonical page URL, the language, the publication time (not on a plain() single, like the
+     * facts line) and the modification time as last_updated (StructuredData's dateModified: the later of the last
+     * save and the publication), both in UTC ISO 8601 — then render(). /llms-full.txt uses render() alone.
      *
      * @param array<int, Entry> $ancestors the entry's ancestors when already loaded
      * @param string $url the page's absolute canonical URL
+     * @param string $siteDescription the site's description in the entry's language (MarkdownPages::siteDescription())
      */
-    public function document(Entry $entry, array $ancestors, string $url): string
+    public function document(Entry $entry, array $ancestors, string $url, string $siteDescription): string
     {
         $fields = ['title' => $entry->title];
-        $description = $entry->seo->metaDescription;
-        if ($description !== null && trim($description) !== '') {
+        $description = trim($entry->seo->metaDescription ?? '');
+        $description = $description !== '' ? $description : trim($siteDescription);
+        if ($description !== '') {
             $fields['description'] = $description;
         }
         $fields['url'] = $url;
@@ -106,7 +100,7 @@ final readonly class EntryMarkdown
             }
             $modified = max($modified, $entry->publishedAt);
         }
-        $fields['updated'] = StructuredData::time($modified);
+        $fields['last_updated'] = StructuredData::time($modified);
 
         return Frontmatter::render($fields) . "\n" . $this->render($entry, $ancestors);
     }
@@ -363,7 +357,7 @@ final readonly class EntryMarkdown
      */
     private static function line(string $text): string
     {
-        return RichTextMarkdown::escape(trim((string) preg_replace('/\s+/u', ' ', $text)));
+        return RichTextMarkdown::line($text);
     }
 
     /**

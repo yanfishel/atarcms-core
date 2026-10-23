@@ -7,9 +7,10 @@ namespace AtarCms\Content\Markdown;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * The path of the current page's markdown twin (EntryMarkdown): a request attribute ContentController sets on public
- * entry pages (never previews, archives, term pages, search or error pages). $this->markdownAlternate() prints it,
- * and ContentController sends it as a Link header (link()) wherever the helper would print it.
+ * The path of the current page's markdown twin (EntryMarkdown, ListingMarkdown): a request attribute ContentController
+ * and TermController set on public entry, single, archive and term pages (never previews, search or error pages).
+ * $this->markdownAlternate() prints it, and MarkdownPages::page() sends it as a Link header (link()) wherever the
+ * helper would print it.
  */
 final readonly class MarkdownTwin
 {

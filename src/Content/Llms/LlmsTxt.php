@@ -26,7 +26,7 @@ final readonly class LlmsTxt
         $base = $this->config->appUrl();
         $lines = [...$this->content->header(), ''];
         // The entry pages' markdown twins (EntryMarkdown, ContentModule::registerRoutes()).
-        $lines[] = "Append .md to an entry's URL for a markdown version.";
+        $lines[] = "Append .md to the URL of an entry, term or archive page for a markdown version.";
         $lines[] = '';
         $lines[] = 'The full text of the entry pages: ' . $base . '/llms-full.txt';
         $lines[] = '';
